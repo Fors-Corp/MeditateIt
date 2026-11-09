@@ -250,8 +250,8 @@ export async function loadRecentSessions(
 
 export const PRESET_BLURBS: Record<string, string> = {
   'daily-calm': 'Speaker-friendly pink + 528 + soft pulse',
-  sleep: 'Deep brown bed, soft rain, slow delta',
-  focus: 'Pink + 528 with mid-beta beat',
-  'anxiety-softener': 'Soft pink, 396 Hz, gentle alpha',
+  sleep: 'Deep brown bed, soft rain, slow ~2 Hz beat',
+  focus: 'Pink + 528 with mid-rate ~16 Hz beat',
+  'anxiety-softener': 'Soft pink + 396 Hz tone + gentle ~10 Hz pulse',
   'deep-rest': 'Open-ended brown + shore wash + low tone',
 }

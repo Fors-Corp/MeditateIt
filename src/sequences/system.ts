@@ -43,7 +43,7 @@ const PINK_BED: SessionRecipe = {
   fadeOutSec: 10,
 }
 
-/** Theta binaural glide for sleep ramp (~5 Hz). */
+/** Slow ~5 Hz binaural glide for night wind-down. */
 const THETA_GLIDE: SessionRecipe = {
   noise: {
     enabled: true,
@@ -85,11 +85,11 @@ function systemSequence(
   }
 }
 
-/** Anxiety softener → pink bed → sleep. */
+/** Soft calm → pink bed → sleep. */
 const WIND_DOWN: Sequence = systemSequence(
   'wind-down',
   'Wind down',
-  'Softener → pink bed → sleep',
+  'Soft calm → pink bed → sleep',
   [
     stage('wd-1', 'Soft landing', 10 * 60, { presetId: 'anxiety-softener' }),
     stage('wd-2', 'Pink settle', 10 * 60, { recipe: PINK_BED }),
@@ -109,14 +109,14 @@ const FOCUS_BLOCK: Sequence = systemSequence(
   ],
 )
 
-/** Pink → theta binaural → deep sleep. */
+/** Pink → slow ~5 Hz beat → sleep. */
 const DEEP_SLEEP_RAMP: Sequence = systemSequence(
   'deep-sleep-ramp',
   'Deep sleep ramp',
-  'Pink → theta glide → deep sleep',
+  'Pink → ~5 Hz glide → sleep',
   [
     stage('ds-1', 'Pink unwind', 10 * 60, { recipe: PINK_BED }),
-    stage('ds-2', 'Theta glide', 15 * 60, { recipe: THETA_GLIDE }),
+    stage('ds-2', '~5 Hz glide', 15 * 60, { recipe: THETA_GLIDE }),
     stage('ds-3', 'Deep sleep', 20 * 60, { presetId: 'sleep' }),
   ],
 )

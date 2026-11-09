@@ -19,7 +19,7 @@ function systemPreset(
   }
 }
 
-/** Sleep — deep brown bed + delta binaural; long fade-out. */
+/** Sleep — deep brown bed + slow ~2 Hz binaural; long fade-out. */
 const SLEEP: Preset = systemPreset('sleep', 'Sleep', 45 * 60, {
   noise: {
     enabled: true,
@@ -45,7 +45,7 @@ const SLEEP: Preset = systemPreset('sleep', 'Sleep', 45 * 60, {
   fadeOutSec: 20,
 })
 
-/** Focus — pink + 528 + mid-beta binaural. */
+/** Focus — pink + 528 + mid-rate ~16 Hz binaural. */
 const FOCUS: Preset = systemPreset('focus', 'Focus', 25 * 60, {
   noise: {
     enabled: true,
@@ -71,10 +71,10 @@ const FOCUS: Preset = systemPreset('focus', 'Focus', 25 * 60, {
   fadeOutSec: 8,
 })
 
-/** Anxiety softener — soft pink + 396 + alpha binaural. */
+/** Soft calm — soft pink + 396 + gentle ~10 Hz binaural. Id kept for last-used prefs. */
 const ANXIETY_SOFTENER: Preset = systemPreset(
   'anxiety-softener',
-  'Anxiety softener',
+  'Soft calm',
   15 * 60,
   {
     noise: {
@@ -102,7 +102,7 @@ const ANXIETY_SOFTENER: Preset = systemPreset(
   },
 )
 
-/** Deep rest — brown rumble + low tone + slow delta; open-ended. */
+/** Deep rest — brown rumble + low tone + slow ~1.5 Hz beat; open-ended. */
 const DEEP_REST: Preset = systemPreset('deep-rest', 'Deep rest', null, {
   noise: {
     enabled: true,
