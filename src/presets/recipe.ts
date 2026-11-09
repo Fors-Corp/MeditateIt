@@ -36,6 +36,7 @@ export function createBlankRecipe(): SessionRecipe {
     nature: {
       enabled: false,
       soundId: null,
+      brightness: 0.5,
     },
     gains: { ...DEFAULT_GAINS },
     fadeInSec: DEFAULT_FADE_IN_SEC,

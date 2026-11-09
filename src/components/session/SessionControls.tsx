@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { SOLFEGGIO_FREQUENCIES } from './bridges'
+import { NATURE_SOUNDS, SOLFEGGIO_FREQUENCIES } from './bridges'
 import type { SessionController } from './useSessionController'
 import { HeadphoneWarning } from './HeadphoneWarning'
 import './session.css'
@@ -53,6 +53,8 @@ export function SessionControls({ session }: SessionControlsProps) {
     setSolfeggio,
     setBeatMode,
     setBeatHz,
+    setNatureSound,
+    setNatureBrightness,
     acknowledgeHeadphones,
     dismissHeadphoneWarning,
   } = session
@@ -256,7 +258,36 @@ export function SessionControls({ session }: SessionControlsProps) {
             onToggle={() => toggleLayer('nature')}
             onGain={(v) => setLayerGain('nature', v)}
           >
-            <p className="layer-note">Nature pack arrives in a later phase.</p>
+            <div className="chip-row" role="group" aria-label="Nature sound">
+              {NATURE_SOUNDS.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`chip${
+                    (recipe.nature.soundId ?? 'rain') === id
+                      ? ' is-selected'
+                      : ''
+                  }`}
+                  onClick={() => setNatureSound(id)}
+                >
+                  {id}
+                </button>
+              ))}
+            </div>
+            <label className="beat-rate">
+              Brightness {Math.round((recipe.nature.brightness ?? 0.5) * 100)}%
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={recipe.nature.brightness ?? 0.5}
+                onChange={(e) =>
+                  setNatureBrightness(Number(e.target.value))
+                }
+                aria-label="Nature brightness"
+              />
+            </label>
           </LayerRow>
         </div>
       </section>

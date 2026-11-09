@@ -1,5 +1,6 @@
 import { BeatLayer } from './BeatLayer'
 import { DEFAULT_ENGINE_PARAMS, GAIN, RAMP_SEC } from './constants'
+import { NatureLayer } from './NatureLayer'
 import { NoiseLayer } from './NoiseLayer'
 import { clamp, rampParam } from './ramp'
 import { ToneLayer } from './ToneLayer'
@@ -8,6 +9,7 @@ import type {
   BeatParams,
   EngineParams,
   EngineParamsPatch,
+  NatureParams,
   NoiseParams,
   ToneParams,
 } from './types'
@@ -40,6 +42,7 @@ export class AudioEngine {
   private noise: NoiseLayer | null = null
   private tone: ToneLayer | null = null
   private beat: BeatLayer | null = null
+  private nature: NatureLayer | null = null
   private params: EngineParams = structuredClone(DEFAULT_ENGINE_PARAMS)
   private status: AudioEngineStatus = 'idle'
   private stopTimer: number | null = null
@@ -85,6 +88,7 @@ export class AudioEngine {
     this.noise!.start(this.params.noise)
     this.tone!.start(this.params.tone)
     this.beat!.start(this.params.beat)
+    this.nature!.start(this.params.nature)
 
     const targetMaster = clamp(this.params.masterGain, 0, GAIN.masterMax)
     rampParam(this.masterGain!.gain, targetMaster, ctx.currentTime, fadeIn)
@@ -108,6 +112,7 @@ export class AudioEngine {
     this.noise?.stop(fadeOut)
     this.tone?.stop(fadeOut)
     this.beat?.stop(fadeOut)
+    this.nature?.stop(fadeOut)
 
     this.stopTimer = window.setTimeout(() => {
       void this.ctx?.suspend()
@@ -137,6 +142,10 @@ export class AudioEngine {
 
   setBeat(patch: Partial<BeatParams>): void {
     this.setParams({ beat: patch })
+  }
+
+  setNature(patch: Partial<NatureParams>): void {
+    this.setParams({ nature: patch })
   }
 
   private ensureGraph(): void {
@@ -172,9 +181,11 @@ export class AudioEngine {
     const noise = new NoiseLayer(ctx)
     const tone = new ToneLayer(ctx)
     const beat = new BeatLayer(ctx)
+    const nature = new NatureLayer(ctx)
     noise.connect(bus)
     tone.connect(bus)
     beat.connect(bus)
+    nature.connect(bus)
 
     this.ctx = ctx
     this.bus = bus
@@ -183,6 +194,7 @@ export class AudioEngine {
     this.noise = noise
     this.tone = tone
     this.beat = beat
+    this.nature = nature
 
     if (!this.hasMasterChain()) {
       throw new Error('Audio master chain failed to initialize')
@@ -201,6 +213,7 @@ export class AudioEngine {
     this.noise?.setParams(this.params.noise)
     this.tone?.setParams(this.params.tone)
     this.beat?.setParams(this.params.beat)
+    this.nature?.setParams(this.params.nature)
   }
 
   private clearStopTimer(): void {
@@ -246,6 +259,20 @@ function mergeParams(
       ...base.beat,
       ...patch.beat,
       gain: clamp(patch.beat?.gain ?? base.beat.gain, 0, GAIN.beatMax),
+    },
+    nature: {
+      ...base.nature,
+      ...patch.nature,
+      gain: clamp(
+        patch.nature?.gain ?? base.nature.gain,
+        0,
+        GAIN.natureMax,
+      ),
+      brightness: clamp(
+        patch.nature?.brightness ?? base.nature.brightness,
+        0,
+        1,
+      ),
     },
   }
 }

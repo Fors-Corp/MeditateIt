@@ -2,6 +2,7 @@
 
 export type NoiseKind = 'white' | 'pink' | 'brown'
 export type BeatMode = 'off' | 'binaural' | 'isochronic'
+export type NatureSoundId = 'rain' | 'shore' | 'wind' | 'forest'
 export type AudioEngineStatus = 'idle' | 'running' | 'unavailable'
 
 export interface NoiseParams {
@@ -44,6 +45,18 @@ export interface BeatParams {
   headphonesAcknowledged: boolean
 }
 
+/**
+ * Procedural nature bed (no licensed sample downloads).
+ * `soundId` null + enabled → engine falls back to `"rain"`.
+ */
+export interface NatureParams {
+  enabled: boolean
+  soundId: NatureSoundId | null
+  gain: number
+  /** 0–1: darker → brighter high shelf. */
+  brightness: number
+}
+
 export interface EngineParams {
   masterGain: number
   fadeInSec: number
@@ -51,6 +64,7 @@ export interface EngineParams {
   noise: NoiseParams
   tone: ToneParams
   beat: BeatParams
+  nature: NatureParams
 }
 
 export type EngineParamsPatch = {
@@ -60,6 +74,7 @@ export type EngineParamsPatch = {
   noise?: Partial<NoiseParams>
   tone?: Partial<ToneParams>
   beat?: Partial<BeatParams>
+  nature?: Partial<NatureParams>
 }
 
 /** Documented constraint for binaural mode. */

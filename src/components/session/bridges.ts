@@ -5,9 +5,11 @@
 import {
   audioEngine,
   BINAURAL_REQUIRES_HEADPHONES,
+  NATURE_SOUNDS,
   SOLFEGGIO_FREQUENCIES,
   type AudioEngineStatus,
   type EngineParamsPatch,
+  type NatureSoundId,
 } from '../../audio'
 import {
   cloneRecipe,
@@ -26,8 +28,8 @@ import {
   updatePrefs,
 } from '../../storage'
 
-export { BINAURAL_REQUIRES_HEADPHONES, SOLFEGGIO_FREQUENCIES }
-export type { BeatMode, NoiseKind, Preset, SessionRecipe }
+export { BINAURAL_REQUIRES_HEADPHONES, NATURE_SOUNDS, SOLFEGGIO_FREQUENCIES }
+export type { BeatMode, NatureSoundId, NoiseKind, Preset, SessionRecipe }
 
 export interface SessionAudioEngine {
   getStatus: () => AudioEngineStatus
@@ -65,6 +67,12 @@ function recipeToPatch(
       gain: recipe.gains.beat,
       pulseDepth: recipe.beat.pulseDepth ?? 0.7,
       headphonesAcknowledged: true,
+    },
+    nature: {
+      enabled: recipe.nature.enabled,
+      soundId: recipe.nature.soundId,
+      gain: recipe.gains.nature,
+      brightness: recipe.nature.brightness ?? 0.5,
     },
   }
 }
@@ -146,8 +154,8 @@ export async function persistMasterVolume(masterVolume: number): Promise<void> {
 
 export const PRESET_BLURBS: Record<string, string> = {
   'daily-calm': 'Speaker-friendly pink + 528 + soft pulse',
-  sleep: 'Deep brown bed with slow delta',
+  sleep: 'Deep brown bed, soft rain, slow delta',
   focus: 'Pink + 528 with mid-beta beat',
   'anxiety-softener': 'Soft pink, 396 Hz, gentle alpha',
-  'deep-rest': 'Open-ended brown rumble + low tone',
+  'deep-rest': 'Open-ended brown + shore wash + low tone',
 }

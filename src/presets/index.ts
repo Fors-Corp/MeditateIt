@@ -8,6 +8,7 @@ export type {
   BeatParams,
   LayerGains,
   NatureParams,
+  NatureSoundId,
   NoiseKind,
   NoiseParams,
   Preset,
