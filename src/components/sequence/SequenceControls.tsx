@@ -31,7 +31,9 @@ export function SequenceControls({ session }: SequenceControlsProps) {
     masterVolume,
     showHeadphoneWarning,
     engineStatus,
+    needsAudioGesture,
     togglePlay,
+    continueAudio,
     skipStage,
     setMasterVolume,
     acknowledgeHeadphones,
@@ -61,11 +63,13 @@ export function SequenceControls({ session }: SequenceControlsProps) {
     ? 'Sequence complete'
     : engineStatus === 'unavailable'
       ? 'Audio unavailable in this browser'
-      : crossfading
-        ? 'Crossfading to next stage…'
-        : playing
-          ? `Stage ${stageIndex + 1} of ${stageCount}`
-          : 'Ready when you are'
+      : needsAudioGesture
+        ? 'Audio paused by the browser'
+        : crossfading
+          ? 'Crossfading to next stage…'
+          : playing
+            ? `Stage ${stageIndex + 1} of ${stageCount}`
+            : 'Ready when you are'
 
   const timerText = completed ? 'Done' : formatTime(stageRemainingSec)
 
@@ -118,6 +122,16 @@ export function SequenceControls({ session }: SequenceControlsProps) {
             {stageIndex >= stageCount - 1 ? 'End sequence' : 'Skip stage'}
           </button>
         </div>
+
+        {needsAudioGesture && (
+          <button
+            type="button"
+            className="audio-resume-prompt"
+            onClick={() => void continueAudio()}
+          >
+            Tap to continue audio
+          </button>
+        )}
 
         <p
           className="sequence-engine-status"

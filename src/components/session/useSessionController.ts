@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   bindMediaSessionHandlers,
+  bindVisibilityAudioResume,
   setMediaSessionPlaybackState,
   setSessionMediaMetadata,
 } from '../../audio'
@@ -48,7 +49,10 @@ export interface SessionController {
   savePresetBusy: boolean
   canOverwritePreset: boolean
   engineStatus: string
+  /** True when auto-resume after background was blocked — show tap affordance. */
+  needsAudioGesture: boolean
   togglePlay: () => Promise<void>
+  continueAudio: () => Promise<void>
   switchPreset: (presetId: string) => void
   setMasterVolume: (value: number) => void
   setFadeIn: (sec: number) => void
@@ -99,6 +103,7 @@ export function useSessionController(
   const [savePresetError, setSavePresetError] = useState<string | null>(null)
   const [savePresetBusy, setSavePresetBusy] = useState(false)
   const [engineStatus, setEngineStatus] = useState('idle')
+  const [needsAudioGesture, setNeedsAudioGesture] = useState(false)
 
   const engineRef = useRef<SessionAudioEngine | null>(null)
   const timerRef = useRef<number | null>(null)
@@ -223,10 +228,22 @@ export function useSessionController(
     engineRef.current?.stop(fadeOutRef.current)
     setPlaying(false)
     setCrossfading(false)
+    setNeedsAudioGesture(false)
     setEngineStatus(engineRef.current?.getStatus() ?? 'idle')
     setMediaSessionPlaybackState('paused')
     commitSessionHistory()
   }, [clearTimer, commitSessionHistory])
+
+  const continueAudio = useCallback(async () => {
+    if (!playingRef.current) return
+    const result = await engineRef.current?.resumeContext()
+    if (result === 'running') {
+      setNeedsAudioGesture(false)
+      setMediaSessionPlaybackState('playing')
+    } else if (result === 'suspended') {
+      setNeedsAudioGesture(true)
+    }
+  }, [])
 
   const startTimer = useCallback(() => {
     clearTimer()
@@ -256,6 +273,7 @@ export function useSessionController(
     await engine.start(recipeRef.current.fadeInSec)
     sessionStartedAtRef.current = new Date().toISOString()
     setPlaying(true)
+    setNeedsAudioGesture(false)
     setEngineStatus(engine.getStatus())
     setSessionMediaMetadata({
       title: presetRef.current.name,
@@ -282,12 +300,16 @@ export function useSessionController(
     stopPlaybackRef.current = stopPlayback
   }, [togglePlay, stopPlayback])
 
-  // Media Session play/pause while a session screen is mounted.
+  // Media Session play/pause/stop while a session screen is mounted.
   useEffect(() => {
     const unbind = bindMediaSessionHandlers({
       onPlay: async () => {
         if (!playingRef.current) {
           await togglePlayRef.current()
+        } else {
+          // User gesture from media keys — good chance to clear a blocked resume.
+          const result = await engineRef.current?.resumeContext()
+          if (result === 'running') setNeedsAudioGesture(false)
         }
       },
       onPause: () => {
@@ -295,8 +317,33 @@ export function useSessionController(
           stopPlaybackRef.current()
         }
       },
+      onStop: () => {
+        if (playingRef.current) {
+          stopPlaybackRef.current()
+        }
+      },
     })
     return unbind
+  }, [])
+
+  // Foreground / pageshow: resume suspended context or ask for a tap.
+  useEffect(() => {
+    return bindVisibilityAudioResume({
+      shouldBePlaying: () => playingRef.current,
+      resumeContext: async () => {
+        const engine = engineRef.current
+        if (!engine) return 'none'
+        if (engine.getContextState() === 'running') return 'running'
+        return engine.resumeContext()
+      },
+      onResumed: () => {
+        setNeedsAudioGesture(false)
+        setMediaSessionPlaybackState('playing')
+      },
+      onBlocked: () => {
+        setNeedsAudioGesture(true)
+      },
+    })
   }, [])
 
   const watchCrossfade = useCallback(() => {
@@ -704,7 +751,9 @@ export function useSessionController(
     savePresetBusy,
     canOverwritePreset,
     engineStatus,
+    needsAudioGesture,
     togglePlay,
+    continueAudio,
     switchPreset,
     setMasterVolume,
     setFadeIn,

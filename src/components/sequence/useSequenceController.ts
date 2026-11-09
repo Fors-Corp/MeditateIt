@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   bindMediaSessionHandlers,
+  bindVisibilityAudioResume,
   setMediaSessionPlaybackState,
   setSessionMediaMetadata,
 } from '../../audio'
@@ -42,7 +43,10 @@ export interface SequenceController {
   masterVolume: number
   showHeadphoneWarning: boolean
   engineStatus: string
+  /** True when auto-resume after background was blocked — show tap affordance. */
+  needsAudioGesture: boolean
   togglePlay: () => Promise<void>
+  continueAudio: () => Promise<void>
   skipStage: () => void
   setMasterVolume: (value: number) => void
   acknowledgeHeadphones: () => void
@@ -68,6 +72,7 @@ export function useSequenceController(
   const [masterVolume, setMasterVolumeState] = useState(0.45)
   const [showHeadphoneWarning, setShowHeadphoneWarning] = useState(false)
   const [engineStatus, setEngineStatus] = useState('idle')
+  const [needsAudioGesture, setNeedsAudioGesture] = useState(false)
 
   const engineRef = useRef<SessionAudioEngine | null>(null)
   const timerRef = useRef<number | null>(null)
@@ -81,6 +86,7 @@ export function useSequenceController(
   const fadeOutRef = useRef(10)
   const togglePlayRef = useRef<() => Promise<void>>(async () => undefined)
   const pausePlaybackRef = useRef<() => void>(() => undefined)
+  const skipStageRef = useRef<() => void>(() => undefined)
   const advanceRef = useRef<() => void>(() => undefined)
 
   useEffect(() => {
@@ -187,9 +193,21 @@ export function useSequenceController(
     clearTimer()
     engineRef.current?.stop(fadeOutRef.current)
     setPlaying(false)
+    setNeedsAudioGesture(false)
     setEngineStatus(engineRef.current?.getStatus() ?? 'idle')
     setMediaSessionPlaybackState('paused')
   }, [clearTimer])
+
+  const continueAudio = useCallback(async () => {
+    if (!playingRef.current) return
+    const result = await engineRef.current?.resumeContext()
+    if (result === 'running') {
+      setNeedsAudioGesture(false)
+      setMediaSessionPlaybackState('playing')
+    } else if (result === 'suspended') {
+      setNeedsAudioGesture(true)
+    }
+  }, [])
 
   const finishSequence = useCallback(() => {
     clearTimer()
@@ -200,6 +218,7 @@ export function useSequenceController(
     engineRef.current?.stop(fadeOutRef.current)
     setPlaying(false)
     setCrossfading(false)
+    setNeedsAudioGesture(false)
     setCompleted(true)
     completedRef.current = true
     setStageRemainingSec(0)
@@ -301,6 +320,7 @@ export function useSequenceController(
     engine.applyRecipe(current.recipe, masterRef.current)
     await engine.start(current.recipe.fadeInSec)
     setPlaying(true)
+    setNeedsAudioGesture(false)
     setCompleted(false)
     completedRef.current = false
     setEngineStatus(engine.getStatus())
@@ -325,18 +345,6 @@ export function useSequenceController(
     pausePlaybackRef.current = pausePlayback
   }, [togglePlay, pausePlayback])
 
-  useEffect(() => {
-    const unbind = bindMediaSessionHandlers({
-      onPlay: async () => {
-        if (!playingRef.current) await togglePlayRef.current()
-      },
-      onPause: () => {
-        if (playingRef.current) pausePlaybackRef.current()
-      },
-    })
-    return unbind
-  }, [])
-
   const skipStage = useCallback(() => {
     if (completedRef.current) return
     const stages = resolvedRef.current
@@ -346,6 +354,52 @@ export function useSequenceController(
     }
     advance()
   }, [advance, finishSequence])
+
+  useEffect(() => {
+    skipStageRef.current = skipStage
+  }, [skipStage])
+
+  useEffect(() => {
+    const unbind = bindMediaSessionHandlers({
+      onPlay: async () => {
+        if (!playingRef.current) {
+          await togglePlayRef.current()
+        } else {
+          const result = await engineRef.current?.resumeContext()
+          if (result === 'running') setNeedsAudioGesture(false)
+        }
+      },
+      onPause: () => {
+        if (playingRef.current) pausePlaybackRef.current()
+      },
+      onStop: () => {
+        if (playingRef.current) pausePlaybackRef.current()
+      },
+      onNextTrack: () => {
+        skipStageRef.current()
+      },
+    })
+    return unbind
+  }, [])
+
+  useEffect(() => {
+    return bindVisibilityAudioResume({
+      shouldBePlaying: () => playingRef.current,
+      resumeContext: async () => {
+        const engine = engineRef.current
+        if (!engine) return 'none'
+        if (engine.getContextState() === 'running') return 'running'
+        return engine.resumeContext()
+      },
+      onResumed: () => {
+        setNeedsAudioGesture(false)
+        setMediaSessionPlaybackState('playing')
+      },
+      onBlocked: () => {
+        setNeedsAudioGesture(true)
+      },
+    })
+  }, [])
 
   const setMasterVolume = useCallback((value: number) => {
     const next = clamp01(value)
@@ -404,7 +458,9 @@ export function useSequenceController(
     masterVolume,
     showHeadphoneWarning,
     engineStatus,
+    needsAudioGesture,
     togglePlay,
+    continueAudio,
     skipStage,
     setMasterVolume,
     acknowledgeHeadphones,

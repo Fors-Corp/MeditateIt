@@ -76,6 +76,17 @@ export type {
   MediaSessionHandlers,
   SessionMediaMetadata,
 } from './mediaSession'
+export {
+  NOISE_WORKLET_CONTENT_HASH,
+  NOISE_WORKLET_NAME,
+  NOISE_WORKLET_URL,
+  ensureNoiseWorklet,
+} from './noiseWorklet'
+export { bindVisibilityAudioResume } from './visibilityResume'
+export type {
+  ContextResumeResult,
+  VisibilityResumeHandlers,
+} from './visibilityResume'
 export { BINAURAL_REQUIRES_HEADPHONES } from './types'
 export type {
   AudioEngineStatus,

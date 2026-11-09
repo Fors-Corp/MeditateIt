@@ -77,6 +77,33 @@
   animation: play-pulse 2.8s var(--ease-out) infinite;
 }
 
+.audio-resume-prompt {
+  appearance: none;
+  display: block;
+  width: min(18rem, 92%);
+  margin: var(--space-3) auto 0;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-elevated));
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+.audio-resume-prompt:hover {
+  background: color-mix(in srgb, var(--accent) 20%, var(--bg-elevated));
+}
+
+.audio-resume-prompt:active {
+  transform: scale(0.98);
+}
+
 .session-engine-status {
   margin-top: var(--space-3);
   font-size: 0.85rem;

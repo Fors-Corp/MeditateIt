@@ -6,6 +6,13 @@
 export interface MediaSessionHandlers {
   onPlay: () => void | Promise<void>
   onPause: () => void
+  /** Optional — headset / lock-screen Stop. */
+  onStop?: () => void
+  /**
+   * Optional — sequence skip-stage via `nexttrack` where the OS exposes it.
+   * Omit for single-preset sessions.
+   */
+  onNextTrack?: () => void
 }
 
 export interface SessionMediaMetadata {
@@ -15,6 +22,13 @@ export interface SessionMediaMetadata {
 }
 
 const DEFAULT_ARTIST = 'MeditateIt'
+
+const ACTION_KEYS = [
+  'play',
+  'pause',
+  'stop',
+  'nexttrack',
+] as const satisfies readonly MediaSessionAction[]
 
 export function isMediaSessionAvailable(): boolean {
   return typeof navigator !== 'undefined' && 'mediaSession' in navigator
@@ -44,8 +58,19 @@ export function setMediaSessionPlaybackState(
   }
 }
 
+function setAction(
+  action: MediaSessionAction,
+  handler: MediaSessionActionHandler | null,
+): void {
+  try {
+    navigator.mediaSession.setActionHandler(action, handler)
+  } catch {
+    /* action unsupported on this platform */
+  }
+}
+
 /**
- * Bind play/pause action handlers. Returns an unbind function.
+ * Bind Media Session action handlers. Returns an unbind function.
  * Clears handlers and playback state on unbind.
  */
 export function bindMediaSessionHandlers(
@@ -61,18 +86,30 @@ export function bindMediaSessionHandlers(
   const onPause = () => {
     handlers.onPause()
   }
-
-  try {
-    navigator.mediaSession.setActionHandler('play', onPlay)
-    navigator.mediaSession.setActionHandler('pause', onPause)
-  } catch {
-    /* action handlers rejected */
+  const onStop = () => {
+    if (handlers.onStop) {
+      handlers.onStop()
+    } else {
+      handlers.onPause()
+    }
   }
+  const onNext =
+    handlers.onNextTrack != null
+      ? () => {
+          handlers.onNextTrack?.()
+        }
+      : null
+
+  setAction('play', onPlay)
+  setAction('pause', onPause)
+  setAction('stop', onStop)
+  setAction('nexttrack', onNext)
 
   return () => {
+    for (const action of ACTION_KEYS) {
+      setAction(action, null)
+    }
     try {
-      navigator.mediaSession.setActionHandler('play', null)
-      navigator.mediaSession.setActionHandler('pause', null)
       navigator.mediaSession.playbackState = 'none'
       navigator.mediaSession.metadata = null
     } catch {
