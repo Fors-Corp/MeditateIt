@@ -3,11 +3,12 @@ import {
   SessionControls,
   useSessionController,
 } from '../components/session'
-import { messages } from '../i18n'
+import { useI18n } from '../i18n/useI18n'
 
 export default function SessionPage() {
   const { presetId } = useParams<{ presetId?: string }>()
   const session = useSessionController(presetId)
+  const { messages } = useI18n()
 
   return (
     <section className="session-page" aria-labelledby="session-heading">

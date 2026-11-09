@@ -1,4 +1,4 @@
-import { messages } from '../../i18n'
+import { useI18n } from '../../i18n/useI18n'
 import { useModalDialogFocus } from './useModalDialogFocus'
 
 interface SavePresetDialogProps {
@@ -26,9 +26,12 @@ export function SavePresetDialog({
   onCancel,
   onSaveNew,
   onOverwrite,
-  title = messages.dialogs.savePresetTitle,
-  description = messages.dialogs.savePresetBody,
+  title,
+  description,
 }: SavePresetDialogProps) {
+  const { messages } = useI18n()
+  const resolvedTitle = title ?? messages.dialogs.savePresetTitle
+  const resolvedDescription = description ?? messages.dialogs.savePresetBody
   const panelRef = useModalDialogFocus(open, onCancel, {
     initialFocus: 'first',
   })
@@ -50,8 +53,8 @@ export function SavePresetDialog({
         aria-describedby="save-preset-body"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="save-preset-title">{title}</h2>
-        <p id="save-preset-body">{description}</p>
+        <h2 id="save-preset-title">{resolvedTitle}</h2>
+        <p id="save-preset-body">{resolvedDescription}</p>
         <label className="save-preset-field">
           {messages.dialogs.name}
           <input

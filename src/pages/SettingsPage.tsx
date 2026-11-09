@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { messages } from '../i18n'
+import LanguagePicker from '../components/LanguagePicker'
+import {
+  formatLocaleDateTime,
+  type Messages,
+} from '../i18n'
+import { useI18n } from '../i18n/useI18n'
 import {
   applySessionHistoryRetention,
   clearSessionHistory,
@@ -20,28 +25,18 @@ import {
   type SessionRecord,
 } from '../storage'
 
-function formatWhen(iso: string): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso
-  return d.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function formatDuration(sec: number): string {
-  if (sec < 60) return `${sec}s`
+function formatDuration(sec: number, messages: Messages): string {
+  if (sec < 60) return messages.home.historySeconds(sec)
   const m = Math.floor(sec / 60)
   const s = sec % 60
-  if (m < 60) return s > 0 ? `${m}m ${s}s` : `${m}m`
+  if (m < 60) return messages.home.historyMinutes(m, s)
   const h = Math.floor(m / 60)
   const rm = m % 60
-  return rm > 0 ? `${h}h ${rm}m` : `${h}h`
+  return messages.home.historyHours(h, rm)
 }
 
 export default function SettingsPage() {
+  const { messages } = useI18n()
   const fileRef = useRef<HTMLInputElement>(null)
   const [history, setHistory] = useState<SessionRecord[]>([])
   const [busy, setBusy] = useState(false)
@@ -195,8 +190,14 @@ export default function SettingsPage() {
 
   return (
     <div className="settings-page">
+      <section className="settings-section" aria-labelledby="language-heading">
+        <h1 id="language-heading">{messages.settings.languageHeading}</h1>
+        <p className="settings-lede">{messages.settings.languageLede}</p>
+        <LanguagePicker disabled={busy} />
+      </section>
+
       <section className="settings-section" aria-labelledby="backup-heading">
-        <h1 id="backup-heading">{messages.settings.backupHeading}</h1>
+        <h2 id="backup-heading">{messages.settings.backupHeading}</h2>
         <p className="settings-lede">{messages.settings.backupLede}</p>
 
         <div className="settings-actions">
@@ -320,9 +321,11 @@ export default function SettingsPage() {
             {history.map((row) => (
               <li key={row.id} className="history-row">
                 <span className="history-name">{row.presetName}</span>
-                <span className="history-meta">{formatWhen(row.endedAt)}</span>
+                <span className="history-meta">
+                  {formatLocaleDateTime(row.endedAt)}
+                </span>
                 <span className="history-duration">
-                  {formatDuration(row.durationSec)}
+                  {formatDuration(row.durationSec, messages)}
                 </span>
               </li>
             ))}

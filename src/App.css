@@ -507,6 +507,16 @@
   outline-offset: 3px;
 }
 
+.language-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.language-picker-row {
+  flex-wrap: wrap;
+}
+
 .settings-fieldset {
   margin: 0;
   padding: var(--space-3);

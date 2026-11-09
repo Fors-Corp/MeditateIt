@@ -103,4 +103,9 @@ export interface UserPrefs {
   preferHeadphonesAck: boolean
   reduceMotion: boolean
   defaultDurationSec: number | null
+  /**
+   * UI locale preference (`en` | `es` | `ca` | `fr` | `pt`).
+   * `null` = follow the browser language when supported, else `en`.
+   */
+  locale: string | null
 }

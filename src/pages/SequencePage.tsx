@@ -3,11 +3,12 @@ import {
   SequenceControls,
   useSequenceController,
 } from '../components/sequence'
-import { messages } from '../i18n'
+import { useI18n } from '../i18n/useI18n'
 
 export default function SequencePage() {
   const { sequenceId } = useParams<{ sequenceId?: string }>()
   const session = useSequenceController(sequenceId)
+  const { messages } = useI18n()
 
   return (
     <section className="session-page" aria-labelledby="sequence-heading">

@@ -1,3 +1,4 @@
+import { isLocaleCode } from '../i18n/locales.ts'
 import {
   DEFAULT_FADE_IN_SEC,
   DEFAULT_FADE_OUT_SEC,
@@ -22,6 +23,7 @@ export const DEFAULT_PREFS: Readonly<UserPrefs> = Object.freeze({
   preferHeadphonesAck: false,
   reduceMotion: false,
   defaultDurationSec: null,
+  locale: null,
 })
 
 function clamp01(n: number, fallback: number): number {
@@ -64,6 +66,13 @@ export function normalizePrefs(raw: unknown): UserPrefs {
         ? null
         : base.defaultDurationSec
 
+  const locale =
+    raw.locale === null
+      ? null
+      : isLocaleCode(raw.locale)
+        ? raw.locale
+        : base.locale
+
   return {
     lastPresetId,
     lastRecipe,
@@ -92,6 +101,7 @@ export function normalizePrefs(raw: unknown): UserPrefs {
         ? raw.reduceMotion
         : base.reduceMotion,
     defaultDurationSec,
+    locale,
   }
 }
 

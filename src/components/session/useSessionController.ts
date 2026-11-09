@@ -5,7 +5,7 @@ import {
   setMediaSessionPlaybackState,
   setSessionMediaMetadata,
 } from '../../audio'
-import { messageForPresetError, messages } from '../../i18n'
+import { getMessages, messageForPresetError } from '../../i18n'
 import { cloneRecipe } from '../../presets'
 import type { Preset, SessionRecipe } from '../../presets'
 import {
@@ -673,11 +673,12 @@ export function useSessionController(
     preset.source === 'user' && preset.id !== 'custom'
 
   const openSavePreset = useCallback(() => {
+    const m = getMessages()
     const defaultName =
       preset.id === 'custom' || preset.source === 'system'
-        ? preset.name === 'Custom'
-          ? 'My preset'
-          : `${preset.name} (mine)`
+        ? preset.name === 'Custom' || preset.name === m.session.customName
+          ? m.session.myPreset
+          : m.session.mineSuffix(preset.name)
         : preset.name
     setSavePresetName(defaultName)
     setSavePresetError(null)
@@ -699,7 +700,7 @@ export function useSessionController(
     async (mode: 'new' | 'overwrite') => {
       const name = savePresetName.trim()
       if (!name) {
-        setSavePresetError(messages.errors.preset.nameRequired)
+        setSavePresetError(getMessages().errors.preset.nameRequired)
         return
       }
       setSavePresetBusy(true)

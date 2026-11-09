@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
-import { messages } from '../i18n'
+import { useI18n } from '../i18n/useI18n'
 
 /** Chromium beforeinstallprompt (not in all DOM lib versions). */
 interface BeforeInstallPromptEvent extends Event {
@@ -13,6 +13,7 @@ interface BeforeInstallPromptEvent extends Event {
  * No nag modal — only surfaces when an update is waiting or install is available.
  */
 export default function PwaChrome() {
+  const { messages } = useI18n()
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,

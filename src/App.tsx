@@ -2,7 +2,8 @@ import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import './App.css'
 import AppFooter from './components/AppFooter'
 import PwaChrome from './components/PwaChrome'
-import { messages } from './i18n'
+import type { Messages } from './i18n'
+import { useI18n } from './i18n/useI18n'
 import HomePage from './pages/HomePage'
 import PrivacyPage from './pages/PrivacyPage'
 import SequencePage from './pages/SequencePage'
@@ -10,7 +11,7 @@ import SessionPage from './pages/SessionPage'
 import SettingsPage from './pages/SettingsPage'
 import TermsPage from './pages/TermsPage'
 
-function headerLabel(pathname: string): string {
+function headerLabel(pathname: string, messages: Messages): string {
   if (pathname.startsWith('/settings')) return messages.app.taglineSettings
   if (pathname.startsWith('/privacy')) return messages.app.taglinePrivacy
   if (pathname.startsWith('/terms')) return messages.app.taglineTerms
@@ -20,6 +21,7 @@ function headerLabel(pathname: string): string {
 function App() {
   const { pathname } = useLocation()
   const isHome = pathname === '/'
+  const { messages } = useI18n()
 
   return (
     <div className={`app-shell${isHome ? ' is-home' : ''}`}>
@@ -33,7 +35,7 @@ function App() {
             <span className="brand-mark" aria-hidden="true" />
             {messages.app.brand}
           </Link>
-          <p className="app-tagline">{headerLabel(pathname)}</p>
+          <p className="app-tagline">{headerLabel(pathname, messages)}</p>
         </header>
       )}
 

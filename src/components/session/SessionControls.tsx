@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { messages } from '../../i18n'
+import { systemPresetLabel, type Messages } from '../../i18n'
+import { useI18n } from '../../i18n/useI18n'
 import {
   NATURE_SOUNDS,
   NEUTRAL_LAYER_EQ,
@@ -17,32 +18,44 @@ import { HeadphoneWarning } from './HeadphoneWarning'
 import { SavePresetDialog } from './SavePresetDialog'
 import './session.css'
 
-const EQ_BANDS: { id: EqBandId; label: string }[] = [
-  { id: 'lowDb', label: 'Low' },
-  { id: 'midDb', label: 'Mid' },
-  { id: 'highDb', label: 'High' },
-]
-
 const NOISE_KINDS = ['pink', 'brown', 'white'] as const
-const BEAT_MODES = [
-  { id: 'off', label: 'Off' },
-  { id: 'isochronic', label: 'Isochronic' },
-  { id: 'binaural', label: 'Binaural' },
-] as const
+const BEAT_MODE_IDS = ['off', 'isochronic', 'binaural'] as const
+const DURATION_PRESETS = [5, 10, 15, 25, 45] as const
 
-const DURATION_PRESETS = [
-  { minutes: 5, label: '5m' },
-  { minutes: 10, label: '10m' },
-  { minutes: 15, label: '15m' },
-  { minutes: 25, label: '25m' },
-  { minutes: 45, label: '45m' },
-] as const
-
-function formatTime(totalSec: number | null, openEnded: boolean): string {
-  if (openEnded || totalSec == null) return 'Open'
+function formatTime(
+  totalSec: number | null,
+  openEnded: boolean,
+  openLabel: string,
+): string {
+  if (openEnded || totalSec == null) return openLabel
   const m = Math.floor(totalSec / 60)
   const s = totalSec % 60
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
+function noiseLabel(kind: (typeof NOISE_KINDS)[number], messages: Messages): string {
+  if (kind === 'pink') return messages.controls.noisePink
+  if (kind === 'brown') return messages.controls.noiseBrown
+  return messages.controls.noiseWhite
+}
+
+function beatModeLabel(
+  id: (typeof BEAT_MODE_IDS)[number],
+  messages: Messages,
+): string {
+  if (id === 'off') return messages.controls.beatOff
+  if (id === 'isochronic') return messages.controls.beatIsochronic
+  return messages.controls.beatBinaural
+}
+
+function natureLabel(
+  id: (typeof NATURE_SOUNDS)[number],
+  messages: Messages,
+): string {
+  if (id === 'rain') return messages.controls.natureRain
+  if (id === 'shore') return messages.controls.natureShore
+  if (id === 'wind') return messages.controls.natureWind
+  return messages.controls.natureForest
 }
 
 interface SessionControlsProps {
@@ -50,6 +63,7 @@ interface SessionControlsProps {
 }
 
 export function SessionControls({ session }: SessionControlsProps) {
+  const { messages } = useI18n()
   const {
     ready,
     preset,
@@ -104,6 +118,11 @@ export function SessionControls({ session }: SessionControlsProps) {
   }
 
   const activeSolfeggio = recipe.tone.frequencyHz
+  const timerText = formatTime(
+    remainingSec,
+    openEnded,
+    messages.controls.openTimer,
+  )
 
   const engineStatusLabel =
     engineStatus === 'unavailable'
@@ -116,16 +135,24 @@ export function SessionControls({ session }: SessionControlsProps) {
             ? messages.session.running
             : messages.session.ready
 
+  const eqBands: { id: EqBandId; label: string }[] = [
+    { id: 'lowDb', label: messages.controls.eqLow },
+    { id: 'midDb', label: messages.controls.eqMid },
+    { id: 'highDb', label: messages.controls.eqHigh },
+  ]
+
   return (
     <div className={`session-panel${playing ? ' is-playing' : ''}`}>
       <div className="session-hero">
-        <p className="session-kicker">{preset.name}</p>
+        <p className="session-kicker">
+          {systemPresetLabel(preset.id, preset.name)}
+        </p>
         {/* Timer is visual only — no per-second aria-live. Status region below. */}
         <p className="session-timer" aria-hidden="true">
-          {formatTime(remainingSec, openEnded)}
+          {timerText}
         </p>
         <span className="visually-hidden">
-          Remaining {formatTime(remainingSec, openEnded)}
+          {messages.controls.remainingAria(timerText)}
         </span>
         <button
           type="button"
@@ -163,10 +190,10 @@ export function SessionControls({ session }: SessionControlsProps) {
 
       <div className="control-block">
         <div className="control-row">
-          <h2 id="preset-switch-label">Preset</h2>
+          <h2 id="preset-switch-label">{messages.controls.preset}</h2>
           {crossfading && (
             <span className="crossfade-hint" aria-live="polite">
-              Fading ~2s
+              {messages.controls.fadingHint}
             </span>
           )}
         </div>
@@ -187,21 +214,21 @@ export function SessionControls({ session }: SessionControlsProps) {
                 disabled={crossfading && !selected}
                 onClick={() => switchPreset(p.id)}
               >
-                {p.name}
+                {systemPresetLabel(p.id, p.name)}
               </button>
             )
           })}
         </div>
         <p className="layer-note">
           {playing
-            ? 'Switching while playing crossfades over ~2 seconds.'
-            : 'Pick a starting recipe, then press Play.'}
+            ? messages.controls.switchWhilePlaying
+            : messages.controls.pickThenPlay}
         </p>
       </div>
 
       <div className="control-block">
         <div className="control-row">
-          <h2 id="master-label">Master</h2>
+          <h2 id="master-label">{messages.controls.master}</h2>
           <span className="control-value">
             {Math.round(masterVolume * 100)}%
           </span>
@@ -219,14 +246,14 @@ export function SessionControls({ session }: SessionControlsProps) {
 
       <div className="control-block">
         <div className="control-row">
-          <h2 id="timer-label">Duration</h2>
+          <h2 id="timer-label">{messages.controls.duration}</h2>
           <label className="open-ended">
             <input
               type="checkbox"
               checked={openEnded}
               onChange={(e) => setOpenEnded(e.target.checked)}
             />
-            Open-ended
+            {messages.controls.openEnded}
           </label>
         </div>
         {!openEnded && (
@@ -235,20 +262,20 @@ export function SessionControls({ session }: SessionControlsProps) {
             role="radiogroup"
             aria-labelledby="timer-label"
           >
-            {DURATION_PRESETS.map((d) => {
+            {DURATION_PRESETS.map((minutes) => {
               const selected =
                 remainingSec != null &&
-                Math.round(remainingSec / 60) === d.minutes
+                Math.round(remainingSec / 60) === minutes
               return (
                 <button
-                  key={d.minutes}
+                  key={minutes}
                   type="button"
                   role="radio"
                   aria-checked={selected}
                   className={`chip${selected ? ' is-selected' : ''}`}
-                  onClick={() => setDurationMinutes(d.minutes)}
+                  onClick={() => setDurationMinutes(minutes)}
                 >
-                  {d.label}
+                  {messages.controls.minutesShort(minutes)}
                 </button>
               )
             })}
@@ -257,10 +284,10 @@ export function SessionControls({ session }: SessionControlsProps) {
       </div>
 
       <div className="control-block">
-        <h2 id="fade-label">Fade</h2>
+        <h2 id="fade-label">{messages.controls.fade}</h2>
         <div className="fade-grid">
           <label>
-            In {recipe.fadeInSec}s
+            {messages.controls.fadeIn(recipe.fadeInSec)}
             <input
               type="range"
               min={0}
@@ -271,7 +298,7 @@ export function SessionControls({ session }: SessionControlsProps) {
             />
           </label>
           <label>
-            Out {recipe.fadeOutSec}s
+            {messages.controls.fadeOut(recipe.fadeOutSec)}
             <input
               type="range"
               min={0}
@@ -285,13 +312,12 @@ export function SessionControls({ session }: SessionControlsProps) {
       </div>
 
       <div className="control-block">
-        <h2 id="layers-label">Layers</h2>
-        <p className="layer-note">
-          Turn a layer on to shape its sound — each includes a simple EQ.
-        </p>
+        <h2 id="layers-label">{messages.controls.layers}</h2>
+        <p className="layer-note">{messages.controls.layersNote}</p>
         <div className="layer-list">
           <LayerRow
-            name="Noise"
+            name={messages.controls.noise}
+            volumeAria={messages.controls.volumeAria(messages.controls.noise)}
             enabled={recipe.noise.enabled}
             gain={recipe.gains.noise}
             onToggle={() => toggleLayer('noise')}
@@ -300,7 +326,7 @@ export function SessionControls({ session }: SessionControlsProps) {
             <div
               className="chip-row"
               role="radiogroup"
-              aria-label="Noise color"
+              aria-label={messages.controls.noiseColor}
             >
               {NOISE_KINDS.map((kind) => {
                 const selected = recipe.noise.kind === kind
@@ -313,14 +339,16 @@ export function SessionControls({ session }: SessionControlsProps) {
                     className={`chip${selected ? ' is-selected' : ''}`}
                     onClick={() => setNoiseKind(kind)}
                   >
-                    {kind}
+                    {noiseLabel(kind, messages)}
                   </button>
                 )
               })}
             </div>
             <LayerEqControls
               layer="noise"
-              layerName="Noise"
+              layerName={messages.controls.noise}
+              messages={messages}
+              bands={eqBands}
               eq={recipeLayerEq(recipe.noise.eq)}
               onBand={(band, db) => setLayerEqBand('noise', band, db)}
               onReset={() => resetLayerEq('noise')}
@@ -328,7 +356,8 @@ export function SessionControls({ session }: SessionControlsProps) {
           </LayerRow>
 
           <LayerRow
-            name="Tone"
+            name={messages.controls.tone}
+            volumeAria={messages.controls.volumeAria(messages.controls.tone)}
             enabled={recipe.tone.enabled}
             gain={recipe.gains.tone}
             onToggle={() => toggleLayer('tone')}
@@ -337,7 +366,7 @@ export function SessionControls({ session }: SessionControlsProps) {
             <div
               className="chip-row tone-hz-row"
               role="radiogroup"
-              aria-label="Tone (Hz)"
+              aria-label={messages.controls.toneHz}
             >
               {SOLFEGGIO_FREQUENCIES.map((hz) => {
                 const selected = activeSolfeggio === hz
@@ -355,13 +384,12 @@ export function SessionControls({ session }: SessionControlsProps) {
                 )
               })}
             </div>
-            <p className="layer-note">
-              Common named frequencies as pure tones — for listening preference,
-              not proven health effects.
-            </p>
+            <p className="layer-note">{messages.controls.toneNote}</p>
             <LayerEqControls
               layer="tone"
-              layerName="Tone"
+              layerName={messages.controls.tone}
+              messages={messages}
+              bands={eqBands}
               eq={recipeLayerEq(recipe.tone.eq)}
               onBand={(band, db) => setLayerEqBand('tone', band, db)}
               onReset={() => resetLayerEq('tone')}
@@ -369,7 +397,8 @@ export function SessionControls({ session }: SessionControlsProps) {
           </LayerRow>
 
           <LayerRow
-            name="Beat"
+            name={messages.controls.beat}
+            volumeAria={messages.controls.volumeAria(messages.controls.beat)}
             enabled={recipe.beat.enabled && recipe.beat.mode !== 'off'}
             gain={recipe.gains.beat}
             onToggle={() => toggleLayer('beat')}
@@ -378,27 +407,27 @@ export function SessionControls({ session }: SessionControlsProps) {
             <div
               className="chip-row"
               role="radiogroup"
-              aria-label="Beat mode"
+              aria-label={messages.controls.beatMode}
             >
-              {BEAT_MODES.map((mode) => {
-                const selected = recipe.beat.mode === mode.id
+              {BEAT_MODE_IDS.map((id) => {
+                const selected = recipe.beat.mode === id
                 return (
                   <button
-                    key={mode.id}
+                    key={id}
                     type="button"
                     role="radio"
                     aria-checked={selected}
                     className={`chip${selected ? ' is-selected' : ''}`}
-                    onClick={() => setBeatMode(mode.id)}
+                    onClick={() => setBeatMode(id)}
                   >
-                    {mode.label}
+                    {beatModeLabel(id, messages)}
                   </button>
                 )
               })}
             </div>
             {recipe.beat.mode !== 'off' && (
               <label className="beat-rate">
-                Rate {recipe.beat.beatHz.toFixed(1)} Hz
+                {messages.controls.beatRate(recipe.beat.beatHz.toFixed(1))}
                 <input
                   type="range"
                   min={0.5}
@@ -411,7 +440,9 @@ export function SessionControls({ session }: SessionControlsProps) {
             )}
             <LayerEqControls
               layer="beat"
-              layerName="Beat"
+              layerName={messages.controls.beat}
+              messages={messages}
+              bands={eqBands}
               eq={recipeLayerEq(recipe.beat.eq)}
               onBand={(band, db) => setLayerEqBand('beat', band, db)}
               onReset={() => resetLayerEq('beat')}
@@ -419,7 +450,8 @@ export function SessionControls({ session }: SessionControlsProps) {
           </LayerRow>
 
           <LayerRow
-            name="Nature"
+            name={messages.controls.nature}
+            volumeAria={messages.controls.volumeAria(messages.controls.nature)}
             enabled={recipe.nature.enabled}
             gain={recipe.gains.nature}
             onToggle={() => toggleLayer('nature')}
@@ -428,7 +460,7 @@ export function SessionControls({ session }: SessionControlsProps) {
             <div
               className="chip-row"
               role="radiogroup"
-              aria-label="Nature sound"
+              aria-label={messages.controls.natureSound}
             >
               {NATURE_SOUNDS.map((id) => {
                 const selected = (recipe.nature.soundId ?? 'rain') === id
@@ -441,13 +473,15 @@ export function SessionControls({ session }: SessionControlsProps) {
                     className={`chip${selected ? ' is-selected' : ''}`}
                     onClick={() => setNatureSound(id)}
                   >
-                    {id}
+                    {natureLabel(id, messages)}
                   </button>
                 )
               })}
             </div>
             <label className="beat-rate">
-              Brightness {Math.round((recipe.nature.brightness ?? 0.5) * 100)}%
+              {messages.controls.brightness(
+                Math.round((recipe.nature.brightness ?? 0.5) * 100),
+              )}
               <input
                 type="range"
                 min={0}
@@ -457,12 +491,14 @@ export function SessionControls({ session }: SessionControlsProps) {
                 onChange={(e) =>
                   setNatureBrightness(Number(e.target.value))
                 }
-                aria-label="Nature brightness"
+                aria-label={messages.controls.natureBrightness}
               />
             </label>
             <LayerEqControls
               layer="nature"
-              layerName="Nature"
+              layerName={messages.controls.nature}
+              messages={messages}
+              bands={eqBands}
               eq={recipeLayerEq(recipe.nature.eq)}
               onBand={(band, db) => setLayerEqBand('nature', band, db)}
               onReset={() => resetLayerEq('nature')}
@@ -501,6 +537,7 @@ export function SessionControls({ session }: SessionControlsProps) {
 
 interface LayerRowProps {
   name: string
+  volumeAria: string
   enabled: boolean
   gain: number
   onToggle: () => void
@@ -510,6 +547,7 @@ interface LayerRowProps {
 
 function LayerRow({
   name,
+  volumeAria,
   enabled,
   gain,
   onToggle,
@@ -537,7 +575,7 @@ function LayerRow({
         value={gain}
         disabled={!enabled}
         onChange={(e) => onGain(Number(e.target.value))}
-        aria-label={`${name} volume`}
+        aria-label={volumeAria}
       />
       {enabled && children}
     </div>
@@ -547,6 +585,8 @@ function LayerRow({
 interface LayerEqControlsProps {
   layer: EqLayerId
   layerName: string
+  messages: Messages
+  bands: { id: EqBandId; label: string }[]
   eq: LayerEqParams
   onBand: (band: EqBandId, valueDb: number) => void
   onReset: () => void
@@ -568,26 +608,32 @@ function isNeutralEq(eq: LayerEqParams): boolean {
 function LayerEqControls({
   layer,
   layerName,
+  messages,
+  bands,
   eq,
   onBand,
   onReset,
 }: LayerEqControlsProps) {
   const neutral = isNeutralEq(eq)
   return (
-    <div className="layer-eq" role="group" aria-label={`${layerName} EQ`}>
+    <div
+      className="layer-eq"
+      role="group"
+      aria-label={messages.controls.eqGroup(layerName)}
+    >
       <div className="layer-eq-head">
-        <span className="layer-eq-label">EQ</span>
+        <span className="layer-eq-label">{messages.controls.eq}</span>
         <button
           type="button"
           className="layer-eq-reset"
           disabled={neutral}
           onClick={onReset}
         >
-          Flat
+          {messages.controls.flat}
         </button>
       </div>
       <div className="layer-eq-bands">
-        {EQ_BANDS.map((band) => (
+        {bands.map((band) => (
           <label key={band.id} className="layer-eq-band">
             <span>
               {band.label}{' '}
@@ -600,7 +646,7 @@ function LayerEqControls({
               step={0.5}
               value={eq[band.id]}
               onChange={(e) => onBand(band.id, Number(e.target.value))}
-              aria-label={`${layerName} ${band.label} EQ`}
+              aria-label={messages.controls.eqBandAria(layerName, band.label)}
               data-layer={layer}
               data-eq-band={band.id}
             />

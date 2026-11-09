@@ -1,6 +1,5 @@
 /**
- * English message catalog (EN-only product).
- * Future locales can mirror this module shape; do not add a second locale yet.
+ * English message catalog — canonical shape for all locales.
  */
 
 export const en = {
@@ -45,6 +44,13 @@ export const en = {
     minutes: (m: number) => `${m} min`,
     replay: 'Replay',
     sequenceTag: 'Sequence',
+    sequenceDuration: (m: number, stages: number) =>
+      `${m} min · ${stages} stages`,
+    historySeconds: (s: number) => `${s}s`,
+    historyMinutes: (m: number, s: number) =>
+      s > 0 ? `${m}m ${s}s` : `${m}m`,
+    historyHours: (h: number, m: number) =>
+      m > 0 ? `${h}h ${m}m` : `${h}h`,
   },
 
   blurbs: {
@@ -55,7 +61,51 @@ export const en = {
     'deep-rest': 'Open-ended brown + shore wash + low tone',
   } as Record<string, string>,
 
+  systemPresets: {
+    'daily-calm': 'Daily calm',
+    sleep: 'Sleep',
+    focus: 'Focus',
+    'anxiety-softener': 'Soft calm',
+    'deep-rest': 'Deep rest',
+  } as Record<string, string>,
+
+  systemSequences: {
+    'wind-down': {
+      name: 'Wind down',
+      summary: 'Soft calm → pink bed → sleep',
+      stages: {
+        'wd-1': 'Soft landing',
+        'wd-2': 'Pink settle',
+        'wd-3': 'Settle',
+      },
+    },
+    'focus-block': {
+      name: 'Focus block',
+      summary: 'Calm arrive → focus → soft close',
+      stages: {
+        'fb-1': 'Arrive',
+        'fb-2': 'Focus work',
+        'fb-3': 'Soft close',
+      },
+    },
+    'deep-sleep-ramp': {
+      name: 'Night wind-down',
+      summary: 'Pink → ~5 Hz glide → night bed',
+      stages: {
+        'ds-1': 'Pink unwind',
+        'ds-2': '~5 Hz glide',
+        'ds-3': 'Night bed',
+      },
+    },
+  } as Record<
+    string,
+    { name: string; summary: string; stages: Record<string, string> }
+  >,
+
   settings: {
+    languageHeading: 'Language',
+    languageLede:
+      'Choose the language for MeditateIt on this device. Dates and times follow this locale.',
     backupHeading: 'Backup',
     backupLede:
       'Download or restore prefs, saved presets, sequences, and session history as JSON. Export includes finished listens by default. No account — the file stays on this device.',
@@ -150,6 +200,60 @@ export const en = {
     exploreNote:
       'Prefer a guided multi-stage path? Sequences are on the home screen.',
     browseSequences: 'Browse sequences',
+    customName: 'Custom',
+    myPreset: 'My preset',
+    mineSuffix: (name: string) => `${name} (mine)`,
+  },
+
+  controls: {
+    preset: 'Preset',
+    fadingHint: 'Fading ~2s',
+    switchWhilePlaying:
+      'Switching while playing crossfades over ~2 seconds.',
+    pickThenPlay: 'Pick a starting recipe, then press Play.',
+    master: 'Master',
+    duration: 'Duration',
+    openEnded: 'Open-ended',
+    openTimer: 'Open',
+    remainingAria: (time: string) => `Remaining ${time}`,
+    fade: 'Fade',
+    fadeIn: (s: number) => `In ${s}s`,
+    fadeOut: (s: number) => `Out ${s}s`,
+    layers: 'Layers',
+    layersNote:
+      'Turn a layer on to shape its sound — each includes a simple EQ.',
+    noise: 'Noise',
+    noiseColor: 'Noise color',
+    tone: 'Tone',
+    toneHz: 'Tone (Hz)',
+    toneNote:
+      'Common named frequencies as pure tones — for listening preference, not proven health effects.',
+    beat: 'Beat',
+    beatMode: 'Beat mode',
+    beatRate: (hz: string) => `Rate ${hz} Hz`,
+    nature: 'Nature',
+    natureSound: 'Nature sound',
+    natureBrightness: 'Nature brightness',
+    brightness: (pct: number) => `Brightness ${pct}%`,
+    volumeAria: (name: string) => `${name} volume`,
+    eq: 'EQ',
+    eqGroup: (name: string) => `${name} EQ`,
+    eqBandAria: (layer: string, band: string) => `${layer} ${band} EQ`,
+    flat: 'Flat',
+    eqLow: 'Low',
+    eqMid: 'Mid',
+    eqHigh: 'High',
+    beatOff: 'Off',
+    beatIsochronic: 'Isochronic',
+    beatBinaural: 'Binaural',
+    minutesShort: (m: number) => `${m}m`,
+    noisePink: 'pink',
+    noiseBrown: 'brown',
+    noiseWhite: 'white',
+    natureRain: 'rain',
+    natureShore: 'shore',
+    natureWind: 'wind',
+    natureForest: 'forest',
   },
 
   sequence: {
@@ -185,6 +289,18 @@ export const en = {
     saveSequence: 'Save sequence',
     saveACopy: 'Save a copy',
     master: 'Master',
+    skippedTo: (name: string) => `Skipped to ${name}`,
+    nowPlaying: (name: string) => `Now playing ${name}`,
+    playingStage: (name: string, n: number, total: number) =>
+      `Playing ${name} · stage ${n} of ${total}`,
+    stageOfNamed: (n: number, total: number, name: string) =>
+      `Stage ${n} of ${total} · ${name}`,
+    mineSuffix: (name: string) => `${name} (mine)`,
+    paused: 'Paused',
+    savedOnDevice: (name: string) => `Saved “${name}” on this device`,
+    savedFrom: (name: string) => `Saved from ${name}`,
+    stagesCount: (n: number) => `${n} stages`,
+    saveFailed: 'Could not save sequence',
   },
 
   pwa: {
@@ -230,3 +346,16 @@ export const en = {
 } as const
 
 export type EnMessages = typeof en
+
+/** Widen EN literal strings so other locales can assign the same shape. */
+type WidenStrings<T> = T extends string
+  ? string
+  : T extends (...args: infer A) => infer R
+    ? (...args: A) => WidenStrings<R>
+    : T extends readonly (infer U)[]
+      ? WidenStrings<U>[]
+      : T extends object
+        ? { [K in keyof T]: WidenStrings<T[K]> }
+        : T
+
+export type Messages = WidenStrings<EnMessages>
