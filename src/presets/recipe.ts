@@ -40,7 +40,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 function clampEqDb(value: unknown): number {
-  if (typeof value !== 'number' || Number.isNaN(value)) return 0
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 0
   return Math.min(12, Math.max(-12, value))
 }
 
@@ -67,6 +67,25 @@ export function cloneLayerEq(eq?: LayerEqParams | null): LayerEqParams {
     midDb: clampEqDb(eq.midDb),
     highDb: clampEqDb(eq.highDb),
   }
+}
+
+/**
+ * Structural gate used by import / prefs. Does not trust nested field types —
+ * pair with {@link normalizeRecipe} before persistence or playback.
+ */
+export function isValidRecipe(value: unknown): value is SessionRecipe {
+  if (!isObject(value)) return false
+  return (
+    isObject(value.noise) &&
+    isObject(value.tone) &&
+    isObject(value.beat) &&
+    isObject(value.nature) &&
+    isObject(value.gains) &&
+    typeof value.fadeInSec === 'number' &&
+    Number.isFinite(value.fadeInSec) &&
+    typeof value.fadeOutSec === 'number' &&
+    Number.isFinite(value.fadeOutSec)
+  )
 }
 
 /** Blank / custom starting recipe (pink + soft 528, beats off). */
@@ -109,18 +128,10 @@ export function createBlankRecipe(): SessionRecipe {
 /**
  * Deep-normalize an unknown recipe from backup / prefs.
  * Returns null when the shape is not a usable SessionRecipe.
+ * Whitelists enums, clamps audio-safe numeric ranges, drops unknown keys.
  */
 export function normalizeRecipe(raw: unknown): SessionRecipe | null {
-  if (!isObject(raw)) return null
-  if (
-    !isObject(raw.noise) ||
-    !isObject(raw.tone) ||
-    !isObject(raw.beat) ||
-    !isObject(raw.nature) ||
-    !isObject(raw.gains)
-  ) {
-    return null
-  }
+  if (!isValidRecipe(raw)) return null
 
   const noiseKind = raw.noise.kind
   if (typeof noiseKind !== 'string' || !NOISE_KINDS.has(noiseKind as NoiseKind)) {
@@ -227,5 +238,6 @@ export function normalizeRecipe(raw: unknown): SessionRecipe | null {
 }
 
 export function cloneRecipe(recipe: SessionRecipe): SessionRecipe {
+  // Route through normalize so clones from partially-trusted sources stay clean.
   return normalizeRecipe(recipe) ?? createBlankRecipe()
 }

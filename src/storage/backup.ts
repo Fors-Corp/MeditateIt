@@ -21,6 +21,9 @@ import {
 export const BACKUP_FORMAT = 'meditateit-backup' as const
 export const BACKUP_VERSION = 1 as const
 
+/** Alias kept for callers that imported the security-branch name. */
+export const BACKUP_MAX_CHARS = MAX_BACKUP_CHARS
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -109,6 +112,7 @@ export function parseBackup(raw: unknown): BackupDocument {
         ? value.exportedAt.slice(0, 64)
         : new Date().toISOString(),
     prefs,
+    // Raw array is re-normalized in replaceUserPresets / mergeUserPresets.
     userPresets: value.userPresets as Preset[],
     sequences,
     ...(sessionHistory ? { sessionHistory } : {}),

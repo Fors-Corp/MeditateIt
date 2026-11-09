@@ -52,6 +52,7 @@ export function normalizePrefs(raw: unknown): UserPrefs {
 
   const lastPresetId = normalizeLastPresetId(raw.lastPresetId, base.lastPresetId)
 
+  // Never persist a raw object graph from JSON import / localStorage.
   const lastRecipe: SessionRecipe | null = normalizeRecipe(raw.lastRecipe)
 
   const defaultDurationSec =

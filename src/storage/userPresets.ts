@@ -25,6 +25,8 @@ function truncate(value: string, max: number): string {
 function normalizeUserPreset(raw: unknown): Preset | null {
   if (!isObject(raw)) return null
   if (typeof raw.id !== 'string' || raw.id.length === 0) return null
+  // Reject oversized ids outright (truncation could collide).
+  if (raw.id.length > MAX_ID_CHARS) return null
   if (typeof raw.name !== 'string' || raw.name.trim().length === 0) return null
 
   const id = truncate(raw.id.trim(), MAX_ID_CHARS)
