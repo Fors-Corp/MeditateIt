@@ -61,7 +61,10 @@ export type {
 
 export interface SessionAudioEngine {
   getStatus: () => AudioEngineStatus
+  getContextState: () => AudioContextState | 'none'
   isCrossfading: () => boolean
+  /** Resume suspended context only — no gain ramps. */
+  resumeContext: () => Promise<'running' | 'suspended' | 'none'>
   start: (fadeInSec?: number) => Promise<void>
   stop: (fadeOutSec?: number) => void
   applyRecipe: (recipe: SessionRecipe, masterVolume: number) => void
@@ -142,7 +145,9 @@ export function recipeLayerEq(
 export function createSessionAudio(): SessionAudioEngine {
   return {
     getStatus: () => audioEngine.getStatus(),
+    getContextState: () => audioEngine.getContextState(),
     isCrossfading: () => audioEngine.isCrossfading(),
+    resumeContext: () => audioEngine.resumeContext(),
     start: (fadeInSec) => audioEngine.start({ fadeInSec }),
     stop: (fadeOutSec) => audioEngine.stop({ fadeOutSec }),
     applyRecipe(recipe, masterVolume) {

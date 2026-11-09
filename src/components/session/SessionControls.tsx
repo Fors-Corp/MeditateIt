@@ -65,7 +65,9 @@ export function SessionControls({ session }: SessionControlsProps) {
     savePresetBusy,
     canOverwritePreset,
     engineStatus,
+    needsAudioGesture,
     togglePlay,
+    continueAudio,
     switchPreset,
     setMasterVolume,
     setFadeIn,
@@ -116,14 +118,25 @@ export function SessionControls({ session }: SessionControlsProps) {
         >
           {playing ? 'Pause' : 'Play'}
         </button>
+        {needsAudioGesture && (
+          <button
+            type="button"
+            className="audio-resume-prompt"
+            onClick={() => void continueAudio()}
+          >
+            Tap to continue audio
+          </button>
+        )}
         <p className="session-engine-status" data-status={engineStatus}>
           {engineStatus === 'unavailable'
             ? 'Audio unavailable in this browser'
-            : crossfading
-              ? 'Crossfading presets…'
-              : playing
-                ? 'Soundscape running'
-                : 'Ready when you are'}
+            : needsAudioGesture
+              ? 'Audio paused by the browser'
+              : crossfading
+                ? 'Crossfading presets…'
+                : playing
+                  ? 'Soundscape running'
+                  : 'Ready when you are'}
         </p>
         <button
           type="button"

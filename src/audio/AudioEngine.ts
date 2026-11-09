@@ -66,6 +66,15 @@ export class AudioEngine {
     return this.status
   }
 
+  /**
+   * Underlying AudioContext state when a graph exists.
+   * Distinct from {@link getStatus}: the engine may still be `running` while
+   * the context is `suspended` after backgrounding.
+   */
+  getContextState(): AudioContextState | 'none' {
+    return this.ctx?.state ?? 'none'
+  }
+
   getParams(): EngineParams {
     return structuredClone(this.params)
   }
@@ -73,6 +82,31 @@ export class AudioEngine {
   /** True while a mid-session preset crossfade is in flight. */
   isCrossfading(): boolean {
     return this.crossfading
+  }
+
+  /**
+   * Resume a suspended AudioContext without touching gains or layers.
+   * Safe after lock-screen / tab hide — avoids clicks from re-ramping.
+   */
+  async resumeContext(): Promise<'running' | 'suspended' | 'none'> {
+    const ctx = this.ctx
+    if (!ctx) return 'none'
+    if (ctx.state === 'closed') return 'none'
+    if (ctx.state === 'running') return 'running'
+    try {
+      await ctx.resume()
+    } catch {
+      /* autoplay / gesture policy */
+    }
+    // Re-read after await — state may have changed; avoid TS narrowing trap.
+    switch (ctx.state as AudioContextState) {
+      case 'running':
+        return 'running'
+      case 'closed':
+        return 'none'
+      default:
+        return 'suspended'
+    }
   }
 
   /**
