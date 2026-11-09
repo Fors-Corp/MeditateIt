@@ -15,6 +15,7 @@ import {
   persistHeadphonesAck,
   persistMasterVolume,
   persistUserPreset,
+  recordFinishedSession,
   rememberLastPreset,
   resolveSessionPreset,
   type BeatMode,
@@ -104,6 +105,8 @@ export function useSessionController(
   const stopPlaybackRef = useRef<() => void>(() => undefined)
   const openEndedRef = useRef(openEnded)
   const configuredDurationRef = useRef<number | null>(10 * 60)
+  /** ISO start time of the current play bout; null when idle. */
+  const sessionStartedAtRef = useRef<string | null>(null)
 
   useEffect(() => {
     recipeRef.current = recipe
@@ -168,6 +171,18 @@ export function useSessionController(
       if (crossfadePollRef.current != null) {
         window.clearInterval(crossfadePollRef.current)
       }
+      // Leaving the session while playing still counts as a finished bout.
+      const startedAt = sessionStartedAtRef.current
+      if (startedAt) {
+        sessionStartedAtRef.current = null
+        const current = presetRef.current
+        void recordFinishedSession({
+          startedAt,
+          presetId: current.id === 'custom' ? null : current.id,
+          presetName: current.name,
+          sequenceId: null,
+        })
+      }
       engineRef.current?.stop(0.05)
     }
   }, [routePresetId])
@@ -177,6 +192,19 @@ export function useSessionController(
       window.clearInterval(timerRef.current)
       timerRef.current = null
     }
+  }, [])
+
+  const commitSessionHistory = useCallback(() => {
+    const startedAt = sessionStartedAtRef.current
+    if (!startedAt) return
+    sessionStartedAtRef.current = null
+    const current = presetRef.current
+    void recordFinishedSession({
+      startedAt,
+      presetId: current.id === 'custom' ? null : current.id,
+      presetName: current.name,
+      sequenceId: null,
+    })
   }, [])
 
   const stopPlayback = useCallback(() => {
@@ -190,7 +218,8 @@ export function useSessionController(
     setCrossfading(false)
     setEngineStatus(engineRef.current?.getStatus() ?? 'idle')
     setMediaSessionPlaybackState('paused')
-  }, [clearTimer])
+    commitSessionHistory()
+  }, [clearTimer, commitSessionHistory])
 
   const startTimer = useCallback(() => {
     clearTimer()
@@ -218,6 +247,7 @@ export function useSessionController(
 
     pushToEngine(recipeRef.current, masterRef.current)
     await engine.start(recipeRef.current.fadeInSec)
+    sessionStartedAtRef.current = new Date().toISOString()
     setPlaying(true)
     setEngineStatus(engine.getStatus())
     setSessionMediaMetadata({

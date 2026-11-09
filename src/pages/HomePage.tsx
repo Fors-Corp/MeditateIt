@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  loadRecentSessions,
   loadSystemPresets,
   loadUserPresets,
   PRESET_BLURBS,
   removeUserPreset,
 } from '../components/session/bridges'
-import { getLastUsedPreset } from '../storage'
+import { getLastUsedPreset, type SessionRecord } from '../storage'
 import type { Preset } from '../presets'
 
 function formatDuration(sec: number | null): string {
@@ -15,10 +16,29 @@ function formatDuration(sec: number | null): string {
   return `${m} min`
 }
 
+function formatHistoryDuration(sec: number): string {
+  if (sec < 60) return `${sec}s`
+  const m = Math.floor(sec / 60)
+  const s = sec % 60
+  return s > 0 ? `${m}m ${s}s` : `${m}m`
+}
+
+function formatHistoryWhen(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export default function HomePage() {
   const presets = loadSystemPresets()
   const [quickStartId, setQuickStartId] = useState('daily-calm')
   const [userPresets, setUserPresets] = useState<Preset[]>([])
+  const [recentSessions, setRecentSessions] = useState<SessionRecord[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const refreshUserPresets = useCallback(() => {
@@ -32,6 +52,9 @@ export default function HomePage() {
     })
     void loadUserPresets().then((list) => {
       if (!cancelled) setUserPresets(list)
+    })
+    void loadRecentSessions(5).then((list) => {
+      if (!cancelled) setRecentSessions(list)
     })
     return () => {
       cancelled = true
@@ -74,8 +97,35 @@ export default function HomePage() {
           <Link className="btn btn-ghost" to="/session/custom">
             Custom
           </Link>
+          <Link className="btn btn-ghost" to="/settings">
+            Settings
+          </Link>
         </div>
       </section>
+
+      {recentSessions.length > 0 ? (
+        <section className="preset-section" aria-labelledby="history-heading">
+          <div className="section-head">
+            <h2 id="history-heading">Recent sessions</h2>
+            <Link className="section-link" to="/settings">
+              All & backup
+            </Link>
+          </div>
+          <ul className="history-list">
+            {recentSessions.map((row) => (
+              <li key={row.id} className="history-row">
+                <span className="history-name">{row.presetName}</span>
+                <span className="history-meta">
+                  {formatHistoryWhen(row.endedAt)}
+                </span>
+                <span className="history-duration">
+                  {formatHistoryDuration(row.durationSec)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {userPresets.length > 0 ? (
         <section className="preset-section" aria-labelledby="user-presets-heading">

@@ -1,6 +1,6 @@
 /**
- * Local persistence for prefs + user presets (localStorage, async API).
- * System presets stay in `src/presets`; this module never mutates them.
+ * Local persistence for prefs, user presets, session history, and backups
+ * (localStorage, async API). System presets stay in `src/presets`.
  */
 
 import {
@@ -9,10 +9,7 @@ import {
   type Preset,
   type UserPrefs,
 } from '../presets/index.ts'
-import {
-  loadPrefs,
-  updatePrefs,
-} from './prefs.ts'
+import { loadPrefs, updatePrefs } from './prefs.ts'
 import {
   deleteUserPreset,
   getUserPreset,
@@ -20,6 +17,13 @@ import {
 } from './userPresets.ts'
 
 export { STORAGE_KEYS } from './keys.ts'
+
+export type {
+  BackupDocument,
+  BackupImportMode,
+  BackupImportResult,
+  SessionRecord,
+} from './types.ts'
 
 export {
   DEFAULT_PREFS,
@@ -33,9 +37,33 @@ export {
   deleteUserPreset,
   getUserPreset,
   listUserPresets,
+  mergeUserPresets,
+  replaceUserPresets,
   saveUserPreset,
   type SaveUserPresetInput,
 } from './userPresets.ts'
+
+export {
+  appendSessionRecord,
+  clearSessionHistory,
+  listSessionHistory,
+  mergeSessionHistory,
+  MIN_SESSION_DURATION_SEC,
+  normalizeSessionRecord,
+  replaceSessionHistory,
+  SESSION_HISTORY_LIMIT,
+  type AppendSessionInput,
+} from './sessionHistory.ts'
+
+export {
+  BACKUP_FORMAT,
+  BACKUP_VERSION,
+  downloadBackup,
+  exportBackup,
+  importBackup,
+  parseBackup,
+  stringifyBackup,
+} from './backup.ts'
 
 /** System templates first, then user presets (insertion / save order). */
 export async function listAllPresets(): Promise<Preset[]> {

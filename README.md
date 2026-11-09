@@ -54,11 +54,32 @@ Native shells (Capacitor, etc.) are out of scope for this wave.
 
 ## App routes
 
-- `/` — home with quick start, custom, system + saved user presets
+- `/` — home with quick start, custom, system + saved user presets, recent sessions
+- `/settings` — export/import JSON backup (merge or replace) + full session history
 - `/session` and `/session/:presetId` — live session player (save preset from the session header)
+
+## Backup & history
+
+Prefs, user presets, and session history live in `localStorage` only (no accounts).
+
+```ts
+import {
+  exportBackup,
+  importBackup,
+  downloadBackup,
+  listSessionHistory,
+  appendSessionRecord,
+  type BackupDocument,
+  type SessionRecord,
+} from './storage'
+```
+
+- **Export** downloads a `meditateit-backup` v1 JSON (prefs + user presets + history; empty `sequences` reserved for Wave 3 sequences).
+- **Import** supports `merge` (presets/history by id; prefs fields from file win) or `replace` (overwrite prefs + user presets; history replaced when present in the file).
+- **Session history** appends on stop / leave while playing (skips sub-second taps); newest first, capped at 100.
 
 ## Notes
 
-- Prefs and user presets persist in `localStorage` only (no accounts).
+- Prefs, user presets, and session history persist in `localStorage` only (no accounts).
 - No GitHub remote is required for local MVP work. Do not push unless a remote is added on purpose.
 - Product plan lives in the MeditateIt Project store (`docs/meditation-app-plan.md`).
