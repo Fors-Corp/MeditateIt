@@ -1,54 +1,59 @@
 import {
   cloneRecipe,
   isSystemPresetId,
+  normalizeRecipe,
   type Preset,
   type SessionRecipe,
 } from '../presets/index.ts'
 import { STORAGE_KEYS } from './keys.ts'
+import {
+  MAX_DURATION_SEC,
+  MAX_ID_CHARS,
+  MAX_NAME_CHARS,
+  MAX_USER_PRESETS,
+} from './limits.ts'
 import { readJson, writeJson } from './local.ts'
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function isValidRecipe(value: unknown): value is SessionRecipe {
-  if (!isObject(value)) return false
-  return (
-    isObject(value.noise) &&
-    isObject(value.tone) &&
-    isObject(value.beat) &&
-    isObject(value.nature) &&
-    isObject(value.gains) &&
-    typeof value.fadeInSec === 'number' &&
-    typeof value.fadeOutSec === 'number'
-  )
+function truncate(value: string, max: number): string {
+  return value.length <= max ? value : value.slice(0, max)
 }
 
 function normalizeUserPreset(raw: unknown): Preset | null {
   if (!isObject(raw)) return null
   if (typeof raw.id !== 'string' || raw.id.length === 0) return null
   if (typeof raw.name !== 'string' || raw.name.trim().length === 0) return null
-  if (!isValidRecipe(raw.recipe)) return null
-  if (isSystemPresetId(raw.id)) return null
+
+  const id = truncate(raw.id.trim(), MAX_ID_CHARS)
+  if (!id || isSystemPresetId(id)) return null
+
+  const name = truncate(raw.name.trim(), MAX_NAME_CHARS)
+  if (!name) return null
+
+  const recipe = normalizeRecipe(raw.recipe)
+  if (!recipe) return null
 
   const defaultDurationSec =
     typeof raw.defaultDurationSec === 'number' &&
     Number.isFinite(raw.defaultDurationSec) &&
     raw.defaultDurationSec >= 0
-      ? raw.defaultDurationSec
+      ? Math.min(MAX_DURATION_SEC, raw.defaultDurationSec)
       : raw.defaultDurationSec === null
         ? null
         : null
 
   return {
-    id: raw.id,
-    name: raw.name.trim(),
+    id,
+    name,
     source: 'user',
-    recipe: cloneRecipe(raw.recipe),
+    recipe,
     defaultDurationSec,
     updatedAt:
       typeof raw.updatedAt === 'string' && raw.updatedAt.length > 0
-        ? raw.updatedAt
+        ? truncate(raw.updatedAt, 64)
         : new Date().toISOString(),
   }
 }
@@ -58,6 +63,7 @@ async function readAll(): Promise<Preset[]> {
   if (!Array.isArray(raw)) return []
   const out: Preset[] = []
   for (const item of raw) {
+    if (out.length >= MAX_USER_PRESETS) break
     const preset = normalizeUserPreset(item)
     if (preset) out.push(preset)
   }
@@ -67,7 +73,7 @@ async function readAll(): Promise<Preset[]> {
 async function writeAll(presets: Preset[]): Promise<void> {
   await writeJson(
     STORAGE_KEYS.userPresets,
-    presets.map((p) => ({
+    presets.slice(0, MAX_USER_PRESETS).map((p) => ({
       ...p,
       source: 'user' as const,
       recipe: cloneRecipe(p.recipe),
@@ -99,29 +105,46 @@ export type SaveUserPresetInput = {
 export async function saveUserPreset(
   input: SaveUserPresetInput,
 ): Promise<Preset> {
-  const name = input.name.trim()
+  const name = truncate(input.name.trim(), MAX_NAME_CHARS)
   if (!name) throw new Error('Preset name is required')
-  if (!isValidRecipe(input.recipe)) throw new Error('Invalid session recipe')
+  const recipe = normalizeRecipe(input.recipe)
+  if (!recipe) throw new Error('Invalid session recipe')
 
-  const id = input.id?.trim() || crypto.randomUUID()
+  const id = truncate(input.id?.trim() || crypto.randomUUID(), MAX_ID_CHARS)
+  if (!id) throw new Error('Preset id is required')
   if (isSystemPresetId(id)) {
     throw new Error('Cannot overwrite a system preset')
   }
+
+  const defaultDurationSec =
+    input.defaultDurationSec === undefined
+      ? null
+      : input.defaultDurationSec === null
+        ? null
+        : Math.min(
+            MAX_DURATION_SEC,
+            Math.max(0, input.defaultDurationSec),
+          )
 
   const next: Preset = {
     id,
     name,
     source: 'user',
-    recipe: cloneRecipe(input.recipe),
-    defaultDurationSec:
-      input.defaultDurationSec === undefined ? null : input.defaultDurationSec,
+    recipe,
+    defaultDurationSec,
     updatedAt: new Date().toISOString(),
   }
 
   const all = await readAll()
   const idx = all.findIndex((p) => p.id === id)
-  if (idx >= 0) all[idx] = next
-  else all.push(next)
+  if (idx >= 0) {
+    all[idx] = next
+  } else {
+    if (all.length >= MAX_USER_PRESETS) {
+      throw new Error(`At most ${MAX_USER_PRESETS} user presets`)
+    }
+    all.push(next)
+  }
   await writeAll(all)
   return next
 }
@@ -145,6 +168,7 @@ export async function replaceUserPresets(
 ): Promise<Preset[]> {
   const next: Preset[] = []
   for (const item of presets) {
+    if (next.length >= MAX_USER_PRESETS) break
     const preset = normalizeUserPreset(item)
     if (preset) next.push(preset)
   }
@@ -163,7 +187,7 @@ export async function mergeUserPresets(presets: unknown[]): Promise<Preset[]> {
     const preset = normalizeUserPreset(item)
     if (preset) byId.set(preset.id, preset)
   }
-  const next = [...byId.values()]
+  const next = [...byId.values()].slice(0, MAX_USER_PRESETS)
   await writeAll(next)
   return next
 }

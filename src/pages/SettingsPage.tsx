@@ -5,6 +5,7 @@ import {
   downloadBackup,
   importBackup,
   listSessionHistory,
+  MAX_BACKUP_CHARS,
   type BackupImportMode,
   type SessionRecord,
 } from '../storage'
@@ -82,6 +83,14 @@ export default function SettingsPage() {
 
   const handleFile = async (file: File | null) => {
     if (!file) return
+    if (file.size > MAX_BACKUP_CHARS) {
+      setError(
+        `Backup too large (max ${Math.floor(MAX_BACKUP_CHARS / (1024 * 1024))} MB)`,
+      )
+      setMessage(null)
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
     const text = await file.text()
     await runImport(text)
   }

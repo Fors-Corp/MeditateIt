@@ -18,6 +18,15 @@ import {
 
 export { STORAGE_KEYS } from './keys.ts'
 
+export {
+  MAX_BACKUP_CHARS,
+  MAX_DURATION_SEC,
+  MAX_FADE_SEC,
+  MAX_ID_CHARS,
+  MAX_NAME_CHARS,
+  MAX_USER_PRESETS,
+} from './limits.ts'
+
 export type {
   BackupDocument,
   BackupImportMode,
