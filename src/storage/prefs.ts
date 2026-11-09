@@ -1,7 +1,7 @@
 import {
   DEFAULT_FADE_IN_SEC,
   DEFAULT_FADE_OUT_SEC,
-  type SessionRecipe,
+  normalizeRecipe,
   type UserPrefs,
 } from '../presets/index.ts'
 import { STORAGE_KEYS } from './keys.ts'
@@ -44,8 +44,8 @@ export function normalizePrefs(raw: unknown): UserPrefs {
         ? null
         : base.lastPresetId
 
-  const lastRecipe =
-    isObject(raw.lastRecipe) ? (raw.lastRecipe as unknown as SessionRecipe) : null
+  // Never persist a raw object graph from JSON import / localStorage.
+  const lastRecipe = normalizeRecipe(raw.lastRecipe)
 
   const defaultDurationSec =
     typeof raw.defaultDurationSec === 'number' &&

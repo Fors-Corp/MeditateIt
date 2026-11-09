@@ -28,6 +28,8 @@ export {
   DEFAULT_FADE_IN_SEC,
   DEFAULT_FADE_OUT_SEC,
   DEFAULT_GAINS,
+  isValidRecipe,
+  normalizeRecipe,
 } from './recipe.ts'
 
 export {

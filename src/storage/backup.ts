@@ -20,6 +20,9 @@ import {
 export const BACKUP_FORMAT = 'meditateit-backup' as const
 export const BACKUP_VERSION = 1 as const
 
+/** Reject multi-megabyte pastes before JSON.parse (DoS / quota pressure). */
+export const BACKUP_MAX_CHARS = 1_500_000
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -58,6 +61,10 @@ export function stringifyBackup(doc: BackupDocument): string {
  * Throws on unrecognized format.
  */
 export function parseBackup(raw: unknown): BackupDocument {
+  if (typeof raw === 'string' && raw.length > BACKUP_MAX_CHARS) {
+    throw new Error('Backup JSON is too large')
+  }
+
   const value =
     typeof raw === 'string'
       ? (JSON.parse(raw) as unknown)
@@ -75,21 +82,26 @@ export function parseBackup(raw: unknown): BackupDocument {
   if (!Array.isArray(value.userPresets)) {
     throw new Error('Backup userPresets must be an array')
   }
+  if (value.userPresets.length > 500) {
+    throw new Error('Backup userPresets exceeds limit')
+  }
 
   const prefs = normalizePrefs(value.prefs)
   const sessionHistory = Array.isArray(value.sessionHistory)
     ? (value.sessionHistory as SessionRecord[])
     : undefined
-  const sequences = Array.isArray(value.sequences) ? value.sequences : []
+  // Sequences are not restored yet — ignore payload contents (no trust boundary).
+  const sequences: unknown[] = []
 
   return {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
     exportedAt:
       typeof value.exportedAt === 'string' && value.exportedAt.length > 0
-        ? value.exportedAt
+        ? value.exportedAt.slice(0, 64)
         : new Date().toISOString(),
     prefs,
+    // Raw array is re-normalized in replaceUserPresets / mergeUserPresets.
     userPresets: value.userPresets as Preset[],
     sequences,
     ...(sessionHistory ? { sessionHistory } : {}),

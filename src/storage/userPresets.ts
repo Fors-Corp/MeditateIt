@@ -1,35 +1,31 @@
 import {
   cloneRecipe,
   isSystemPresetId,
+  isValidRecipe,
+  normalizeRecipe,
   type Preset,
   type SessionRecipe,
 } from '../presets/index.ts'
 import { STORAGE_KEYS } from './keys.ts'
 import { readJson, writeJson } from './local.ts'
 
+/** Cap untrusted string fields from JSON import / localStorage. */
+const MAX_PRESET_ID_LEN = 128
+const MAX_PRESET_NAME_LEN = 120
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function isValidRecipe(value: unknown): value is SessionRecipe {
-  if (!isObject(value)) return false
-  return (
-    isObject(value.noise) &&
-    isObject(value.tone) &&
-    isObject(value.beat) &&
-    isObject(value.nature) &&
-    isObject(value.gains) &&
-    typeof value.fadeInSec === 'number' &&
-    typeof value.fadeOutSec === 'number'
-  )
 }
 
 function normalizeUserPreset(raw: unknown): Preset | null {
   if (!isObject(raw)) return null
   if (typeof raw.id !== 'string' || raw.id.length === 0) return null
+  if (raw.id.length > MAX_PRESET_ID_LEN) return null
   if (typeof raw.name !== 'string' || raw.name.trim().length === 0) return null
-  if (!isValidRecipe(raw.recipe)) return null
   if (isSystemPresetId(raw.id)) return null
+
+  const recipe = normalizeRecipe(raw.recipe)
+  if (!recipe) return null
 
   const defaultDurationSec =
     typeof raw.defaultDurationSec === 'number' &&
@@ -42,13 +38,13 @@ function normalizeUserPreset(raw: unknown): Preset | null {
 
   return {
     id: raw.id,
-    name: raw.name.trim(),
+    name: raw.name.trim().slice(0, MAX_PRESET_NAME_LEN),
     source: 'user',
-    recipe: cloneRecipe(raw.recipe),
+    recipe,
     defaultDurationSec,
     updatedAt:
       typeof raw.updatedAt === 'string' && raw.updatedAt.length > 0
-        ? raw.updatedAt
+        ? raw.updatedAt.slice(0, 64)
         : new Date().toISOString(),
   }
 }
