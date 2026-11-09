@@ -35,8 +35,9 @@ Name: **MeditateIt**. Icons live in `public/icons/` (192 / 512).
 
 ## App routes
 
-- `/` — home with quick start, custom, system + saved user presets
+- `/` — home with quick start, custom, system sequences, system + saved user presets
 - `/session` and `/session/:presetId` — live session player (save preset from the session header)
+- `/sequence/:sequenceId` — multi-stage sequence player (auto-advance + crossfade; pause freezes the stage timer)
 
 ## Notes
 
