@@ -71,7 +71,7 @@
   margin: 0 auto;
   height: 0.45rem;
   border-radius: 999px;
-  background: rgba(42, 107, 94, 0.12);
+  background: var(--accent-muted);
   overflow: hidden;
 }
 
@@ -142,8 +142,8 @@
 
 .sequence-stage-item.is-current {
   color: var(--ink);
-  background: rgba(42, 107, 94, 0.08);
-  border-color: rgba(42, 107, 94, 0.18);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .sequence-stage-item.is-done {

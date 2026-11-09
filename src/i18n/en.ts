@@ -56,6 +56,17 @@ export const en = {
   } as Record<string, string>,
 
   settings: {
+    themeHeading: 'Theme',
+    themeLede:
+      'Pick a calm palette. System follows your device light or dark setting.',
+    themeSystem: 'System',
+    themes: {
+      light: 'Light',
+      dark: 'Dark',
+      dusk: 'Dusk',
+      mist: 'Mist',
+      forest: 'Forest',
+    },
     backupHeading: 'Backup',
     backupLede:
       'Download or restore prefs, saved presets, sequences, and session history as JSON. Export includes finished listens by default. No account — the file stays on this device.',

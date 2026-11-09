@@ -16,6 +16,7 @@ export type {
   PresetSource,
   SessionRecipe,
   ToneParams,
+  ThemeId,
   UserPrefs,
 } from './types.ts'
 

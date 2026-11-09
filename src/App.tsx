@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import './App.css'
 import AppFooter from './components/AppFooter'
@@ -9,6 +10,8 @@ import SequencePage from './pages/SequencePage'
 import SessionPage from './pages/SessionPage'
 import SettingsPage from './pages/SettingsPage'
 import TermsPage from './pages/TermsPage'
+import { loadPrefs } from './storage'
+import { applyThemePreference, subscribeSystemColorScheme } from './theme'
 
 function headerLabel(pathname: string): string {
   if (pathname.startsWith('/settings')) return messages.app.taglineSettings
@@ -17,9 +20,26 @@ function headerLabel(pathname: string): string {
   return messages.app.taglineHome
 }
 
+/** Sync data-theme from prefs; follow OS when preference is system (null). */
+function useThemeBootstrap() {
+  useEffect(() => {
+    let cancelled = false
+    void loadPrefs().then((prefs) => {
+      if (cancelled) return
+      applyThemePreference(prefs.themeId)
+    })
+    const unsubscribe = subscribeSystemColorScheme()
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [])
+}
+
 function App() {
   const { pathname } = useLocation()
   const isHome = pathname === '/'
+  useThemeBootstrap()
 
   return (
     <div className={`app-shell${isHome ? ' is-home' : ''}`}>

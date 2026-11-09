@@ -1,5 +1,9 @@
 /** Domain types for session recipes and presets (MVP data model). */
 
+import type { ThemeId } from '../theme/ids.ts'
+
+export type { ThemeId }
+
 export type NoiseKind = 'white' | 'pink' | 'brown'
 export type BeatMode = 'off' | 'binaural' | 'isochronic'
 export type PresetSource = 'system' | 'user'
@@ -103,4 +107,9 @@ export interface UserPrefs {
   preferHeadphonesAck: boolean
   reduceMotion: boolean
   defaultDurationSec: number | null
+  /**
+   * Saved theme id, or null to follow the OS color scheme.
+   * Named extras (dusk / mist / forest) always win over system.
+   */
+  themeId: ThemeId | null
 }

@@ -56,7 +56,7 @@
   font-family: var(--font-body);
   font-size: 1.05rem;
   font-weight: 600;
-  color: #f4faf7;
+  color: var(--on-accent);
   background: var(--accent);
   transition:
     transform var(--motion-fast) var(--ease-out),
@@ -73,7 +73,7 @@
 }
 
 .play-btn.is-active {
-  box-shadow: 0 0 0 6px rgba(42, 107, 94, 0.16);
+  box-shadow: 0 0 0 6px var(--mark-ring);
   animation: play-pulse 2.8s var(--ease-out) infinite;
 }
 
@@ -160,45 +160,6 @@
   cursor: pointer;
 }
 
-.chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.chip {
-  appearance: none;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--ink-muted);
-  border-radius: var(--radius-sm);
-  padding: 0.4rem 0.7rem;
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background-color var(--motion-fast) var(--ease-out),
-    border-color var(--motion-fast) var(--ease-out),
-    color var(--motion-fast) var(--ease-out);
-}
-
-.chip:hover {
-  border-color: var(--accent-soft);
-  color: var(--accent);
-}
-
-.chip:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-
-.chip.is-selected {
-  background: rgba(42, 107, 94, 0.12);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
 .tone-hz-row .chip,
 .solfeggio-row .chip {
   min-width: 3.1rem;
@@ -264,7 +225,7 @@
 }
 
 .layer-toggle.is-on {
-  background: rgba(42, 107, 94, 0.12);
+  background: var(--accent-muted);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -316,7 +277,7 @@
 }
 
 .layer-eq-reset:not(:disabled):hover {
-  background: rgba(42, 107, 94, 0.08);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .layer-eq-bands {
@@ -366,9 +327,9 @@
   width: min(24rem, 100%);
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  background: #f3faf6;
+  background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: 0 18px 40px rgba(22, 40, 36, 0.18);
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--ink) 18%, transparent);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -418,7 +379,7 @@
   padding: 0.7rem 0.85rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  background: #fff;
+  background: var(--surface-solid);
 }
 
 .save-preset-field input:focus {
@@ -428,7 +389,7 @@
 
 .save-preset-error {
   margin: 0;
-  color: #8a3a32;
+  color: var(--danger);
   font-size: 0.9rem;
 }
 
@@ -455,10 +416,10 @@
 @keyframes play-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 6px rgba(42, 107, 94, 0.12);
+    box-shadow: 0 0 0 6px var(--mark-ring);
   }
   50% {
-    box-shadow: 0 0 0 10px rgba(42, 107, 94, 0.2);
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 20%, transparent);
   }
 }
 

@@ -6,7 +6,7 @@
   padding: 0.65rem 1rem;
   border-radius: var(--radius-md);
   background: var(--ink);
-  color: #f4faf7;
+  color: var(--on-accent);
   font-weight: 600;
   text-decoration: none;
   transform: translateY(-200%);
@@ -109,7 +109,7 @@
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, var(--accent-soft), var(--accent));
   vertical-align: 0.05em;
-  box-shadow: 0 0 0 3px rgba(42, 107, 94, 0.12);
+  box-shadow: 0 0 0 3px var(--mark-ring);
 }
 
 .app-tagline {
@@ -149,12 +149,12 @@
 
 .btn-primary {
   background: var(--accent);
-  color: #f4faf7;
+  color: var(--on-accent);
 }
 
 .btn-primary:hover {
   background: var(--accent-hover);
-  color: #f4faf7;
+  color: var(--on-accent);
 }
 
 .btn-ghost {
@@ -167,6 +167,54 @@
 .btn-ghost:hover {
   border-color: var(--accent-soft);
   color: var(--accent);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.chip {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--ink-muted);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.7rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out);
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--accent-soft);
+  color: var(--accent);
+}
+
+.chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.chip.is-selected {
+  background: var(--accent-muted);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.theme-picker {
+  margin-top: var(--space-2);
 }
 
 /* —— Home —— */
@@ -194,8 +242,8 @@
   inset: -20% -10% auto;
   height: 70%;
   background:
-    radial-gradient(closest-side at 30% 40%, rgba(255, 255, 255, 0.55), transparent 70%),
-    radial-gradient(closest-side at 75% 30%, rgba(159, 196, 184, 0.55), transparent 72%);
+    radial-gradient(closest-side at 30% 40%, var(--hero-glow-a), transparent 70%),
+    radial-gradient(closest-side at 75% 30%, var(--hero-glow-b), transparent 72%);
   pointer-events: none;
   animation: glow-drift 14s ease-in-out infinite alternate;
   z-index: 0;
@@ -341,7 +389,7 @@
 }
 
 .preset-delete:hover:not(:disabled) {
-  color: #8a3a32;
+  color: var(--danger);
   border-color: rgba(138, 58, 50, 0.25);
   background: rgba(255, 255, 255, 0.35);
 }
@@ -574,12 +622,12 @@
 }
 
 .settings-erase-btn {
-  color: #8a3a32;
-  border-color: color-mix(in srgb, #8a3a32 35%, var(--border));
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
 }
 
 .settings-erase-btn:hover:not(:disabled) {
-  color: #6e2e28;
+  color: var(--danger-hover);
 }
 
 .settings-status {
@@ -591,7 +639,7 @@
 .settings-error {
   margin: 0;
   font-size: 0.9rem;
-  color: #8a3a32;
+  color: var(--danger);
 }
 
 .settings-empty {
@@ -613,7 +661,7 @@
 }
 
 .settings-text-btn:hover:not(:disabled) {
-  color: #8a3a32;
+  color: var(--danger);
 }
 
 .settings-text-btn:disabled {

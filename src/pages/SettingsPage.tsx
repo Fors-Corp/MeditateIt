@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ThemePicker } from '../components/ThemePicker'
+import { useThemePreference } from '../components/useThemePreference'
 import { messages } from '../i18n'
 import {
   applySessionHistoryRetention,
@@ -19,6 +21,7 @@ import {
   type HistoryRetentionDays,
   type SessionRecord,
 } from '../storage'
+import { applyThemePreference } from '../theme'
 
 function formatWhen(iso: string): string {
   const d = new Date(iso)
@@ -52,6 +55,12 @@ export default function SettingsPage() {
   const [retentionDays, setRetentionDays] =
     useState<HistoryRetentionDays>(null)
   const [clearCachesOnErase, setClearCachesOnErase] = useState(false)
+  const {
+    themeId,
+    setThemeId,
+    busy: themeBusy,
+    reload: reloadTheme,
+  } = useThemePreference()
 
   const refreshHistory = useCallback(() => {
     void listSessionHistory().then(setHistory)
@@ -93,6 +102,7 @@ export default function SettingsPage() {
           importMode === 'replace' ? keepHistoryWhenOmitted : false,
       })
       refreshHistory()
+      reloadTheme()
       setMessage(
         messages.settings.imported(
           result.mode,
@@ -180,6 +190,8 @@ export default function SettingsPage() {
       setHistory([])
       setRetentionDays(null)
       setKeepHistoryWhenOmitted(false)
+      applyThemePreference(null)
+      reloadTheme()
       const cacheMsg = result.cachesCleared
         ? messages.settings.erasedCaches(result.serviceWorkersUnregistered)
         : ''
@@ -195,8 +207,20 @@ export default function SettingsPage() {
 
   return (
     <div className="settings-page">
+      <section className="settings-section" aria-labelledby="theme-heading">
+        <h1 id="theme-heading">{messages.settings.themeHeading}</h1>
+        <p className="settings-lede">{messages.settings.themeLede}</p>
+        <ThemePicker
+          value={themeId}
+          onChange={setThemeId}
+          disabled={busy || themeBusy}
+        />
+      </section>
+
+      {/* Language section: parallel i18n agent owns this — do not expand locales here. */}
+
       <section className="settings-section" aria-labelledby="backup-heading">
-        <h1 id="backup-heading">{messages.settings.backupHeading}</h1>
+        <h2 id="backup-heading">{messages.settings.backupHeading}</h2>
         <p className="settings-lede">{messages.settings.backupLede}</p>
 
         <div className="settings-actions">

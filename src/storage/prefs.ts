@@ -5,6 +5,7 @@ import {
   type SessionRecipe,
   type UserPrefs,
 } from '../presets/index.ts'
+import { normalizeThemePreference } from '../theme/index.ts'
 import { STORAGE_KEYS } from './keys.ts'
 import {
   MAX_DURATION_SEC,
@@ -22,6 +23,7 @@ export const DEFAULT_PREFS: Readonly<UserPrefs> = Object.freeze({
   preferHeadphonesAck: false,
   reduceMotion: false,
   defaultDurationSec: null,
+  themeId: null,
 })
 
 function clamp01(n: number, fallback: number): number {
@@ -92,6 +94,7 @@ export function normalizePrefs(raw: unknown): UserPrefs {
         ? raw.reduceMotion
         : base.reduceMotion,
     defaultDurationSec,
+    themeId: normalizeThemePreference(raw.themeId),
   }
 }
 
