@@ -17,6 +17,8 @@ export const GAIN = {
   toneMax: 0.4,
   beatDefault: 0.1,
   beatMax: 0.35,
+  natureDefault: 0.2,
+  natureMax: 0.45,
 } as const
 
 export const FREQ = {
@@ -32,6 +34,9 @@ export const FREQ = {
   defaultToneHz: 528,
   defaultBeatCarrierHz: 220,
   defaultBeatHz: 6,
+  natureSounds: ['rain', 'shore', 'wind', 'forest'] as const,
+  defaultNatureSound: 'rain' as const,
+  defaultNatureBrightness: 0.5,
 } as const
 
 export const RAMP_SEC = {
@@ -66,5 +71,11 @@ export const DEFAULT_ENGINE_PARAMS: EngineParams = {
     gain: GAIN.beatDefault,
     pulseDepth: 0.85,
     headphonesAcknowledged: false,
+  },
+  nature: {
+    enabled: false,
+    soundId: null,
+    gain: GAIN.natureDefault,
+    brightness: FREQ.defaultNatureBrightness,
   },
 }

@@ -35,9 +35,16 @@ export interface BeatParams {
   pulseDepth?: number
 }
 
+export type NatureSoundId = 'rain' | 'shore' | 'wind' | 'forest'
+
 export interface NatureParams {
-  /** "rain" | "shore" | … — null until nature pack ships */
-  soundId: string | null
+  /**
+   * Procedural bed id — `"rain" | "shore" | "wind" | "forest"`.
+   * `null` + enabled falls back to rain in the audio engine.
+   */
+  soundId: NatureSoundId | null
+  /** 0–1 high-shelf brightness; omit → engine default 0.5 */
+  brightness?: number
 }
 
 export interface SessionRecipe {

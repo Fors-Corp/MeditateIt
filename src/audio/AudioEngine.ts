@@ -11,6 +11,7 @@ import type {
   BeatParams,
   EngineParams,
   EngineParamsPatch,
+  NatureParams,
   NoiseParams,
   ToneParams,
 } from './types'
@@ -141,7 +142,7 @@ export class AudioEngine {
 
   /**
    * Crossfade from the current recipe to `next` over ~1–3s using dual bus gains.
-   * No-ops (falls back to setParams) when not running.
+   * No-ops (params still updated) when not running.
    */
   crossfadeTo(next: EngineParams, options: CrossfadeOptions = {}): void {
     this.params = normalizeParams(next)
@@ -160,7 +161,6 @@ export class AudioEngine {
       options.durationSec ?? CROSSFADE_SEC.default,
     )
 
-    // Incoming bank starts muted, then dual-ramp with the outgoing bank.
     to.bus.gain.setValueAtTime(0, ctx.currentTime)
     to.start(this.params)
 
@@ -174,8 +174,6 @@ export class AudioEngine {
     this.crossfading = true
     const nextActive: BankKey = this.active === 'a' ? 'b' : 'a'
     this.crossfadeTimer = window.setTimeout(() => {
-      // Promote incoming bank before clearing the flag so live setParams
-      // cannot briefly target the outgoing stack.
       this.active = nextActive
       this.crossfading = false
       this.crossfadeTimer = null
@@ -207,6 +205,10 @@ export class AudioEngine {
     this.setParams({ beat: patch })
   }
 
+  setNature(patch: Partial<NatureParams>): void {
+    this.setParams({ nature: patch })
+  }
+
   private ensureGraph(): void {
     if (this.ctx) return
 
@@ -225,7 +227,6 @@ export class AudioEngine {
     const masterGain = ctx.createGain()
     masterGain.gain.value = 0
 
-    // Soft peak ceiling — gentle limiting on param spikes / sum peaks.
     const limiter = ctx.createDynamicsCompressor()
     limiter.threshold.value = -8
     limiter.knee.value = 8
@@ -264,7 +265,6 @@ export class AudioEngine {
       t,
       RAMP_SEC.gain,
     )
-    // Live tweaks land on the bank currently audible (incoming during fade).
     const target = this.crossfading ? this.idleBank() : this.activeBank()
     target.setParams(this.params)
   }
@@ -277,10 +277,6 @@ export class AudioEngine {
     return this.active === 'a' ? this.bankB! : this.bankA!
   }
 
-  /**
-   * Finish an in-flight crossfade immediately so a new start/stop/crossfade
-   * does not leave two banks sounding.
-   */
   private settleCrossfadeImmediate(): void {
     if (!this.crossfading || !this.ctx) {
       this.clearCrossfadeTimer()
@@ -315,7 +311,6 @@ export class AudioEngine {
     }
   }
 
-  /** True once the master bus + limiter are connected to the destination. */
   private hasMasterChain(): boolean {
     return (
       this.sumBus != null &&
@@ -334,6 +329,7 @@ function normalizeParams(params: EngineParams): EngineParams {
     noise: params.noise,
     tone: params.tone,
     beat: params.beat,
+    nature: params.nature,
   })
 }
 
@@ -367,6 +363,20 @@ function mergeParams(
       ...base.beat,
       ...patch.beat,
       gain: clamp(patch.beat?.gain ?? base.beat.gain, 0, GAIN.beatMax),
+    },
+    nature: {
+      ...base.nature,
+      ...patch.nature,
+      gain: clamp(
+        patch.nature?.gain ?? base.nature.gain,
+        0,
+        GAIN.natureMax,
+      ),
+      brightness: clamp(
+        patch.nature?.brightness ?? base.nature.brightness,
+        0,
+        1,
+      ),
     },
   }
 }

@@ -1,10 +1,11 @@
 import { BeatLayer } from './BeatLayer'
+import { NatureLayer } from './NatureLayer'
 import { NoiseLayer } from './NoiseLayer'
 import { ToneLayer } from './ToneLayer'
 import type { EngineParams } from './types'
 
 /**
- * One full noise/tone/beat stack behind a bus gain.
+ * One full noise/tone/beat/nature stack behind a bus gain.
  * AudioEngine keeps two banks so preset switches can dual-ramp A→B.
  */
 export class LayerBank {
@@ -12,6 +13,7 @@ export class LayerBank {
   readonly noise: NoiseLayer
   readonly tone: ToneLayer
   readonly beat: BeatLayer
+  readonly nature: NatureLayer
 
   constructor(ctx: AudioContext) {
     this.bus = ctx.createGain()
@@ -19,9 +21,11 @@ export class LayerBank {
     this.noise = new NoiseLayer(ctx)
     this.tone = new ToneLayer(ctx)
     this.beat = new BeatLayer(ctx)
+    this.nature = new NatureLayer(ctx)
     this.noise.connect(this.bus)
     this.tone.connect(this.bus)
     this.beat.connect(this.bus)
+    this.nature.connect(this.bus)
   }
 
   connect(destination: AudioNode): void {
@@ -32,24 +36,28 @@ export class LayerBank {
     this.noise.start(params.noise)
     this.tone.start(params.tone)
     this.beat.start(params.beat)
+    this.nature.start(params.nature)
   }
 
   stop(fadeSec: number): void {
     this.noise.stop(fadeSec)
     this.tone.stop(fadeSec)
     this.beat.stop(fadeSec)
+    this.nature.stop(fadeSec)
   }
 
   setParams(params: EngineParams): void {
     this.noise.setParams(params.noise)
     this.tone.setParams(params.tone)
     this.beat.setParams(params.beat)
+    this.nature.setParams(params.nature)
   }
 
   dispose(): void {
     this.noise.dispose()
     this.tone.dispose()
     this.beat.dispose()
+    this.nature.dispose()
     try {
       this.bus.disconnect()
     } catch {

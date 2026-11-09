@@ -17,6 +17,7 @@ import {
   rememberLastPreset,
   resolveSessionPreset,
   type BeatMode,
+  type NatureSoundId,
   type NoiseKind,
   type SessionAudioEngine,
 } from './bridges'
@@ -48,6 +49,8 @@ export interface SessionController {
   setSolfeggio: (hz: SolfeggioHz) => void
   setBeatMode: (mode: BeatMode) => void
   setBeatHz: (hz: number) => void
+  setNatureSound: (soundId: NatureSoundId) => void
+  setNatureBrightness: (brightness: number) => void
   acknowledgeHeadphones: () => void
   dismissHeadphoneWarning: () => void
 }
@@ -384,6 +387,25 @@ export function useSessionController(
             },
           }
         }
+        if (layer === 'nature') {
+          const enabling = !r.nature.enabled
+          return {
+            ...r,
+            nature: {
+              ...r.nature,
+              enabled: enabling,
+              soundId: enabling
+                ? (r.nature.soundId ?? 'rain')
+                : r.nature.soundId,
+              brightness: r.nature.brightness ?? 0.5,
+            },
+            gains: {
+              ...r.gains,
+              nature:
+                enabling && r.gains.nature <= 0 ? 0.2 : r.gains.nature,
+            },
+          }
+        }
         return {
           ...r,
           [layer]: { ...r[layer], enabled: !r[layer].enabled },
@@ -457,6 +479,38 @@ export function useSessionController(
     [updateRecipe],
   )
 
+  const setNatureSound = useCallback(
+    (soundId: NatureSoundId) => {
+      updateRecipe((r) => ({
+        ...r,
+        nature: {
+          ...r.nature,
+          enabled: true,
+          soundId,
+          brightness: r.nature.brightness ?? 0.5,
+        },
+        gains: {
+          ...r.gains,
+          nature: r.gains.nature <= 0 ? 0.2 : r.gains.nature,
+        },
+      }))
+    },
+    [updateRecipe],
+  )
+
+  const setNatureBrightness = useCallback(
+    (brightness: number) => {
+      updateRecipe((r) => ({
+        ...r,
+        nature: {
+          ...r.nature,
+          brightness: clamp01(brightness),
+        },
+      }))
+    },
+    [updateRecipe],
+  )
+
   const acknowledgeHeadphones = useCallback(() => {
     setHeadphonesAck(true)
     setShowHeadphoneWarning(false)
@@ -501,6 +555,8 @@ export function useSessionController(
     setSolfeggio,
     setBeatMode,
     setBeatHz,
+    setNatureSound,
+    setNatureBrightness,
     acknowledgeHeadphones,
     dismissHeadphoneWarning,
   }
