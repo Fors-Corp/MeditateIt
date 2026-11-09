@@ -7,19 +7,14 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'script',
-      includeAssets: [
-        'favicon.svg',
-        'icons.svg',
-        'icons/icon-192.png',
-        'icons/icon-512.png',
-        'worklets/noise-processor.js',
-        'fonts/figtree-latin.woff2',
-        'fonts/figtree-latin-ext.woff2',
-        'fonts/fraunces-latin.woff2',
-        'fonts/fraunces-latin-ext.woff2',
-      ],
+      // Explicit “Update available — Reload” via virtual:pwa-register/react.
+      registerType: 'prompt',
+      injectRegister: false,
+      // Public assets are copied into dist/ and matched by globPatterns —
+      // do not also list them in includeAssets (that duplicated precache entries).
+      // Manifest icons are covered by globPatterns; disable the extra auto-inject.
+      includeAssets: [],
+      includeManifestIcons: false,
       manifest: {
         name: 'MeditateIt',
         short_name: 'MeditateIt',
@@ -32,7 +27,8 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         lang: 'en',
-        categories: ['health', 'lifestyle', 'wellness'],
+        // No "health" — lifestyle/wellness only (audit / W4-6).
+        categories: ['lifestyle', 'wellness'],
         icons: [
           {
             src: 'icons/icon-192.png',
@@ -55,14 +51,14 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // App shell + hashed assets (incl. noise AudioWorklet via ?url).
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,webmanifest}'],
+        // App shell + hashed assets (icons/fonts/worklet via public → dist).
+        // Omit webmanifest — the plugin already precaches the generated manifest.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
-        // No third-party runtime caches — fonts ship from /fonts (self-hosted).
+        // No skipWaiting / clientsClaim — waiting SW activates only after the
+        // user chooses Reload (registerType: 'prompt').
       },
       devOptions: {
         enabled: false,
