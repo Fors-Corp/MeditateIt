@@ -1,6 +1,7 @@
 import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import './App.css'
 import AppFooter from './components/AppFooter'
+import PwaChrome from './components/PwaChrome'
 import HomePage from './pages/HomePage'
 import PrivacyPage from './pages/PrivacyPage'
 import SequencePage from './pages/SequencePage'
@@ -21,6 +22,10 @@ function App() {
 
   return (
     <div className={`app-shell${isHome ? ' is-home' : ''}`}>
+      <a href="#main" className="skip-link">
+        Skip to main content
+      </a>
+
       {!isHome && (
         <header className="app-header">
           <Link to="/" className="brand">
@@ -31,7 +36,7 @@ function App() {
         </header>
       )}
 
-      <main className="app-main">
+      <main id="main" className="app-main" tabIndex={-1}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/settings" element={<SettingsPage />} />
@@ -43,6 +48,7 @@ function App() {
         </Routes>
       </main>
 
+      <PwaChrome />
       <AppFooter />
     </div>
   )

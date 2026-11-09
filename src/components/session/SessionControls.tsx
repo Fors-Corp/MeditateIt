@@ -101,13 +101,26 @@ export function SessionControls({ session }: SessionControlsProps) {
 
   const activeSolfeggio = recipe.tone.frequencyHz
 
+  const engineStatusLabel =
+    engineStatus === 'unavailable'
+      ? 'Audio unavailable in this browser'
+      : crossfading
+        ? 'Crossfading presets…'
+        : playing
+          ? 'Soundscape running'
+          : 'Ready when you are'
+
   return (
     <div className={`session-panel${playing ? ' is-playing' : ''}`}>
-      <header className="session-hero">
+      <div className="session-hero">
         <p className="session-kicker">{preset.name}</p>
-        <p className="session-timer" aria-live="polite">
+        {/* Timer is visual only — no per-second aria-live. Status region below. */}
+        <p className="session-timer" aria-hidden="true">
           {formatTime(remainingSec, openEnded)}
         </p>
+        <span className="visually-hidden">
+          Remaining {formatTime(remainingSec, openEnded)}
+        </span>
         <button
           type="button"
           className={`play-btn${playing ? ' is-active' : ''}`}
@@ -116,14 +129,13 @@ export function SessionControls({ session }: SessionControlsProps) {
         >
           {playing ? 'Pause' : 'Play'}
         </button>
-        <p className="session-engine-status" data-status={engineStatus}>
-          {engineStatus === 'unavailable'
-            ? 'Audio unavailable in this browser'
-            : crossfading
-              ? 'Crossfading presets…'
-              : playing
-                ? 'Soundscape running'
-                : 'Ready when you are'}
+        <p
+          className="session-engine-status"
+          data-status={engineStatus}
+          role="status"
+          aria-live="polite"
+        >
+          {engineStatusLabel}
         </p>
         <button
           type="button"
@@ -132,9 +144,9 @@ export function SessionControls({ session }: SessionControlsProps) {
         >
           Save as preset
         </button>
-      </header>
+      </div>
 
-      <section className="control-block" aria-labelledby="preset-switch-label">
+      <div className="control-block">
         <div className="control-row">
           <h2 id="preset-switch-label">Preset</h2>
           {crossfading && (
@@ -145,29 +157,34 @@ export function SessionControls({ session }: SessionControlsProps) {
         </div>
         <div
           className="chip-row preset-switch-row"
-          role="group"
-          aria-label="Switch preset"
+          role="radiogroup"
+          aria-labelledby="preset-switch-label"
         >
-          {switchablePresets.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className={`chip${preset.id === p.id ? ' is-selected' : ''}`}
-              disabled={crossfading && preset.id !== p.id}
-              onClick={() => switchPreset(p.id)}
-            >
-              {p.name}
-            </button>
-          ))}
+          {switchablePresets.map((p) => {
+            const selected = preset.id === p.id
+            return (
+              <button
+                key={p.id}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                className={`chip${selected ? ' is-selected' : ''}`}
+                disabled={crossfading && !selected}
+                onClick={() => switchPreset(p.id)}
+              >
+                {p.name}
+              </button>
+            )
+          })}
         </div>
         <p className="layer-note">
           {playing
             ? 'Switching while playing crossfades over ~2 seconds.'
             : 'Pick a starting recipe, then press Play.'}
         </p>
-      </section>
+      </div>
 
-      <section className="control-block" aria-labelledby="master-label">
+      <div className="control-block">
         <div className="control-row">
           <h2 id="master-label">Master</h2>
           <span className="control-value">
@@ -181,11 +198,11 @@ export function SessionControls({ session }: SessionControlsProps) {
           step={0.01}
           value={masterVolume}
           onChange={(e) => setMasterVolume(Number(e.target.value))}
-          aria-label="Master volume"
+          aria-labelledby="master-label"
         />
-      </section>
+      </div>
 
-      <section className="control-block" aria-labelledby="timer-label">
+      <div className="control-block">
         <div className="control-row">
           <h2 id="timer-label">Duration</h2>
           <label className="open-ended">
@@ -198,27 +215,33 @@ export function SessionControls({ session }: SessionControlsProps) {
           </label>
         </div>
         {!openEnded && (
-          <div className="chip-row" role="group" aria-label="Session length">
-            {DURATION_PRESETS.map((d) => (
-              <button
-                key={d.minutes}
-                type="button"
-                className={`chip${
-                  remainingSec != null &&
-                  Math.round(remainingSec / 60) === d.minutes
-                    ? ' is-selected'
-                    : ''
-                }`}
-                onClick={() => setDurationMinutes(d.minutes)}
-              >
-                {d.label}
-              </button>
-            ))}
+          <div
+            className="chip-row"
+            role="radiogroup"
+            aria-labelledby="timer-label"
+          >
+            {DURATION_PRESETS.map((d) => {
+              const selected =
+                remainingSec != null &&
+                Math.round(remainingSec / 60) === d.minutes
+              return (
+                <button
+                  key={d.minutes}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  className={`chip${selected ? ' is-selected' : ''}`}
+                  onClick={() => setDurationMinutes(d.minutes)}
+                >
+                  {d.label}
+                </button>
+              )
+            })}
           </div>
         )}
-      </section>
+      </div>
 
-      <section className="control-block" aria-labelledby="fade-label">
+      <div className="control-block">
         <h2 id="fade-label">Fade</h2>
         <div className="fade-grid">
           <label>
@@ -244,9 +267,9 @@ export function SessionControls({ session }: SessionControlsProps) {
             />
           </label>
         </div>
-      </section>
+      </div>
 
-      <section className="control-block" aria-labelledby="layers-label">
+      <div className="control-block">
         <h2 id="layers-label">Layers</h2>
         <div className="layer-list">
           <LayerRow
@@ -256,17 +279,26 @@ export function SessionControls({ session }: SessionControlsProps) {
             onToggle={() => toggleLayer('noise')}
             onGain={(v) => setLayerGain('noise', v)}
           >
-            <div className="chip-row" role="group" aria-label="Noise color">
-              {NOISE_KINDS.map((kind) => (
-                <button
-                  key={kind}
-                  type="button"
-                  className={`chip${recipe.noise.kind === kind ? ' is-selected' : ''}`}
-                  onClick={() => setNoiseKind(kind)}
-                >
-                  {kind}
-                </button>
-              ))}
+            <div
+              className="chip-row"
+              role="radiogroup"
+              aria-label="Noise color"
+            >
+              {NOISE_KINDS.map((kind) => {
+                const selected = recipe.noise.kind === kind
+                return (
+                  <button
+                    key={kind}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    className={`chip${selected ? ' is-selected' : ''}`}
+                    onClick={() => setNoiseKind(kind)}
+                  >
+                    {kind}
+                  </button>
+                )
+              })}
             </div>
             <LayerEqControls
               layer="noise"
@@ -284,17 +316,26 @@ export function SessionControls({ session }: SessionControlsProps) {
             onToggle={() => toggleLayer('tone')}
             onGain={(v) => setLayerGain('tone', v)}
           >
-            <div className="chip-row solfeggio-row" role="group" aria-label="Solfeggio">
-              {SOLFEGGIO_FREQUENCIES.map((hz) => (
-                <button
-                  key={hz}
-                  type="button"
-                  className={`chip${activeSolfeggio === hz ? ' is-selected' : ''}`}
-                  onClick={() => setSolfeggio(hz)}
-                >
-                  {hz}
-                </button>
-              ))}
+            <div
+              className="chip-row solfeggio-row"
+              role="radiogroup"
+              aria-label="Solfeggio"
+            >
+              {SOLFEGGIO_FREQUENCIES.map((hz) => {
+                const selected = activeSolfeggio === hz
+                return (
+                  <button
+                    key={hz}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    className={`chip${selected ? ' is-selected' : ''}`}
+                    onClick={() => setSolfeggio(hz)}
+                  >
+                    {hz}
+                  </button>
+                )
+              })}
             </div>
             <LayerEqControls
               layer="tone"
@@ -312,17 +353,26 @@ export function SessionControls({ session }: SessionControlsProps) {
             onToggle={() => toggleLayer('beat')}
             onGain={(v) => setLayerGain('beat', v)}
           >
-            <div className="chip-row" role="group" aria-label="Beat mode">
-              {BEAT_MODES.map((mode) => (
-                <button
-                  key={mode.id}
-                  type="button"
-                  className={`chip${recipe.beat.mode === mode.id ? ' is-selected' : ''}`}
-                  onClick={() => setBeatMode(mode.id)}
-                >
-                  {mode.label}
-                </button>
-              ))}
+            <div
+              className="chip-row"
+              role="radiogroup"
+              aria-label="Beat mode"
+            >
+              {BEAT_MODES.map((mode) => {
+                const selected = recipe.beat.mode === mode.id
+                return (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    className={`chip${selected ? ' is-selected' : ''}`}
+                    onClick={() => setBeatMode(mode.id)}
+                  >
+                    {mode.label}
+                  </button>
+                )
+              })}
             </div>
             {recipe.beat.mode !== 'off' && (
               <label className="beat-rate">
@@ -353,21 +403,26 @@ export function SessionControls({ session }: SessionControlsProps) {
             onToggle={() => toggleLayer('nature')}
             onGain={(v) => setLayerGain('nature', v)}
           >
-            <div className="chip-row" role="group" aria-label="Nature sound">
-              {NATURE_SOUNDS.map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={`chip${
-                    (recipe.nature.soundId ?? 'rain') === id
-                      ? ' is-selected'
-                      : ''
-                  }`}
-                  onClick={() => setNatureSound(id)}
-                >
-                  {id}
-                </button>
-              ))}
+            <div
+              className="chip-row"
+              role="radiogroup"
+              aria-label="Nature sound"
+            >
+              {NATURE_SOUNDS.map((id) => {
+                const selected = (recipe.nature.soundId ?? 'rain') === id
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    className={`chip${selected ? ' is-selected' : ''}`}
+                    onClick={() => setNatureSound(id)}
+                  >
+                    {id}
+                  </button>
+                )
+              })}
             </div>
             <label className="beat-rate">
               Brightness {Math.round((recipe.nature.brightness ?? 0.5) * 100)}%
@@ -392,7 +447,7 @@ export function SessionControls({ session }: SessionControlsProps) {
             />
           </LayerRow>
         </div>
-      </section>
+      </div>
 
       <HeadphoneWarning
         open={showHeadphoneWarning}

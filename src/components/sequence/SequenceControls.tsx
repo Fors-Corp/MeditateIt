@@ -67,14 +67,20 @@ export function SequenceControls({ session }: SequenceControlsProps) {
           ? `Stage ${stageIndex + 1} of ${stageCount}`
           : 'Ready when you are'
 
+  const timerText = completed ? 'Done' : formatTime(stageRemainingSec)
+
   return (
     <div className={`sequence-panel${playing ? ' is-playing' : ''}`}>
-      <header className="sequence-hero">
+      <div className="sequence-hero">
         <p className="sequence-kicker">{sequence.name}</p>
         <h2 className="sequence-stage-name">{stageName}</h2>
-        <p className="sequence-timer" aria-live="polite">
-          {completed ? 'Done' : formatTime(stageRemainingSec)}
+        {/* Timer is visual only — no per-second aria-live. Status region below. */}
+        <p className="sequence-timer" aria-hidden="true">
+          {timerText}
         </p>
+        <span className="visually-hidden">
+          {completed ? 'Sequence done' : `Stage remaining ${timerText}`}
+        </span>
 
         <div
           className="sequence-progress"
@@ -113,12 +119,17 @@ export function SequenceControls({ session }: SequenceControlsProps) {
           </button>
         </div>
 
-        <p className="sequence-engine-status" data-status={engineStatus}>
+        <p
+          className="sequence-engine-status"
+          data-status={engineStatus}
+          role="status"
+          aria-live="polite"
+        >
           {statusLabel}
         </p>
-      </header>
+      </div>
 
-      <section className="control-block" aria-labelledby="seq-overall-label">
+      <div className="control-block">
         <div className="control-row">
           <h2 id="seq-overall-label">Sequence</h2>
           <span className="control-value">
@@ -160,9 +171,9 @@ export function SequenceControls({ session }: SequenceControlsProps) {
             )
           })}
         </ol>
-      </section>
+      </div>
 
-      <section className="control-block" aria-labelledby="seq-master-label">
+      <div className="control-block">
         <div className="control-row">
           <h2 id="seq-master-label">Master</h2>
           <span className="control-value">
@@ -176,9 +187,9 @@ export function SequenceControls({ session }: SequenceControlsProps) {
           step={0.01}
           value={masterVolume}
           onChange={(e) => setMasterVolume(Number(e.target.value))}
-          aria-label="Master volume"
+          aria-labelledby="seq-master-label"
         />
-      </section>
+      </div>
 
       <HeadphoneWarning
         open={showHeadphoneWarning}

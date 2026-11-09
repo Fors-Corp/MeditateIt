@@ -1,3 +1,27 @@
+.skip-link {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  top: var(--space-3);
+  z-index: 100;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--ink);
+  color: #f4faf7;
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform var(--motion-fast) var(--ease-out);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.skip-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
 .app-shell {
   flex: 1;
   display: flex;
@@ -5,6 +29,50 @@
   width: min(42rem, 100%);
   margin-inline: auto;
   padding: var(--space-4) var(--space-3) var(--space-6);
+}
+
+.app-main:focus {
+  outline: none;
+}
+
+.app-main:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 4px;
+}
+
+.pwa-chrome {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  backdrop-filter: blur(8px);
+}
+
+.pwa-chrome-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.pwa-chrome-copy {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.pwa-chrome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.pwa-chrome-btn {
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
 }
 
 .app-shell.is-home {
