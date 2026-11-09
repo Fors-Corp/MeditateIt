@@ -46,7 +46,13 @@
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--ink);
+  margin: 0 0 var(--space-1);
+}
+
+.sequence-stage-sub {
   margin: 0 0 var(--space-3);
+  font-size: 0.9rem;
+  color: var(--ink-muted);
 }
 
 .sequence-timer {

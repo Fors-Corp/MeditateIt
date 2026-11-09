@@ -4,12 +4,15 @@ import {
   loadRecentSessions,
   loadSystemPresets,
   loadUserPresets,
+  loadUserSequences,
   PRESET_BLURBS,
   removeUserPreset,
+  removeUserSequence,
 } from '../components/session/bridges'
 import {
   formatSequenceDuration,
   listSystemSequences,
+  type Sequence,
 } from '../sequences'
 import { getLastUsedPreset, type SessionRecord } from '../storage'
 import type { Preset } from '../presets'
@@ -43,11 +46,16 @@ export default function HomePage() {
   const sequences = listSystemSequences()
   const [quickStartId, setQuickStartId] = useState('daily-calm')
   const [userPresets, setUserPresets] = useState<Preset[]>([])
+  const [userSequences, setUserSequences] = useState<Sequence[]>([])
   const [recentSessions, setRecentSessions] = useState<SessionRecord[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const refreshUserPresets = useCallback(() => {
     void loadUserPresets().then(setUserPresets)
+  }, [])
+
+  const refreshUserSequences = useCallback(() => {
+    void loadUserSequences().then(setUserSequences)
   }, [])
 
   useEffect(() => {
@@ -58,6 +66,9 @@ export default function HomePage() {
     void loadUserPresets().then((list) => {
       if (!cancelled) setUserPresets(list)
     })
+    void loadUserSequences().then((list) => {
+      if (!cancelled) setUserSequences(list)
+    })
     void loadRecentSessions(5).then((list) => {
       if (!cancelled) setRecentSessions(list)
     })
@@ -66,7 +77,7 @@ export default function HomePage() {
     }
   }, [])
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleDeletePreset = async (id: string, name: string) => {
     if (!window.confirm(`Delete preset “${name}”? This cannot be undone.`)) {
       return
     }
@@ -78,6 +89,19 @@ export default function HomePage() {
         const last = await getLastUsedPreset()
         setQuickStartId(last.id)
       }
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const handleDeleteSequence = async (id: string, name: string) => {
+    if (!window.confirm(`Delete sequence “${name}”? This cannot be undone.`)) {
+      return
+    }
+    setDeletingId(id)
+    try {
+      await removeUserSequence(id)
+      refreshUserSequences()
     } finally {
       setDeletingId(null)
     }
@@ -125,6 +149,43 @@ export default function HomePage() {
         </ul>
       </section>
 
+      {userSequences.length > 0 ? (
+        <section
+          className="preset-section"
+          aria-labelledby="user-sequences-heading"
+        >
+          <h2 id="user-sequences-heading">Your sequences</h2>
+          <ul className="preset-list">
+            {userSequences.map((seq, index) => (
+              <li
+                key={seq.id}
+                className="preset-row"
+                style={{ animationDelay: `${55 + index * 40}ms` }}
+              >
+                <Link className="preset-link" to={`/sequence/${seq.id}`}>
+                  <span className="preset-name">{seq.name}</span>
+                  <span className="preset-meta">
+                    {seq.summary || 'Saved on this device'}
+                  </span>
+                  <span className="preset-duration">
+                    {formatSequenceDuration(seq)}
+                  </span>
+                </Link>
+                <button
+                  type="button"
+                  className="preset-delete"
+                  onClick={() => void handleDeleteSequence(seq.id, seq.name)}
+                  disabled={deletingId === seq.id}
+                  aria-label={`Delete ${seq.name}`}
+                >
+                  {deletingId === seq.id ? '…' : 'Delete'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {recentSessions.length > 0 ? (
         <section className="preset-section" aria-labelledby="history-heading">
           <div className="section-head">
@@ -169,7 +230,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   className="preset-delete"
-                  onClick={() => void handleDelete(preset.id, preset.name)}
+                  onClick={() => void handleDeletePreset(preset.id, preset.name)}
                   disabled={deletingId === preset.id}
                   aria-label={`Delete ${preset.name}`}
                 >

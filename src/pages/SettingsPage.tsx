@@ -67,8 +67,9 @@ export default function SettingsPage() {
     setMessage(null)
     try {
       const doc = await downloadBackup()
+      const seqCount = (doc.sequences ?? []).length
       setMessage(
-        `Exported ${doc.userPresets.length} preset${doc.userPresets.length === 1 ? '' : 's'} and ${(doc.sessionHistory ?? []).length} session${(doc.sessionHistory ?? []).length === 1 ? '' : 's'}.`,
+        `Exported ${doc.userPresets.length} preset${doc.userPresets.length === 1 ? '' : 's'}, ${seqCount} sequence${seqCount === 1 ? '' : 's'}, and ${(doc.sessionHistory ?? []).length} session${(doc.sessionHistory ?? []).length === 1 ? '' : 's'}.`,
       )
     } catch (err) {
       setError(messageForStorageError(err, STORAGE_ERROR.EXPORT_FAILED))
@@ -88,7 +89,7 @@ export default function SettingsPage() {
       })
       refreshHistory()
       setMessage(
-        `Import (${result.mode}): ${result.userPresetCount} preset${result.userPresetCount === 1 ? '' : 's'}, ${result.historyCount} history entr${result.historyCount === 1 ? 'y' : 'ies'}.`,
+        `Import (${result.mode}): ${result.userPresetCount} preset${result.userPresetCount === 1 ? '' : 's'}, ${result.userSequenceCount} sequence${result.userSequenceCount === 1 ? '' : 's'}, ${result.historyCount} history entr${result.historyCount === 1 ? 'y' : 'ies'}.`,
       )
     } catch (err) {
       setError(messageForStorageError(err, STORAGE_ERROR.IMPORT_FAILED))
@@ -156,7 +157,7 @@ export default function SettingsPage() {
       : ''
     if (
       !window.confirm(
-        `Erase all MeditateIt data on this device (prefs, saved presets, session history, and retention setting)?${cacheNote} This cannot be undone.`,
+        `Erase all MeditateIt data on this device (prefs, saved presets, sequences, session history, and retention setting)?${cacheNote} This cannot be undone.`,
       )
     ) {
       return
@@ -189,9 +190,9 @@ export default function SettingsPage() {
       <section className="settings-section" aria-labelledby="backup-heading">
         <h1 id="backup-heading">Backup</h1>
         <p className="settings-lede">
-          Download or restore prefs, saved presets, and session history as JSON.
-          Export includes finished listens by default. No account — the file
-          stays on this device.
+          Download or restore prefs, saved presets, sequences, and session
+          history as JSON. Export includes finished listens by default. No
+          account — the file stays on this device.
         </p>
 
         <div className="settings-actions">
@@ -217,8 +218,8 @@ export default function SettingsPage() {
               disabled={busy}
             />
             <span>
-              <strong>Merge</strong> — keep existing presets; same ids update
-              from the file
+              <strong>Merge</strong> — keep existing presets and sequences; same
+              ids update from the file
             </span>
           </label>
           <label className="settings-radio">
@@ -231,8 +232,8 @@ export default function SettingsPage() {
               disabled={busy}
             />
             <span>
-              <strong>Replace</strong> — overwrite prefs and user presets; wipe
-              session history when the file has none
+              <strong>Replace</strong> — overwrite prefs, user presets, and
+              sequences; wipe session history when the file has none
             </span>
           </label>
           {importMode === 'replace' ? (
@@ -333,9 +334,9 @@ export default function SettingsPage() {
       <section className="settings-section" aria-labelledby="erase-heading">
         <h2 id="erase-heading">Erase all data</h2>
         <p className="settings-lede">
-          Remove prefs, saved presets, session history, and the retention
-          setting from this browser. Export a backup first if you may want it
-          back.
+          Remove prefs, saved presets, sequences, session history, and the
+          retention setting from this browser. Export a backup first if you may
+          want it back.
         </p>
         <label className="settings-check">
           <input

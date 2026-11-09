@@ -1,5 +1,5 @@
 import { cloneRecipe, getSystemPreset } from '../presets'
-import { getPreset } from '../storage'
+import { getUserPreset } from '../storage/userPresets.ts'
 import type { ResolvedStage, Sequence, SequenceStage } from './types'
 
 export class StageResolveError extends Error {
@@ -62,7 +62,7 @@ export async function resolveStage(
     if (!(err instanceof StageResolveError)) throw err
   }
 
-  const preset = await getPreset(stage.presetId)
+  const preset = await getUserPreset(stage.presetId)
   if (!preset) {
     throw new StageResolveError(
       `Stage “${stage.id}” could not resolve preset “${stage.presetId}”`,

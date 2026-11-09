@@ -10,6 +10,9 @@ interface SavePresetDialogProps {
   onCancel: () => void
   onSaveNew: () => void
   onOverwrite: () => void
+  /** Defaults to preset copy so sequence save can reuse the same dialog. */
+  title?: string
+  description?: string
 }
 
 export function SavePresetDialog({
@@ -22,6 +25,8 @@ export function SavePresetDialog({
   onCancel,
   onSaveNew,
   onOverwrite,
+  title = 'Save preset',
+  description = 'Store this soundscape locally on this device. No account needed.',
 }: SavePresetDialogProps) {
   const panelRef = useModalDialogFocus(open, onCancel, {
     initialFocus: 'first',
@@ -44,10 +49,8 @@ export function SavePresetDialog({
         aria-describedby="save-preset-body"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="save-preset-title">Save preset</h2>
-        <p id="save-preset-body">
-          Store this soundscape locally on this device. No account needed.
-        </p>
+        <h2 id="save-preset-title">{title}</h2>
+        <p id="save-preset-body">{description}</p>
         <label className="save-preset-field">
           Name
           <input

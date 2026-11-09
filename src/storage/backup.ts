@@ -1,6 +1,11 @@
 import type { Preset, UserPrefs } from '../presets/index.ts'
+import type { Sequence } from '../sequences/types.ts'
 import { STORAGE_ERROR } from './errors.ts'
-import { MAX_BACKUP_CHARS, MAX_USER_PRESETS } from './limits.ts'
+import {
+  MAX_BACKUP_CHARS,
+  MAX_USER_PRESETS,
+  MAX_USER_SEQUENCES,
+} from './limits.ts'
 import { loadPrefs, normalizePrefs, savePrefs } from './prefs.ts'
 import {
   clearSessionHistory,
@@ -19,6 +24,12 @@ import {
   mergeUserPresets,
   replaceUserPresets,
 } from './userPresets.ts'
+import {
+  clearUserSequences,
+  listUserSequences,
+  mergeUserSequences,
+  replaceUserSequences,
+} from './userSequences.ts'
 
 export const BACKUP_FORMAT = 'meditateit-backup' as const
 export const BACKUP_VERSION = 1 as const
@@ -30,14 +41,15 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-/** Build a downloadable backup of prefs + user presets (+ optional history). */
+/** Build a downloadable backup of prefs + user presets + sequences (+ optional history). */
 export async function exportBackup(options?: {
   includeHistory?: boolean
 }): Promise<BackupDocument> {
   const includeHistory = options?.includeHistory !== false
-  const [prefs, userPresets, sessionHistory] = await Promise.all([
+  const [prefs, userPresets, sequences, sessionHistory] = await Promise.all([
     loadPrefs(),
     listUserPresets(),
+    listUserSequences(),
     includeHistory ? listSessionHistory() : Promise.resolve([] as SessionRecord[]),
   ])
 
@@ -47,7 +59,7 @@ export async function exportBackup(options?: {
     exportedAt: new Date().toISOString(),
     prefs,
     userPresets,
-    sequences: [],
+    sequences,
   }
   if (includeHistory) {
     doc.sessionHistory = sessionHistory
@@ -62,6 +74,7 @@ export function stringifyBackup(doc: BackupDocument): string {
 /**
  * Parse + soft-validate a backup JSON string or object.
  * Throws with stable STORAGE_ERROR messages.
+ * Sequences are capped; invalid entries are dropped later on persist.
  */
 export function parseBackup(raw: unknown): BackupDocument {
   if (typeof raw === 'string' && raw.length > MAX_BACKUP_CHARS) {
@@ -94,15 +107,21 @@ export function parseBackup(raw: unknown): BackupDocument {
     // Allow a little headroom in the file; persist path still caps.
     throw new Error(STORAGE_ERROR.PRESETS_TOO_MANY)
   }
+  if (
+    Array.isArray(value.sequences) &&
+    value.sequences.length > MAX_USER_SEQUENCES * 2
+  ) {
+    throw new Error(STORAGE_ERROR.PRESETS_TOO_MANY)
+  }
 
   const prefs = normalizePrefs(value.prefs)
   const sessionHistory = Array.isArray(value.sessionHistory)
     ? (value.sessionHistory as SessionRecord[])
     : undefined
-  // Sequences are reserved; drop anything oversized / non-array.
+  // Preserve presence: omitted sequences → undefined (replace can wipe).
   const sequences = Array.isArray(value.sequences)
-    ? value.sequences.slice(0, 50)
-    : []
+    ? (value.sequences.slice(0, MAX_USER_SEQUENCES * 2) as Sequence[])
+    : undefined
 
   return {
     format: BACKUP_FORMAT,
@@ -114,7 +133,7 @@ export function parseBackup(raw: unknown): BackupDocument {
     prefs,
     // Raw array is re-normalized in replaceUserPresets / mergeUserPresets.
     userPresets: value.userPresets as Preset[],
-    sequences,
+    ...(sequences ? { sequences } : {}),
     ...(sessionHistory ? { sessionHistory } : {}),
   }
 }
@@ -130,9 +149,10 @@ export type ImportBackupOptions = {
 
 /**
  * Import a backup.
- * - `replace`: overwrite prefs + user presets; history from file, or wipe
- *   when omitted unless `keepHistoryWhenOmitted`
- * - `merge`: imported prefs fields win; presets/history merge by id
+ * - `replace`: overwrite prefs + user presets + sequences; history from file,
+ *   or wipe when omitted unless `keepHistoryWhenOmitted`. Omitted sequences
+ *   wipe stored user sequences.
+ * - `merge`: imported prefs fields win; presets/sequences/history merge by id
  */
 export async function importBackup(
   raw: unknown,
@@ -153,6 +173,19 @@ export async function importBackup(
     mode === 'replace'
       ? await replaceUserPresets(doc.userPresets)
       : await mergeUserPresets(doc.userPresets)
+
+  let userSequences: Sequence[]
+  if (doc.sequences) {
+    userSequences =
+      mode === 'replace'
+        ? await replaceUserSequences(doc.sequences)
+        : await mergeUserSequences(doc.sequences)
+  } else if (mode === 'replace') {
+    await clearUserSequences()
+    userSequences = []
+  } else {
+    userSequences = await listUserSequences()
+  }
 
   let historyCount = 0
   if (doc.sessionHistory) {
@@ -176,6 +209,7 @@ export async function importBackup(
     mode,
     prefs,
     userPresetCount: userPresets.length,
+    userSequenceCount: userSequences.length,
     historyCount,
   }
 }

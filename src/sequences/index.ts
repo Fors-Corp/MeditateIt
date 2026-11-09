@@ -1,5 +1,6 @@
 /**
  * Multi-stage sequences — system templates + stage resolution.
+ * User sequence persistence lives in `src/storage/userSequences`.
  * Player UI lives in `src/components/sequence` + `src/pages/SequencePage`.
  */
 
