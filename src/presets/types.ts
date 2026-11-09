@@ -1,8 +1,10 @@
 /** Domain types for session recipes and presets (MVP data model). */
 
+import type { PresetCategoryId } from './categories.ts'
 import type { ThemeId } from '../theme/ids.ts'
 
 export type { ThemeId }
+export type { PresetCategoryId }
 
 export type NoiseKind = 'white' | 'pink' | 'brown'
 export type BeatMode = 'off' | 'binaural' | 'isochronic'
@@ -94,6 +96,13 @@ export interface Preset {
   defaultDurationSec: number | null
   /** ISO timestamp */
   updatedAt: string
+  /**
+   * Browse categories (system presets). User presets may omit.
+   * At least one category on every system template.
+   */
+  categories?: readonly PresetCategoryId[]
+  /** Optional light search tags (case-insensitive match on Home). */
+  tags?: readonly string[]
 }
 
 export interface UserPrefs {

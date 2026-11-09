@@ -15,7 +15,12 @@ import {
   type Messages,
 } from '../i18n'
 import { useI18n } from '../i18n/useI18n'
-import { isSystemPresetId, type Preset } from '../presets'
+import {
+  isSystemPresetId,
+  PRESET_CATEGORY_IDS,
+  type Preset,
+  type PresetCategoryId,
+} from '../presets'
 import {
   isSystemSequenceId,
   listSystemSequences,
@@ -50,6 +55,33 @@ function presetBlurb(id: string, messages: Messages): string | undefined {
   return messages.blurbs[id]
 }
 
+function matchesCategory(
+  preset: Preset,
+  category: PresetCategoryId | null,
+): boolean {
+  if (category == null) return true
+  return (preset.categories ?? []).includes(category)
+}
+
+function matchesSearch(
+  preset: Preset,
+  query: string,
+  messages: Messages,
+): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const name = systemPresetLabel(preset.id, preset.name).toLowerCase()
+  const blurb = (messages.blurbs[preset.id] ?? '').toLowerCase()
+  const tags = (preset.tags ?? []).join(' ').toLowerCase()
+  const id = preset.id.toLowerCase()
+  return (
+    name.includes(q) ||
+    blurb.includes(q) ||
+    tags.includes(q) ||
+    id.includes(q)
+  )
+}
+
 /** Prefer sequence replay when resolvable; else preset session. */
 function resolveHistoryHref(
   row: SessionRecord,
@@ -74,13 +106,27 @@ function resolveHistoryHref(
 
 export default function HomePage() {
   const { messages } = useI18n()
-  const presets = loadSystemPresets()
+  const presets = useMemo(() => loadSystemPresets(), [])
   const sequences = listSystemSequences()
   const [quickStartId, setQuickStartId] = useState('daily-calm')
   const [userPresets, setUserPresets] = useState<Preset[]>([])
   const [userSequences, setUserSequences] = useState<Sequence[]>([])
   const [recentSessions, setRecentSessions] = useState<SessionRecord[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [presetCategory, setPresetCategory] = useState<PresetCategoryId | null>(
+    null,
+  )
+  const [presetQuery, setPresetQuery] = useState('')
+
+  const filteredSystemPresets = useMemo(
+    () =>
+      presets.filter(
+        (preset) =>
+          matchesCategory(preset, presetCategory) &&
+          matchesSearch(preset, presetQuery, messages),
+      ),
+    [presets, presetCategory, presetQuery, messages],
+  )
 
   const knownUserPresetIds = useMemo(
     () => new Set(userPresets.map((p) => p.id)),
@@ -326,25 +372,87 @@ export default function HomePage() {
       ) : null}
 
       <section className="preset-section" aria-labelledby="presets-heading">
-        <h2 id="presets-heading">{messages.home.systemPresets}</h2>
-        <ul className="preset-list">
-          {presets.map((preset, index) => (
-            <li key={preset.id} style={{ animationDelay: `${80 + index * 50}ms` }}>
-              <Link className="preset-link" to={`/session/${preset.id}`}>
-                <span className="preset-name">
-                  {systemPresetLabel(preset.id, preset.name)}
-                </span>
-                <span className="preset-meta">
-                  {presetBlurb(preset.id, messages) ??
-                    formatDuration(preset.defaultDurationSec, messages)}
-                </span>
-                <span className="preset-duration">
-                  {formatDuration(preset.defaultDurationSec, messages)}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="section-head">
+          <h2 id="presets-heading">{messages.home.systemPresets}</h2>
+          <p className="section-aside">{messages.home.browseAside}</p>
+        </div>
+
+        <div className="preset-browse">
+          <div className="preset-search">
+            <label htmlFor="preset-search" className="preset-search-label">
+              {messages.home.searchLabel}
+            </label>
+            <input
+              id="preset-search"
+              type="search"
+              className="preset-search-input"
+              value={presetQuery}
+              onChange={(e) => setPresetQuery(e.target.value)}
+              placeholder={messages.home.searchPlaceholder}
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
+
+          <div
+            className="chip-row preset-category-row"
+            role="radiogroup"
+            aria-label={messages.home.categoryFilterAria}
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={presetCategory === null}
+              className={`chip${presetCategory === null ? ' is-selected' : ''}`}
+              onClick={() => setPresetCategory(null)}
+            >
+              {messages.home.categoryAll}
+            </button>
+            {PRESET_CATEGORY_IDS.map((id) => {
+              const selected = presetCategory === id
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  className={`chip${selected ? ' is-selected' : ''}`}
+                  onClick={() => setPresetCategory(id)}
+                >
+                  {messages.categories[id]}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {filteredSystemPresets.length === 0 ? (
+          <p className="preset-empty" role="status">
+            {messages.home.noPresetMatches}
+          </p>
+        ) : (
+          <ul className="preset-list">
+            {filteredSystemPresets.map((preset, index) => (
+              <li
+                key={preset.id}
+                style={{ animationDelay: `${80 + index * 40}ms` }}
+              >
+                <Link className="preset-link" to={`/session/${preset.id}`}>
+                  <span className="preset-name">
+                    {systemPresetLabel(preset.id, preset.name)}
+                  </span>
+                  <span className="preset-meta">
+                    {presetBlurb(preset.id, messages) ??
+                      formatDuration(preset.defaultDurationSec, messages)}
+                  </span>
+                  <span className="preset-duration">
+                    {formatDuration(preset.defaultDurationSec, messages)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   )

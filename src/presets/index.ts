@@ -13,6 +13,7 @@ export type {
   NoiseKind,
   NoiseParams,
   Preset,
+  PresetCategoryId,
   PresetSource,
   SessionRecipe,
   ToneParams,
@@ -21,6 +22,11 @@ export type {
 } from './types.ts'
 
 export { NEUTRAL_LAYER_EQ } from './types.ts'
+
+export {
+  isPresetCategoryId,
+  PRESET_CATEGORY_IDS,
+} from './categories.ts'
 
 export {
   cloneLayerEq,
