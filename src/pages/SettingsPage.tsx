@@ -227,6 +227,21 @@ export default function SettingsPage() {
         )}
       </section>
 
+      <section className="settings-section" aria-labelledby="about-heading">
+        <h2 id="about-heading">About &amp; legal</h2>
+        <p className="settings-lede">
+          MeditateIt is a generative sound tool for personal wellness and focus.
+          It is not a medical device and is not intended to diagnose, treat,
+          cure, or prevent any condition. If you have health concerns, talk to a
+          qualified professional.
+        </p>
+        <p className="settings-legal-links">
+          <Link to="/privacy">Privacy</Link>
+          <span aria-hidden="true"> · </span>
+          <Link to="/terms">Terms</Link>
+        </p>
+      </section>
+
       <p className="settings-foot">
         <Link to="/">← Back home</Link>
       </p>

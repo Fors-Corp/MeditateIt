@@ -464,6 +464,106 @@
   color: var(--accent);
 }
 
+.settings-legal-links {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.settings-legal-links a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.settings-legal-links a:hover {
+  text-decoration: underline;
+}
+
+/* —— Legal stubs + app footer —— */
+
+.legal-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  max-width: 36rem;
+}
+
+.legal-page h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.1rem);
+  letter-spacing: -0.02em;
+}
+
+.legal-lede,
+.legal-section p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.legal-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.legal-section h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.legal-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.legal-list code,
+.legal-section code {
+  font-size: 0.85em;
+  color: var(--ink);
+}
+
+.app-footer {
+  margin-top: auto;
+  padding-top: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.app-disclaimer {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ink-muted);
+  max-width: 36rem;
+}
+
+.app-footer-links {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.app-footer-links a {
+  color: var(--ink-muted);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.app-footer-links a:hover {
+  color: var(--accent);
+}
+
 /* —— Session page chrome —— */
 
 .session-page {
