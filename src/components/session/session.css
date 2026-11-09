@@ -1,0 +1,319 @@
+.session-loading {
+  padding: var(--space-5);
+  color: var(--ink-muted);
+  animation: session-fade-in var(--motion-med) var(--ease-out) both;
+}
+
+.session-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  animation: session-rise var(--motion-med) var(--ease-out) both;
+}
+
+.session-panel.is-playing .session-hero {
+  background:
+    radial-gradient(80% 120% at 50% 0%, rgba(159, 196, 184, 0.35), transparent 70%),
+    var(--bg-elevated);
+}
+
+.session-hero {
+  text-align: center;
+  padding: var(--space-5) var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  transition: background-color var(--motion-med) var(--ease-out);
+}
+
+.session-kicker {
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: var(--space-2);
+}
+
+.session-timer {
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 8vw, 3.5rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: var(--space-4);
+  font-variant-numeric: tabular-nums;
+}
+
+.play-btn {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  width: min(11rem, 70%);
+  padding: 1rem 1.5rem;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #f4faf7;
+  background: var(--accent);
+  transition:
+    transform var(--motion-fast) var(--ease-out),
+    background-color var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-med) var(--ease-out);
+}
+
+.play-btn:hover {
+  background: var(--accent-hover);
+}
+
+.play-btn:active {
+  transform: scale(0.98);
+}
+
+.play-btn.is-active {
+  box-shadow: 0 0 0 6px rgba(42, 107, 94, 0.16);
+  animation: play-pulse 2.8s var(--ease-out) infinite;
+}
+
+.session-engine-status {
+  margin-top: var(--space-3);
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.control-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+  border-top: 1px solid var(--border);
+  animation: session-fade-in var(--motion-med) var(--ease-out) both;
+}
+
+.control-block:nth-of-type(2) {
+  animation-delay: 40ms;
+}
+.control-block:nth-of-type(3) {
+  animation-delay: 80ms;
+}
+.control-block:nth-of-type(4) {
+  animation-delay: 120ms;
+}
+.control-block:nth-of-type(5) {
+  animation-delay: 160ms;
+}
+
+.control-block h2 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.control-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.open-ended {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.chip {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--ink-muted);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.7rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out);
+}
+
+.chip:hover {
+  border-color: var(--accent-soft);
+  color: var(--accent);
+}
+
+.chip.is-selected {
+  background: rgba(42, 107, 94, 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.solfeggio-row .chip {
+  min-width: 3.1rem;
+  justify-content: center;
+}
+
+.fade-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.fade-grid label,
+.beat-rate {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+.layer-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.layer-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: var(--space-3) 0;
+  opacity: 0.72;
+  transition: opacity var(--motion-fast) var(--ease-out);
+}
+
+.layer-row.is-on {
+  opacity: 1;
+}
+
+.layer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.layer-toggle {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--ink-muted);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out);
+}
+
+.layer-toggle.is-on {
+  background: rgba(42, 107, 94, 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.layer-note {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.session-panel input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.headphone-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgba(22, 40, 36, 0.42);
+  backdrop-filter: blur(4px);
+  animation: session-fade-in var(--motion-fast) var(--ease-out) both;
+}
+
+.headphone-dialog {
+  width: min(24rem, 100%);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: #f3faf6;
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 40px rgba(22, 40, 36, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  animation: session-rise var(--motion-med) var(--ease-out) both;
+}
+
+.headphone-dialog h2 {
+  font-size: 1.35rem;
+}
+
+.headphone-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+@keyframes session-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes session-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes play-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 6px rgba(42, 107, 94, 0.12);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(42, 107, 94, 0.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-btn.is-active {
+    animation: none;
+  }
+}

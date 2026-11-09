@@ -1,0 +1,153 @@
+/**
+ * Thin adapters: session UI → audio engine + presets/storage.
+ */
+
+import {
+  audioEngine,
+  BINAURAL_REQUIRES_HEADPHONES,
+  SOLFEGGIO_FREQUENCIES,
+  type AudioEngineStatus,
+  type EngineParamsPatch,
+} from '../../audio'
+import {
+  cloneRecipe,
+  createBlankRecipe,
+  listSystemPresets,
+  type BeatMode,
+  type NoiseKind,
+  type Preset,
+  type SessionRecipe,
+} from '../../presets'
+import {
+  getLastUsedPreset,
+  getPreset,
+  loadPrefs,
+  rememberLastPreset as persistLastPreset,
+  updatePrefs,
+} from '../../storage'
+
+export { BINAURAL_REQUIRES_HEADPHONES, SOLFEGGIO_FREQUENCIES }
+export type { BeatMode, NoiseKind, Preset, SessionRecipe }
+
+export interface SessionAudioEngine {
+  getStatus: () => AudioEngineStatus
+  start: (fadeInSec?: number) => Promise<void>
+  stop: (fadeOutSec?: number) => void
+  applyRecipe: (recipe: SessionRecipe, masterVolume: number) => void
+}
+
+function recipeToPatch(
+  recipe: SessionRecipe,
+  masterVolume: number,
+): EngineParamsPatch {
+  return {
+    masterGain: masterVolume,
+    fadeInSec: recipe.fadeInSec,
+    fadeOutSec: recipe.fadeOutSec,
+    noise: {
+      enabled: recipe.noise.enabled,
+      kind: recipe.noise.kind,
+      gain: recipe.gains.noise,
+      highpassHz: recipe.noise.highpassHz ?? 40,
+      lowpassHz: recipe.noise.lowpassHz ?? 8000,
+    },
+    tone: {
+      enabled: recipe.tone.enabled,
+      frequencyHz: recipe.tone.frequencyHz,
+      gain: recipe.gains.tone,
+      mildDetuneCents: recipe.tone.mildDetuneCents ?? 0,
+    },
+    beat: {
+      enabled: recipe.beat.enabled && recipe.beat.mode !== 'off',
+      mode: recipe.beat.mode,
+      carrierHz: recipe.beat.carrierHz,
+      beatHz: recipe.beat.beatHz,
+      gain: recipe.gains.beat,
+      pulseDepth: recipe.beat.pulseDepth ?? 0.7,
+      headphonesAcknowledged: true,
+    },
+  }
+}
+
+export function createSessionAudio(): SessionAudioEngine {
+  return {
+    getStatus: () => audioEngine.getStatus(),
+    start: (fadeInSec) => audioEngine.start({ fadeInSec }),
+    stop: (fadeOutSec) => audioEngine.stop({ fadeOutSec }),
+    applyRecipe(recipe, masterVolume) {
+      audioEngine.setParams(recipeToPatch(recipe, masterVolume))
+    },
+  }
+}
+
+export function blankCustomPreset(): Preset {
+  return {
+    id: 'custom',
+    name: 'Custom',
+    source: 'user',
+    recipe: createBlankRecipe(),
+    defaultDurationSec: null,
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+/** Home list — system templates (cloned). */
+export function loadSystemPresets(): Preset[] {
+  return listSystemPresets().map((p) => ({
+    ...p,
+    recipe: cloneRecipe(p.recipe),
+  }))
+}
+
+export async function resolveSessionPreset(
+  routePresetId: string | undefined,
+): Promise<Preset> {
+  if (routePresetId === 'custom') {
+    return blankCustomPreset()
+  }
+
+  if (routePresetId) {
+    const found = await getPreset(routePresetId)
+    if (found) {
+      return {
+        ...found,
+        recipe: cloneRecipe(found.recipe),
+      }
+    }
+  }
+
+  // Quick start — last used or Daily calm
+  const last = await getLastUsedPreset()
+  return {
+    ...last,
+    recipe: cloneRecipe(last.recipe),
+  }
+}
+
+export async function loadSessionPrefs() {
+  return loadPrefs()
+}
+
+export async function rememberLastPreset(
+  presetId: string,
+  recipe?: SessionRecipe,
+): Promise<void> {
+  if (presetId === 'custom') return
+  await persistLastPreset(presetId, recipe)
+}
+
+export async function persistHeadphonesAck(acked: boolean): Promise<void> {
+  await updatePrefs({ preferHeadphonesAck: acked })
+}
+
+export async function persistMasterVolume(masterVolume: number): Promise<void> {
+  await updatePrefs({ masterVolume })
+}
+
+export const PRESET_BLURBS: Record<string, string> = {
+  'daily-calm': 'Speaker-friendly pink + 528 + soft pulse',
+  sleep: 'Deep brown bed with slow delta',
+  focus: 'Pink + 528 with mid-beta beat',
+  'anxiety-softener': 'Soft pink, 396 Hz, gentle alpha',
+  'deep-rest': 'Open-ended brown rumble + low tone',
+}

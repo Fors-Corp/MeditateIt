@@ -1,30 +1,68 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { loadSystemPresets, PRESET_BLURBS } from '../components/session/bridges'
+import { getLastUsedPreset } from '../storage'
+
+function formatDuration(sec: number | null): string {
+  if (sec == null) return 'Open-ended'
+  const m = Math.round(sec / 60)
+  return `${m} min`
+}
 
 export default function HomePage() {
+  const presets = loadSystemPresets()
+  const [quickStartId, setQuickStartId] = useState('daily-calm')
+
+  useEffect(() => {
+    let cancelled = false
+    void getLastUsedPreset().then((p) => {
+      if (!cancelled) setQuickStartId(p.id)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
-    <section className="home">
-      <div className="home-lead">
-        <h1>Start a calm session</h1>
-        <p>
-          Shape pink noise, solfeggio tones, and beats live — not a static
-          playlist. Pick a preset or go custom in under thirty seconds.
+    <div className="home-page">
+      <section className="home-hero" aria-labelledby="brand-hero">
+        <div className="home-hero-glow" aria-hidden="true" />
+        <p className="home-eyebrow">Generative soundscapes</p>
+        <h1 id="brand-hero" className="home-brand">
+          MeditateIt
+        </h1>
+        <p className="home-lede">
+          Shape pink noise, solfeggio tones, and beats live — start calm in under
+          thirty seconds.
         </p>
-      </div>
+        <div className="home-actions">
+          <Link className="btn btn-primary" to={`/session/${quickStartId}`}>
+            Quick start
+          </Link>
+          <Link className="btn btn-ghost" to="/session/custom">
+            Custom
+          </Link>
+        </div>
+      </section>
 
-      <div className="home-actions">
-        <Link className="btn btn-primary" to="/session">
-          Quick start
-        </Link>
-        <Link className="btn btn-ghost" to="/session/custom">
-          Custom session
-        </Link>
-      </div>
-
-      <p className="home-note">
-        Preset list and last-used quick start will land when{' '}
-        <code>src/presets/**</code> and <code>src/storage/**</code> are owned
-        by sibling agents. This shell only routes into the session stub.
-      </p>
-    </section>
+      <section className="preset-section" aria-labelledby="presets-heading">
+        <h2 id="presets-heading">System presets</h2>
+        <ul className="preset-list">
+          {presets.map((preset, index) => (
+            <li key={preset.id} style={{ animationDelay: `${80 + index * 50}ms` }}>
+              <Link className="preset-link" to={`/session/${preset.id}`}>
+                <span className="preset-name">{preset.name}</span>
+                <span className="preset-meta">
+                  {PRESET_BLURBS[preset.id] ?? formatDuration(preset.defaultDurationSec)}
+                </span>
+                <span className="preset-duration">
+                  {formatDuration(preset.defaultDurationSec)}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
   )
 }
