@@ -34,7 +34,9 @@ export function HeadphoneWarning({
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="headphone-title">Headphones needed</h2>
-        <p id="headphone-body">{BINAURAL_REQUIRES_HEADPHONES}</p>
+        <div id="headphone-body" className="headphone-body">
+          <p>{BINAURAL_REQUIRES_HEADPHONES}</p>
+        </div>
         <div className="headphone-actions">
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
             Cancel

@@ -1,5 +1,5 @@
 /**
- * Session UI — play/pause, timer, layer gains, solfeggio, beat mode,
+ * Session UI — play/pause, timer, layer gains, tone (Hz), beat mode,
  * mid-session preset crossfade, Media Session play/pause/stop, visibility resume.
  * Calls into `src/audio` via bridges; never owns DSP nodes.
  */

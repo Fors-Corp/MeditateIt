@@ -93,7 +93,7 @@ const WIND_DOWN: Sequence = systemSequence(
   [
     stage('wd-1', 'Soft landing', 10 * 60, { presetId: 'anxiety-softener' }),
     stage('wd-2', 'Pink settle', 10 * 60, { recipe: PINK_BED }),
-    stage('wd-3', 'Sleep door', 15 * 60, { presetId: 'sleep' }),
+    stage('wd-3', 'Settle', 15 * 60, { presetId: 'sleep' }),
   ],
 )
 
@@ -109,15 +109,15 @@ const FOCUS_BLOCK: Sequence = systemSequence(
   ],
 )
 
-/** Pink → slow ~5 Hz beat → sleep. */
+/** Pink → slow ~5 Hz beat → night bed (id kept for prefs / history). */
 const DEEP_SLEEP_RAMP: Sequence = systemSequence(
   'deep-sleep-ramp',
-  'Deep sleep ramp',
-  'Pink → ~5 Hz glide → sleep',
+  'Night wind-down',
+  'Pink → ~5 Hz glide → night bed',
   [
     stage('ds-1', 'Pink unwind', 10 * 60, { recipe: PINK_BED }),
     stage('ds-2', '~5 Hz glide', 15 * 60, { recipe: THETA_GLIDE }),
-    stage('ds-3', 'Deep sleep', 20 * 60, { presetId: 'sleep' }),
+    stage('ds-3', 'Night bed', 20 * 60, { presetId: 'sleep' }),
   ],
 )
 

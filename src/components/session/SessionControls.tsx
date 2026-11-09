@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import {
   NATURE_SOUNDS,
   NEUTRAL_LAYER_EQ,
@@ -284,6 +285,9 @@ export function SessionControls({ session }: SessionControlsProps) {
 
       <div className="control-block">
         <h2 id="layers-label">Layers</h2>
+        <p className="layer-note">
+          Turn a layer on to shape its sound — each includes a simple EQ.
+        </p>
         <div className="layer-list">
           <LayerRow
             name="Noise"
@@ -330,9 +334,9 @@ export function SessionControls({ session }: SessionControlsProps) {
             onGain={(v) => setLayerGain('tone', v)}
           >
             <div
-              className="chip-row solfeggio-row"
+              className="chip-row tone-hz-row"
               role="radiogroup"
-              aria-label="Solfeggio"
+              aria-label="Tone (Hz)"
             >
               {SOLFEGGIO_FREQUENCIES.map((hz) => {
                 const selected = activeSolfeggio === hz
@@ -350,6 +354,10 @@ export function SessionControls({ session }: SessionControlsProps) {
                 )
               })}
             </div>
+            <p className="layer-note">
+              Common named frequencies as pure tones — for listening preference,
+              not proven health effects.
+            </p>
             <LayerEqControls
               layer="tone"
               layerName="Tone"
@@ -460,6 +468,16 @@ export function SessionControls({ session }: SessionControlsProps) {
             />
           </LayerRow>
         </div>
+      </div>
+
+      <div className="control-block session-explore">
+        <h2 id="session-explore-label">Explore</h2>
+        <p className="layer-note">
+          Prefer a guided multi-stage path? Sequences are on the home screen.
+        </p>
+        <Link className="btn btn-ghost session-explore-link" to="/#sequences">
+          Browse sequences
+        </Link>
       </div>
 
       <HeadphoneWarning

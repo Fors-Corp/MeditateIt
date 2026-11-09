@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   loadRecentSessions,
@@ -7,12 +7,13 @@ import {
   PRESET_BLURBS,
   removeUserPreset,
 } from '../components/session/bridges'
+import { isSystemPresetId, type Preset } from '../presets'
 import {
   formatSequenceDuration,
+  isSystemSequenceId,
   listSystemSequences,
 } from '../sequences'
 import { getLastUsedPreset, type SessionRecord } from '../storage'
-import type { Preset } from '../presets'
 
 function formatDuration(sec: number | null): string {
   if (sec == null) return 'Open-ended'
@@ -38,6 +39,23 @@ function formatHistoryWhen(iso: string): string {
   })
 }
 
+/** Prefer sequence replay when resolvable; else preset session. */
+function resolveHistoryHref(
+  row: SessionRecord,
+  knownUserPresetIds: ReadonlySet<string>,
+): string | null {
+  if (row.sequenceId && isSystemSequenceId(row.sequenceId)) {
+    return `/sequence/${row.sequenceId}`
+  }
+  if (
+    row.presetId &&
+    (isSystemPresetId(row.presetId) || knownUserPresetIds.has(row.presetId))
+  ) {
+    return `/session/${row.presetId}`
+  }
+  return null
+}
+
 export default function HomePage() {
   const presets = loadSystemPresets()
   const sequences = listSystemSequences()
@@ -45,6 +63,11 @@ export default function HomePage() {
   const [userPresets, setUserPresets] = useState<Preset[]>([])
   const [recentSessions, setRecentSessions] = useState<SessionRecord[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const knownUserPresetIds = useMemo(
+    () => new Set(userPresets.map((p) => p.id)),
+    [userPresets],
+  )
 
   const refreshUserPresets = useCallback(() => {
     void loadUserPresets().then(setUserPresets)
@@ -64,6 +87,12 @@ export default function HomePage() {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    if (window.location.hash !== '#sequences') return
+    const el = document.getElementById('sequences')
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [])
 
   const handleDelete = async (id: string, name: string) => {
@@ -92,8 +121,8 @@ export default function HomePage() {
           MeditateIt
         </h1>
         <p className="home-lede">
-          Shape pink noise, solfeggio tones, and beats live — start calm in under
-          thirty seconds.
+          Shape pink noise, tones, and beats live — start calm in under thirty
+          seconds.
         </p>
         <div className="home-actions">
           <Link className="btn btn-primary" to={`/session/${quickStartId}`}>
@@ -108,8 +137,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="preset-section" aria-labelledby="sequences-heading">
-        <h2 id="sequences-heading">Sequences</h2>
+      <section
+        id="sequences"
+        className="preset-section"
+        aria-labelledby="sequences-heading"
+      >
+        <div className="section-head">
+          <h2 id="sequences-heading">Sequences</h2>
+          <p className="section-aside">Multi-stage paths</p>
+        </div>
         <ul className="preset-list">
           {sequences.map((seq, index) => (
             <li key={seq.id} style={{ animationDelay: `${50 + index * 45}ms` }}>
@@ -134,17 +170,40 @@ export default function HomePage() {
             </Link>
           </div>
           <ul className="history-list">
-            {recentSessions.map((row) => (
-              <li key={row.id} className="history-row">
-                <span className="history-name">{row.presetName}</span>
-                <span className="history-meta">
-                  {formatHistoryWhen(row.endedAt)}
-                </span>
-                <span className="history-duration">
-                  {formatHistoryDuration(row.durationSec)}
-                </span>
-              </li>
-            ))}
+            {recentSessions.map((row) => {
+              const href = resolveHistoryHref(row, knownUserPresetIds)
+              const meta = [
+                formatHistoryWhen(row.endedAt),
+                row.sequenceId && isSystemSequenceId(row.sequenceId)
+                  ? 'Sequence'
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')
+
+              return (
+                <li key={row.id} className="history-row">
+                  {href ? (
+                    <Link className="history-link" to={href}>
+                      <span className="history-name">{row.presetName}</span>
+                      <span className="history-meta">{meta}</span>
+                      <span className="history-duration">
+                        {formatHistoryDuration(row.durationSec)}
+                      </span>
+                      <span className="history-replay">Replay</span>
+                    </Link>
+                  ) : (
+                    <>
+                      <span className="history-name">{row.presetName}</span>
+                      <span className="history-meta">{meta}</span>
+                      <span className="history-duration">
+                        {formatHistoryDuration(row.durationSec)}
+                      </span>
+                    </>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </section>
       ) : null}
