@@ -18,7 +18,10 @@ Other scripts:
 npm run build    # typecheck + production build
 npm run preview  # serve the production build (needed to verify the service worker)
 npm run lint     # oxlint
+npm test         # pure *.check.ts harness (storage, recipe/EQ, CSP smoke)
 ```
+
+`npm test` runs every `*.check.ts` via `tsx` (devDependency — pinned so the gate does not depend on `npx` downloading a runner). Covers backup parse/normalize, erase-all + retention purge, backup replace/history, crossfade/EQ clamps, and CSP string asserts on `index.html` / `public/_headers` (and `dist/index.html` when a build is present). No browser or Playwright.
 
 ## PWA
 
@@ -51,6 +54,14 @@ MeditateIt is a web app (installable PWA), not a native player. Expect platform 
 - **Long sessions:** keep the session page open; do not rely on the OS to keep a hidden web tab alive overnight.
 
 Native shells (Capacitor, etc.) are out of scope for this wave.
+
+### Manual audio / PWA smoke
+
+After `npm run build && npm run preview`, spot-check in Chromium (localhost):
+
+1. **Resume** — start a session, switch away (or lock), return; if audio is suspended, use “Tap to continue audio” / play and confirm sound resumes without a click/pop.
+2. **Install** — Install app from the address bar / App menu; relaunch the installed window and confirm shell + a short noise session still start.
+3. **Offline worklet** — load once online, then DevTools → Offline → hard-reload; start noise and confirm `/worklets/noise-processor.js` comes from the SW precache (no network) with buffer fallback only if the worklet path fails.
 
 ## App routes
 
