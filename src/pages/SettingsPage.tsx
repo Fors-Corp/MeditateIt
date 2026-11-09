@@ -158,15 +158,14 @@ export default function SettingsPage() {
         </fieldset>
 
         <div className="settings-actions">
-          <input
-            ref={fileRef}
-            type="file"
-            accept="application/json,.json"
-            className="visually-hidden"
-            id="backup-file"
-            onChange={(e) => void handleFile(e.target.files?.[0] ?? null)}
-          />
-          <label className="btn btn-ghost" htmlFor="backup-file">
+          <label className="btn btn-ghost settings-file-label">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="application/json,.json"
+              className="visually-hidden"
+              onChange={(e) => void handleFile(e.target.files?.[0] ?? null)}
+            />
             Import JSON…
           </label>
         </div>

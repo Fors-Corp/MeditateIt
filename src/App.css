@@ -370,6 +370,12 @@
   gap: var(--space-3);
 }
 
+/* File input is clipped inside the label; surface focus on the label. */
+.settings-file-label:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
 .settings-fieldset {
   margin: 0;
   padding: var(--space-3);
