@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { messages } from '../i18n'
 import {
   applySessionHistoryRetention,
   clearSessionHistory,
@@ -68,7 +69,10 @@ export default function SettingsPage() {
     try {
       const doc = await downloadBackup()
       setMessage(
-        `Exported ${doc.userPresets.length} preset${doc.userPresets.length === 1 ? '' : 's'} and ${(doc.sessionHistory ?? []).length} session${(doc.sessionHistory ?? []).length === 1 ? '' : 's'}.`,
+        messages.settings.exported(
+          doc.userPresets.length,
+          (doc.sessionHistory ?? []).length,
+        ),
       )
     } catch (err) {
       setError(messageForStorageError(err, STORAGE_ERROR.EXPORT_FAILED))
@@ -88,7 +92,11 @@ export default function SettingsPage() {
       })
       refreshHistory()
       setMessage(
-        `Import (${result.mode}): ${result.userPresetCount} preset${result.userPresetCount === 1 ? '' : 's'}, ${result.historyCount} history entr${result.historyCount === 1 ? 'y' : 'ies'}.`,
+        messages.settings.imported(
+          result.mode,
+          result.userPresetCount,
+          result.historyCount,
+        ),
       )
     } catch (err) {
       setError(messageForStorageError(err, STORAGE_ERROR.IMPORT_FAILED))
@@ -101,7 +109,7 @@ export default function SettingsPage() {
   const handleFile = async (file: File | null) => {
     if (!file) return
     if (file.size > MAX_BACKUP_CHARS) {
-      setError(STORAGE_ERROR.TOO_LARGE)
+      setError(messageForStorageError(new Error(STORAGE_ERROR.TOO_LARGE)))
       setMessage(null)
       if (fileRef.current) fileRef.current.value = ''
       return
@@ -111,18 +119,14 @@ export default function SettingsPage() {
   }
 
   const handleClearHistory = async () => {
-    if (
-      !window.confirm(
-        'Clear all session history on this device? Prefs and presets stay.',
-      )
-    ) {
+    if (!window.confirm(messages.settings.clearHistoryConfirm)) {
       return
     }
     setBusy(true)
     try {
       await clearSessionHistory()
       setHistory([])
-      setMessage('Session history cleared.')
+      setMessage(messages.settings.historyCleared)
       setError(null)
     } finally {
       setBusy(false)
@@ -141,7 +145,10 @@ export default function SettingsPage() {
       const purged = await applySessionHistoryRetention()
       setHistory(purged)
       setMessage(
-        `History retention set to ${labelForHistoryRetention(saved).toLowerCase()}. ${purged.length} entr${purged.length === 1 ? 'y' : 'ies'} kept.`,
+        messages.settings.retentionUpdated(
+          labelForHistoryRetention(saved),
+          purged.length,
+        ),
       )
     } catch (err) {
       setError(messageForStorageError(err, STORAGE_ERROR.RETENTION_FAILED))
@@ -151,12 +158,11 @@ export default function SettingsPage() {
   }
 
   const handleEraseAll = async () => {
-    const cacheNote = clearCachesOnErase
-      ? ' This also clears offline caches and unregisters the service worker.'
-      : ''
     if (
       !window.confirm(
-        `Erase all MeditateIt data on this device (prefs, saved presets, session history, and retention setting)?${cacheNote} This cannot be undone.`,
+        clearCachesOnErase
+          ? messages.settings.eraseConfirmWithCaches
+          : messages.settings.eraseConfirm,
       )
     ) {
       return
@@ -172,10 +178,10 @@ export default function SettingsPage() {
       setRetentionDays(null)
       setKeepHistoryWhenOmitted(false)
       const cacheMsg = result.cachesCleared
-        ? ` Caches cleared; ${result.serviceWorkersUnregistered} service worker${result.serviceWorkersUnregistered === 1 ? '' : 's'} unregistered.`
+        ? messages.settings.erasedCaches(result.serviceWorkersUnregistered)
         : ''
       setMessage(
-        `All local MeditateIt data erased (${result.removedKeys.length} keys).${cacheMsg}`,
+        `${messages.settings.erased(result.removedKeys.length)}${cacheMsg}`,
       )
     } catch (err) {
       setError(messageForStorageError(err, STORAGE_ERROR.ERASE_FAILED))
@@ -187,12 +193,8 @@ export default function SettingsPage() {
   return (
     <div className="settings-page">
       <section className="settings-section" aria-labelledby="backup-heading">
-        <h1 id="backup-heading">Backup</h1>
-        <p className="settings-lede">
-          Download or restore prefs, saved presets, and session history as JSON.
-          Export includes finished listens by default. No account — the file
-          stays on this device.
-        </p>
+        <h1 id="backup-heading">{messages.settings.backupHeading}</h1>
+        <p className="settings-lede">{messages.settings.backupLede}</p>
 
         <div className="settings-actions">
           <button
@@ -201,12 +203,12 @@ export default function SettingsPage() {
             onClick={() => void handleExport()}
             disabled={busy}
           >
-            Export JSON
+            {messages.settings.exportJson}
           </button>
         </div>
 
         <fieldset className="settings-fieldset">
-          <legend>Import mode</legend>
+          <legend>{messages.settings.importModeLegend}</legend>
           <label className="settings-radio">
             <input
               type="radio"
@@ -217,8 +219,8 @@ export default function SettingsPage() {
               disabled={busy}
             />
             <span>
-              <strong>Merge</strong> — keep existing presets; same ids update
-              from the file
+              <strong>{messages.settings.mergeTitle}</strong>
+              {messages.settings.mergeDetail}
             </span>
           </label>
           <label className="settings-radio">
@@ -231,8 +233,8 @@ export default function SettingsPage() {
               disabled={busy}
             />
             <span>
-              <strong>Replace</strong> — overwrite prefs and user presets; wipe
-              session history when the file has none
+              <strong>{messages.settings.replaceTitle}</strong>
+              {messages.settings.replaceDetail}
             </span>
           </label>
           {importMode === 'replace' ? (
@@ -243,9 +245,7 @@ export default function SettingsPage() {
                 onChange={(e) => setKeepHistoryWhenOmitted(e.target.checked)}
                 disabled={busy}
               />
-              <span>
-                Keep existing session history if the file omits history
-              </span>
+              <span>{messages.settings.keepHistoryWhenOmitted}</span>
             </label>
           ) : null}
         </fieldset>
@@ -259,7 +259,7 @@ export default function SettingsPage() {
               className="visually-hidden"
               onChange={(e) => void handleFile(e.target.files?.[0] ?? null)}
             />
-            Import JSON…
+            {messages.settings.importJson}
           </label>
         </div>
 
@@ -277,7 +277,7 @@ export default function SettingsPage() {
 
       <section className="settings-section" aria-labelledby="history-heading">
         <div className="settings-section-head">
-          <h2 id="history-heading">Session history</h2>
+          <h2 id="history-heading">{messages.settings.historyHeading}</h2>
           {history.length > 0 ? (
             <button
               type="button"
@@ -285,17 +285,14 @@ export default function SettingsPage() {
               onClick={() => void handleClearHistory()}
               disabled={busy}
             >
-              Clear
+              {messages.settings.clear}
             </button>
           ) : null}
         </div>
-        <p className="settings-lede">
-          Finished listens on this device (written when you stop or leave a
-          session). Kept to at most 100 entries, plus any time limit below.
-        </p>
+        <p className="settings-lede">{messages.settings.historyLede}</p>
 
         <label className="settings-select-label">
-          <span>Retention</span>
+          <span>{messages.settings.retention}</span>
           <select
             className="settings-select"
             value={retentionDays === null ? 'null' : String(retentionDays)}
@@ -314,7 +311,7 @@ export default function SettingsPage() {
         </label>
 
         {history.length === 0 ? (
-          <p className="settings-empty">No sessions yet. Play something, then stop.</p>
+          <p className="settings-empty">{messages.settings.historyEmpty}</p>
         ) : (
           <ul className="history-list">
             {history.map((row) => (
@@ -331,12 +328,8 @@ export default function SettingsPage() {
       </section>
 
       <section className="settings-section" aria-labelledby="erase-heading">
-        <h2 id="erase-heading">Erase all data</h2>
-        <p className="settings-lede">
-          Remove prefs, saved presets, session history, and the retention
-          setting from this browser. Export a backup first if you may want it
-          back.
-        </p>
+        <h2 id="erase-heading">{messages.settings.eraseHeading}</h2>
+        <p className="settings-lede">{messages.settings.eraseLede}</p>
         <label className="settings-check">
           <input
             type="checkbox"
@@ -344,7 +337,7 @@ export default function SettingsPage() {
             onChange={(e) => setClearCachesOnErase(e.target.checked)}
             disabled={busy}
           />
-          <span>Also clear offline caches and unregister the service worker</span>
+          <span>{messages.settings.clearCachesToo}</span>
         </label>
         <div className="settings-actions">
           <button
@@ -353,28 +346,23 @@ export default function SettingsPage() {
             onClick={() => void handleEraseAll()}
             disabled={busy}
           >
-            Erase all local data…
+            {messages.settings.eraseButton}
           </button>
         </div>
       </section>
 
       <section className="settings-section" aria-labelledby="about-heading">
-        <h2 id="about-heading">About &amp; legal</h2>
-        <p className="settings-lede">
-          MeditateIt is a generative sound tool for personal wellness and focus.
-          It is not a medical device and is not intended to diagnose, treat,
-          cure, or prevent any condition. If you have health concerns, talk to a
-          qualified professional.
-        </p>
+        <h2 id="about-heading">{messages.settings.aboutHeading}</h2>
+        <p className="settings-lede">{messages.settings.aboutLede}</p>
         <p className="settings-legal-links">
-          <Link to="/privacy">Privacy</Link>
+          <Link to="/privacy">{messages.app.privacy}</Link>
           <span aria-hidden="true"> · </span>
-          <Link to="/terms">Terms</Link>
+          <Link to="/terms">{messages.app.terms}</Link>
         </p>
       </section>
 
       <p className="settings-foot">
-        <Link to="/">← Back home</Link>
+        <Link to="/">{messages.app.backHome}</Link>
       </p>
     </div>
   )

@@ -1,5 +1,7 @@
 /** Thin localStorage JSON helpers (async surface for a future IndexedDB swap). */
 
+import { STORAGE_ERROR } from '../i18n/index.ts'
+
 function canUseLocalStorage(): boolean {
   try {
     const probe = '__meditateit_probe__'
@@ -24,7 +26,7 @@ export async function readJson<T>(key: string): Promise<T | null> {
 
 export async function writeJson(key: string, value: unknown): Promise<void> {
   if (typeof window === 'undefined' || !canUseLocalStorage()) {
-    throw new Error('localStorage unavailable')
+    throw new Error(STORAGE_ERROR.STORAGE_UNAVAILABLE)
   }
   window.localStorage.setItem(key, JSON.stringify(value))
 }

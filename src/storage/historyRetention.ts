@@ -1,3 +1,4 @@
+import { messages } from '../i18n/index.ts'
 import { STORAGE_KEYS } from './keys.ts'
 import { readJson, writeJson } from './local.ts'
 
@@ -45,9 +46,6 @@ export async function saveHistoryRetentionDays(
 }
 
 export function labelForHistoryRetention(days: HistoryRetentionDays): string {
-  if (days === null) return 'Keep until count limit (100)'
-  if (days === 7) return '7 days'
-  if (days === 30) return '30 days'
-  if (days === 90) return '90 days'
-  return '365 days'
+  if (days === null) return messages.settings.retentionForever
+  return messages.settings.retentionDays(days)
 }

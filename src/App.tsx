@@ -2,6 +2,7 @@ import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import './App.css'
 import AppFooter from './components/AppFooter'
 import PwaChrome from './components/PwaChrome'
+import { messages } from './i18n'
 import HomePage from './pages/HomePage'
 import PrivacyPage from './pages/PrivacyPage'
 import SequencePage from './pages/SequencePage'
@@ -10,10 +11,10 @@ import SettingsPage from './pages/SettingsPage'
 import TermsPage from './pages/TermsPage'
 
 function headerLabel(pathname: string): string {
-  if (pathname.startsWith('/settings')) return 'Settings'
-  if (pathname.startsWith('/privacy')) return 'Privacy'
-  if (pathname.startsWith('/terms')) return 'Terms'
-  return 'Generative soundscapes'
+  if (pathname.startsWith('/settings')) return messages.app.taglineSettings
+  if (pathname.startsWith('/privacy')) return messages.app.taglinePrivacy
+  if (pathname.startsWith('/terms')) return messages.app.taglineTerms
+  return messages.app.taglineHome
 }
 
 function App() {
@@ -23,14 +24,14 @@ function App() {
   return (
     <div className={`app-shell${isHome ? ' is-home' : ''}`}>
       <a href="#main" className="skip-link">
-        Skip to main content
+        {messages.app.skipToMain}
       </a>
 
       {!isHome && (
         <header className="app-header">
           <Link to="/" className="brand">
             <span className="brand-mark" aria-hidden="true" />
-            MeditateIt
+            {messages.app.brand}
           </Link>
           <p className="app-tagline">{headerLabel(pathname)}</p>
         </header>

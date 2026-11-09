@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { messages } from '../../i18n'
 import { HeadphoneWarning } from '../session/HeadphoneWarning'
 import '../session/session.css'
 import type { SequenceController } from './useSequenceController'
@@ -43,7 +44,7 @@ export function SequenceControls({ session }: SequenceControlsProps) {
   if (!ready) {
     return (
       <div className="sequence-loading" aria-live="polite">
-        Preparing sequence…
+        {messages.sequence.preparing}
       </div>
     )
   }
@@ -51,27 +52,29 @@ export function SequenceControls({ session }: SequenceControlsProps) {
   if (missing || !sequence) {
     return (
       <div className="sequence-missing">
-        <p>That sequence was not found.</p>
+        <p>{messages.sequence.missing}</p>
         <Link className="btn btn-ghost" to="/">
-          Back home
+          {messages.app.backHomeShort}
         </Link>
       </div>
     )
   }
 
   const statusLabel = completed
-    ? 'Sequence complete'
+    ? messages.sequence.complete
     : engineStatus === 'unavailable'
-      ? 'Audio unavailable in this browser'
+      ? messages.sequence.unavailable
       : needsAudioGesture
-        ? 'Audio paused by the browser'
+        ? messages.sequence.pausedByBrowser
         : crossfading
-          ? 'Crossfading to next stage…'
+          ? messages.sequence.crossfading
           : playing
-            ? `Stage ${stageIndex + 1} of ${stageCount}`
-            : 'Ready when you are'
+            ? messages.sequence.stageOf(stageIndex + 1, stageCount)
+            : messages.sequence.ready
 
-  const timerText = completed ? 'Done' : formatTime(stageRemainingSec)
+  const timerText = completed
+    ? messages.sequence.done
+    : formatTime(stageRemainingSec)
 
   return (
     <div className={`sequence-panel${playing ? ' is-playing' : ''}`}>
@@ -83,7 +86,9 @@ export function SequenceControls({ session }: SequenceControlsProps) {
           {timerText}
         </p>
         <span className="visually-hidden">
-          {completed ? 'Sequence done' : `Stage remaining ${timerText}`}
+          {completed
+            ? messages.sequence.doneTitle
+            : messages.sequence.stageRemaining(timerText)}
         </span>
 
         <div
@@ -111,7 +116,11 @@ export function SequenceControls({ session }: SequenceControlsProps) {
             onClick={() => void togglePlay()}
             aria-pressed={playing}
           >
-            {completed ? 'Play again' : playing ? 'Pause' : 'Play'}
+            {completed
+              ? messages.sequence.playAgain
+              : playing
+                ? messages.session.pause
+                : messages.session.play}
           </button>
           <button
             type="button"
@@ -119,7 +128,9 @@ export function SequenceControls({ session }: SequenceControlsProps) {
             onClick={skipStage}
             disabled={completed}
           >
-            {stageIndex >= stageCount - 1 ? 'End sequence' : 'Skip stage'}
+            {stageIndex >= stageCount - 1
+              ? messages.sequence.endSequence
+              : messages.sequence.skipStage}
           </button>
         </div>
 
@@ -129,7 +140,7 @@ export function SequenceControls({ session }: SequenceControlsProps) {
             className="audio-resume-prompt"
             onClick={() => void continueAudio()}
           >
-            Tap to continue audio
+            {messages.session.continueAudio}
           </button>
         )}
 

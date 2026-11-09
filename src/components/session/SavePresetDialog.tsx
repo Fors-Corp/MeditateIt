@@ -1,3 +1,4 @@
+import { messages } from '../../i18n'
 import { useModalDialogFocus } from './useModalDialogFocus'
 
 interface SavePresetDialogProps {
@@ -44,12 +45,10 @@ export function SavePresetDialog({
         aria-describedby="save-preset-body"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="save-preset-title">Save preset</h2>
-        <p id="save-preset-body">
-          Store this soundscape locally on this device. No account needed.
-        </p>
+        <h2 id="save-preset-title">{messages.dialogs.savePresetTitle}</h2>
+        <p id="save-preset-body">{messages.dialogs.savePresetBody}</p>
         <label className="save-preset-field">
-          Name
+          {messages.dialogs.name}
           <input
             type="text"
             value={name}
@@ -71,7 +70,7 @@ export function SavePresetDialog({
             onClick={onCancel}
             disabled={saving}
           >
-            Cancel
+            {messages.dialogs.cancel}
           </button>
           {canOverwrite ? (
             <button
@@ -80,7 +79,7 @@ export function SavePresetDialog({
               onClick={onOverwrite}
               disabled={saving || !name.trim()}
             >
-              Update
+              {messages.dialogs.update}
             </button>
           ) : null}
           <button
@@ -89,7 +88,11 @@ export function SavePresetDialog({
             onClick={onSaveNew}
             disabled={saving || !name.trim()}
           >
-            {saving ? 'Saving…' : canOverwrite ? 'Save as new' : 'Save'}
+            {saving
+              ? messages.dialogs.saving
+              : canOverwrite
+                ? messages.dialogs.saveAsNew
+                : messages.dialogs.save}
           </button>
         </div>
       </div>

@@ -3,6 +3,7 @@ import {
   SequenceControls,
   useSequenceController,
 } from '../components/sequence'
+import { messages } from '../i18n'
 
 export default function SequencePage() {
   const { sequenceId } = useParams<{ sequenceId?: string }>()
@@ -12,10 +13,10 @@ export default function SequencePage() {
     <section className="session-page" aria-labelledby="sequence-heading">
       <div className="session-top">
         <Link className="session-back" to="/">
-          ← Home
+          {messages.app.homeLink}
         </Link>
         <h1 id="sequence-heading" className="visually-hidden">
-          Sequence
+          {messages.sequence.heading}
         </h1>
       </div>
       <SequenceControls session={session} />

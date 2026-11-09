@@ -16,6 +16,7 @@ import {
   type EngineParamsPatch,
   type NatureSoundId,
 } from '../../audio'
+import { messages } from '../../i18n'
 import {
   cloneRecipe,
   createBlankRecipe,
@@ -253,10 +254,5 @@ export async function loadRecentSessions(
   return all.slice(0, Math.max(0, limit))
 }
 
-export const PRESET_BLURBS: Record<string, string> = {
-  'daily-calm': 'Speaker-friendly pink + 528 + soft pulse',
-  sleep: 'Deep brown bed, soft rain, slow ~2 Hz beat',
-  focus: 'Pink + 528 with mid-rate ~16 Hz beat',
-  'anxiety-softener': 'Soft pink + 396 Hz tone + gentle ~10 Hz pulse',
-  'deep-rest': 'Open-ended brown + shore wash + low tone',
-}
+/** System preset blurbs from the EN catalog. */
+export const PRESET_BLURBS: Record<string, string> = { ...messages.blurbs }
