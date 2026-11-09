@@ -1,6 +1,6 @@
 # MeditateIt
 
-Local-first generative meditation soundscapes (noise, solfeggio, binaural/isochronic). Web MVP on Vite + React + TypeScript; PWA later.
+Local-first generative meditation soundscapes (noise, solfeggio, binaural/isochronic). Web MVP on Vite + React + TypeScript with PWA install support.
 
 ## Run
 
@@ -16,30 +16,30 @@ Other scripts:
 
 ```bash
 npm run build    # typecheck + production build
-npm run preview  # serve the production build
+npm run preview  # serve the production build (needed to verify the service worker)
 npm run lint     # oxlint
 ```
 
-## App shell (this scaffold)
+## PWA
 
-- `/` — home with quick start / custom links
-- `/session` and `/session/:presetId` — session route stubs
-- Calm misty-lagoon CSS variables in `src/index.css` (no purple-on-white defaults)
+Production builds register a service worker via `vite-plugin-pwa` (`registerType: autoUpdate`).
 
-## Ownership — do not deepen these as shell work
+To verify installability locally:
 
-Sibling agents own the product guts. The scaffold only leaves stubs/exports:
+1. `npm run build && npm run preview`
+2. Open the preview URL over `http://localhost…` (Chromium treats localhost as a secure context)
+3. DevTools → Application → Manifest / Service Workers
+4. Chrome/Edge address bar → Install app (or App menu → Install MeditateIt)
 
-| Path | Owner | Fill in |
-|------|--------|---------|
-| `src/audio/**` | audio sibling | Web Audio engine, layers, limiter |
-| `src/components/session/**` + session page | session UI sibling | live controls, timer, fades |
-| `src/presets/**` | presets sibling | system + user recipes |
-| `src/storage/**` | storage sibling | prefs / presets persistence |
+Name: **MeditateIt**. Icons live in `public/icons/` (192 / 512).
 
-Shell / routing / global styles stay with the app scaffold unless ownership moves.
+## App routes
+
+- `/` — home with quick start, custom, system + saved user presets
+- `/session` and `/session/:presetId` — live session player (save preset from the session header)
 
 ## Notes
 
-- No GitHub remote is configured by this scaffold. Do not push unless a remote is added on purpose.
+- Prefs and user presets persist in `localStorage` only (no accounts).
+- No GitHub remote is required for local MVP work. Do not push unless a remote is added on purpose.
 - Product plan lives in the MeditateIt Project store (`docs/meditation-app-plan.md`).

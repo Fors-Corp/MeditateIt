@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { NATURE_SOUNDS, SOLFEGGIO_FREQUENCIES } from './bridges'
 import type { SessionController } from './useSessionController'
 import { HeadphoneWarning } from './HeadphoneWarning'
+import { SavePresetDialog } from './SavePresetDialog'
 import './session.css'
 
 const NOISE_KINDS = ['pink', 'brown', 'white'] as const
@@ -42,6 +43,11 @@ export function SessionControls({ session }: SessionControlsProps) {
     remainingSec,
     openEnded,
     showHeadphoneWarning,
+    showSavePreset,
+    savePresetName,
+    savePresetError,
+    savePresetBusy,
+    canOverwritePreset,
     engineStatus,
     togglePlay,
     switchPreset,
@@ -60,6 +66,11 @@ export function SessionControls({ session }: SessionControlsProps) {
     setNatureBrightness,
     acknowledgeHeadphones,
     dismissHeadphoneWarning,
+    openSavePreset,
+    dismissSavePreset,
+    setSavePresetName,
+    savePresetAsNew,
+    overwritePreset,
   } = session
 
   if (!ready) {
@@ -96,6 +107,13 @@ export function SessionControls({ session }: SessionControlsProps) {
                 ? 'Soundscape running'
                 : 'Ready when you are'}
         </p>
+        <button
+          type="button"
+          className="btn btn-ghost save-preset-btn"
+          onClick={openSavePreset}
+        >
+          Save as preset
+        </button>
       </header>
 
       <section className="control-block" aria-labelledby="preset-switch-label">
@@ -334,6 +352,17 @@ export function SessionControls({ session }: SessionControlsProps) {
         open={showHeadphoneWarning}
         onConfirm={acknowledgeHeadphones}
         onCancel={dismissHeadphoneWarning}
+      />
+      <SavePresetDialog
+        open={showSavePreset}
+        name={savePresetName}
+        canOverwrite={canOverwritePreset}
+        saving={savePresetBusy}
+        error={savePresetError}
+        onNameChange={setSavePresetName}
+        onCancel={dismissSavePreset}
+        onSaveNew={() => void savePresetAsNew()}
+        onOverwrite={() => void overwritePreset()}
       />
     </div>
   )

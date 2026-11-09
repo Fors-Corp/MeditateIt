@@ -240,6 +240,43 @@
   font-variant-numeric: tabular-nums;
 }
 
+.preset-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+}
+
+.preset-row .preset-link {
+  border-bottom: none;
+}
+
+.preset-delete {
+  appearance: none;
+  align-self: center;
+  margin-right: 0.15rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.preset-delete:hover:not(:disabled) {
+  color: #8a3a32;
+  border-color: rgba(138, 58, 50, 0.25);
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.preset-delete:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
 /* —— Session page chrome —— */
 
 .session-page {

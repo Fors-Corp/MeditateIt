@@ -14,6 +14,7 @@ import {
   loadSystemPresets,
   persistHeadphonesAck,
   persistMasterVolume,
+  persistUserPreset,
   rememberLastPreset,
   resolveSessionPreset,
   type BeatMode,
@@ -35,6 +36,11 @@ export interface SessionController {
   openEnded: boolean
   headphonesAck: boolean
   showHeadphoneWarning: boolean
+  showSavePreset: boolean
+  savePresetName: string
+  savePresetError: string | null
+  savePresetBusy: boolean
+  canOverwritePreset: boolean
   engineStatus: string
   togglePlay: () => Promise<void>
   switchPreset: (presetId: string) => void
@@ -53,6 +59,11 @@ export interface SessionController {
   setNatureBrightness: (brightness: number) => void
   acknowledgeHeadphones: () => void
   dismissHeadphoneWarning: () => void
+  openSavePreset: () => void
+  dismissSavePreset: () => void
+  setSavePresetName: (name: string) => void
+  savePresetAsNew: () => Promise<void>
+  overwritePreset: () => Promise<void>
 }
 
 function clamp01(n: number): number {
@@ -75,6 +86,10 @@ export function useSessionController(
   const [openEnded, setOpenEndedState] = useState(false)
   const [headphonesAck, setHeadphonesAck] = useState(false)
   const [showHeadphoneWarning, setShowHeadphoneWarning] = useState(false)
+  const [showSavePreset, setShowSavePreset] = useState(false)
+  const [savePresetName, setSavePresetName] = useState('')
+  const [savePresetError, setSavePresetError] = useState<string | null>(null)
+  const [savePresetBusy, setSavePresetBusy] = useState(false)
   const [engineStatus, setEngineStatus] = useState('idle')
 
   const engineRef = useRef<SessionAudioEngine | null>(null)
@@ -87,6 +102,8 @@ export function useSessionController(
   const presetRef = useRef(preset)
   const togglePlayRef = useRef<() => Promise<void>>(async () => undefined)
   const stopPlaybackRef = useRef<() => void>(() => undefined)
+  const openEndedRef = useRef(openEnded)
+  const configuredDurationRef = useRef<number | null>(10 * 60)
 
   useEffect(() => {
     recipeRef.current = recipe
@@ -94,7 +111,8 @@ export function useSessionController(
     playingRef.current = playing
     fadeOutRef.current = recipe.fadeOutSec
     presetRef.current = preset
-  }, [recipe, masterVolume, playing, preset])
+    openEndedRef.current = openEnded
+  }, [recipe, masterVolume, playing, preset, openEnded])
 
   const pushToEngine = useCallback((next: SessionRecipe, volume: number) => {
     engineRef.current?.applyRecipe(next, volume)
@@ -133,6 +151,7 @@ export function useSessionController(
       setRecipe(cloneRecipe(resolved.recipe))
       const open = resolved.defaultDurationSec == null
       setOpenEndedState(open)
+      configuredDurationRef.current = open ? null : resolved.defaultDurationSec
       setRemainingSec(open ? null : resolved.defaultDurationSec)
       setReady(true)
 
@@ -296,6 +315,7 @@ export function useSessionController(
       if (!playingRef.current) {
         const open = next.defaultDurationSec == null
         setOpenEndedState(open)
+        configuredDurationRef.current = open ? null : next.defaultDurationSec
         setRemainingSec(open ? null : next.defaultDurationSec)
       }
     },
@@ -332,10 +352,15 @@ export function useSessionController(
     (open: boolean) => {
       setOpenEndedState(open)
       if (open) {
+        configuredDurationRef.current = null
         setRemainingSec(null)
         clearTimer()
       } else {
-        const fallback = preset.defaultDurationSec ?? 10 * 60
+        const fallback =
+          configuredDurationRef.current ??
+          preset.defaultDurationSec ??
+          10 * 60
+        configuredDurationRef.current = fallback
         setRemainingSec(fallback)
         if (playingRef.current) startTimer()
       }
@@ -347,6 +372,7 @@ export function useSessionController(
     (minutes: number) => {
       const sec = Math.max(1, Math.round(minutes)) * 60
       setOpenEndedState(false)
+      configuredDurationRef.current = sec
       setRemainingSec(sec)
       if (playingRef.current) {
         clearTimer()
@@ -529,6 +555,71 @@ export function useSessionController(
     setShowHeadphoneWarning(false)
   }, [])
 
+  const canOverwritePreset =
+    preset.source === 'user' && preset.id !== 'custom'
+
+  const openSavePreset = useCallback(() => {
+    const defaultName =
+      preset.id === 'custom' || preset.source === 'system'
+        ? preset.name === 'Custom'
+          ? 'My preset'
+          : `${preset.name} (mine)`
+        : preset.name
+    setSavePresetName(defaultName)
+    setSavePresetError(null)
+    setShowSavePreset(true)
+  }, [preset])
+
+  const dismissSavePreset = useCallback(() => {
+    if (savePresetBusy) return
+    setShowSavePreset(false)
+    setSavePresetError(null)
+  }, [savePresetBusy])
+
+  const durationForSave = useCallback((): number | null => {
+    if (openEndedRef.current) return null
+    return configuredDurationRef.current
+  }, [])
+
+  const commitPreset = useCallback(
+    async (mode: 'new' | 'overwrite') => {
+      const name = savePresetName.trim()
+      if (!name) {
+        setSavePresetError('Name is required')
+        return
+      }
+      setSavePresetBusy(true)
+      setSavePresetError(null)
+      try {
+        const saved = await persistUserPreset({
+          id: mode === 'overwrite' && canOverwritePreset ? preset.id : undefined,
+          name,
+          recipe: recipeRef.current,
+          defaultDurationSec: durationForSave(),
+        })
+        setPreset(saved)
+        setRecipe(cloneRecipe(saved.recipe))
+        setShowSavePreset(false)
+      } catch (err) {
+        setSavePresetError(
+          err instanceof Error ? err.message : 'Could not save preset',
+        )
+      } finally {
+        setSavePresetBusy(false)
+      }
+    },
+    [canOverwritePreset, durationForSave, preset.id, savePresetName],
+  )
+
+  const savePresetAsNew = useCallback(async () => {
+    await commitPreset('new')
+  }, [commitPreset])
+
+  const overwritePreset = useCallback(async () => {
+    if (!canOverwritePreset) return
+    await commitPreset('overwrite')
+  }, [canOverwritePreset, commitPreset])
+
   return {
     ready,
     preset,
@@ -541,6 +632,11 @@ export function useSessionController(
     openEnded,
     headphonesAck,
     showHeadphoneWarning,
+    showSavePreset,
+    savePresetName,
+    savePresetError,
+    savePresetBusy,
+    canOverwritePreset,
     engineStatus,
     togglePlay,
     switchPreset,
@@ -559,5 +655,10 @@ export function useSessionController(
     setNatureBrightness,
     acknowledgeHeadphones,
     dismissHeadphoneWarning,
+    openSavePreset,
+    dismissSavePreset,
+    setSavePresetName,
+    savePresetAsNew,
+    overwritePreset,
   }
 }

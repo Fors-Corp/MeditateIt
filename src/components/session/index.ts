@@ -6,5 +6,6 @@
 
 export { SessionControls } from './SessionControls'
 export { HeadphoneWarning } from './HeadphoneWarning'
+export { SavePresetDialog } from './SavePresetDialog'
 export { useSessionController } from './useSessionController'
 export type { SessionController } from './useSessionController'
