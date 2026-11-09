@@ -11,6 +11,7 @@ import {
   loadSessionPrefs,
   persistHeadphonesAck,
   persistMasterVolume,
+  recordFinishedSession,
   type SessionAudioEngine,
 } from '../session/bridges'
 import {
@@ -84,6 +85,7 @@ export function useSequenceController(
   const sequenceRef = useRef<Sequence | null>(null)
   const completedRef = useRef(false)
   const fadeOutRef = useRef(10)
+  const sessionStartedAtRef = useRef<string | null>(null)
   const togglePlayRef = useRef<() => Promise<void>>(async () => undefined)
   const pausePlaybackRef = useRef<() => void>(() => undefined)
   const skipStageRef = useRef<() => void>(() => undefined)
@@ -153,6 +155,19 @@ export function useSequenceController(
       if (crossfadePollRef.current != null) {
         window.clearInterval(crossfadePollRef.current)
       }
+      const startedAt = sessionStartedAtRef.current
+      if (startedAt) {
+        sessionStartedAtRef.current = null
+        const seq = sequenceRef.current
+        if (seq) {
+          void recordFinishedSession({
+            startedAt,
+            presetId: null,
+            presetName: seq.name,
+            sequenceId: seq.id,
+          })
+        }
+      }
       engineRef.current?.stop(0.05)
     }
   }, [sequenceId])
@@ -162,6 +177,20 @@ export function useSequenceController(
       window.clearInterval(timerRef.current)
       timerRef.current = null
     }
+  }, [])
+
+  const commitSequenceHistory = useCallback(() => {
+    const startedAt = sessionStartedAtRef.current
+    if (!startedAt) return
+    sessionStartedAtRef.current = null
+    const seq = sequenceRef.current
+    if (!seq) return
+    void recordFinishedSession({
+      startedAt,
+      presetId: null,
+      presetName: seq.name,
+      sequenceId: seq.id,
+    })
   }, [])
 
   const watchCrossfade = useCallback(() => {
@@ -196,7 +225,8 @@ export function useSequenceController(
     setNeedsAudioGesture(false)
     setEngineStatus(engineRef.current?.getStatus() ?? 'idle')
     setMediaSessionPlaybackState('paused')
-  }, [clearTimer])
+    commitSequenceHistory()
+  }, [clearTimer, commitSequenceHistory])
 
   const continueAudio = useCallback(async () => {
     if (!playingRef.current) return
@@ -224,7 +254,8 @@ export function useSequenceController(
     setStageRemainingSec(0)
     setEngineStatus(engineRef.current?.getStatus() ?? 'idle')
     setMediaSessionPlaybackState('paused')
-  }, [clearTimer])
+    commitSequenceHistory()
+  }, [clearTimer, commitSequenceHistory])
 
   const startTimer = useCallback(() => {
     clearTimer()
@@ -319,6 +350,7 @@ export function useSequenceController(
 
     engine.applyRecipe(current.recipe, masterRef.current)
     await engine.start(current.recipe.fadeInSec)
+    sessionStartedAtRef.current = new Date().toISOString()
     setPlaying(true)
     setNeedsAudioGesture(false)
     setCompleted(false)

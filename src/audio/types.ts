@@ -101,6 +101,6 @@ export type EngineParamsPatch = {
   nature?: Partial<NatureParams>
 }
 
-/** Documented constraint for binaural mode. */
+/** Documented constraint for binaural mode (UI + headphone dialog). */
 export const BINAURAL_REQUIRES_HEADPHONES =
-  'Binaural beats require stereo headphones. Use isochronic mode for speakers.' as const
+  'Binaural mode plays slightly different tones in each ear so you hear a pulse. Stereo headphones are required; use isochronic mode for speakers. This is a listening effect, not a medical treatment.' as const

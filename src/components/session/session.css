@@ -188,12 +188,18 @@
   color: var(--accent);
 }
 
+.chip:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 .chip.is-selected {
   background: rgba(42, 107, 94, 0.12);
   border-color: var(--accent);
   color: var(--accent);
 }
 
+.tone-hz-row .chip,
 .solfeggio-row .chip {
   min-width: 3.1rem;
   justify-content: center;
@@ -373,6 +379,17 @@
   font-size: 1.35rem;
 }
 
+.headphone-body {
+  margin: 0;
+}
+
+.headphone-body p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
 .headphone-actions {
   display: flex;
   flex-wrap: wrap;
@@ -443,6 +460,16 @@
   50% {
     box-shadow: 0 0 0 10px rgba(42, 107, 94, 0.2);
   }
+}
+
+.session-explore .session-explore-link {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+}
+
+.session-explore-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {
