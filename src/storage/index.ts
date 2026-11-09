@@ -1,6 +1,7 @@
 /**
- * Local persistence for prefs, user presets, session history, and backups
- * (localStorage, async API). System presets stay in `src/presets`.
+ * Local persistence for prefs, user presets, user sequences, session history,
+ * and backups (localStorage, async API). System presets stay in `src/presets`;
+ * system sequences stay in `src/sequences`.
  */
 
 import {
@@ -9,12 +10,23 @@ import {
   type Preset,
   type UserPrefs,
 } from '../presets/index.ts'
+import {
+  cloneSequence,
+  getSystemSequence,
+  listSystemSequences,
+  type Sequence,
+} from '../sequences/index.ts'
 import { loadPrefs, updatePrefs } from './prefs.ts'
 import {
   deleteUserPreset,
   getUserPreset,
   listUserPresets,
 } from './userPresets.ts'
+import {
+  deleteUserSequence,
+  getUserSequence,
+  listUserSequences,
+} from './userSequences.ts'
 
 export { STORAGE_KEYS } from './keys.ts'
 
@@ -24,7 +36,10 @@ export {
   MAX_FADE_SEC,
   MAX_ID_CHARS,
   MAX_NAME_CHARS,
+  MAX_SEQUENCE_STAGES,
+  MAX_SUMMARY_CHARS,
   MAX_USER_PRESETS,
+  MAX_USER_SEQUENCES,
 } from './limits.ts'
 
 export type {
@@ -51,6 +66,18 @@ export {
   saveUserPreset,
   type SaveUserPresetInput,
 } from './userPresets.ts'
+
+export {
+  clearUserSequences,
+  deleteUserSequence,
+  getUserSequence,
+  listUserSequences,
+  mergeUserSequences,
+  normalizeUserSequence,
+  replaceUserSequences,
+  saveUserSequence,
+  type SaveUserSequenceInput,
+} from './userSequences.ts'
 
 export {
   appendSessionRecord,
@@ -111,6 +138,19 @@ export async function getPreset(id: string): Promise<Preset | null> {
   return getUserPreset(id)
 }
 
+/** System templates first, then user sequences. */
+export async function listAllSequences(): Promise<Sequence[]> {
+  const user = await listUserSequences()
+  return [...listSystemSequences().map((s) => cloneSequence(s)), ...user]
+}
+
+/** Resolve system or user sequence by id. */
+export async function getSequence(id: string): Promise<Sequence | null> {
+  const system = getSystemSequence(id)
+  if (system) return system
+  return getUserSequence(id)
+}
+
 /**
  * Last-used preset for quick start.
  * Falls back to Daily calm when unset / missing.
@@ -146,4 +186,11 @@ export async function deleteUserPresetAndForget(
     await updatePrefs({ lastPresetId: null })
   }
   return true
+}
+
+/** Delete a user sequence (system ids are no-ops). */
+export async function deleteUserSequenceAndForget(
+  id: string,
+): Promise<boolean> {
+  return deleteUserSequence(id)
 }

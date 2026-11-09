@@ -13,13 +13,14 @@ import { STORAGE_ERROR, messageForStorageError } from './errors.ts'
 import {
   normalizeHistoryRetentionDays,
 } from './historyRetention.ts'
-import { MAX_BACKUP_CHARS } from './limits.ts'
+import { MAX_BACKUP_CHARS, MAX_USER_SEQUENCES } from './limits.ts'
 import { STORAGE_KEYS } from './keys.ts'
 import {
   filterHistoryByRetention,
   normalizeSessionRecord,
 } from './sessionHistory.ts'
 import { normalizePrefs } from './prefs.ts'
+import { normalizeUserSequence } from './userSequences.ts'
 
 function assert(cond: boolean, msg: string): void {
   if (!cond) throw new Error(msg)
@@ -56,7 +57,63 @@ const doc = parseBackup({
 })
 assert(doc.prefs.masterVolume === 0.3, 'backup prefs')
 assert(doc.userPresets.length === 0, 'backup presets empty')
-assert((doc.sequences ?? []).length === 0, 'sequences ignored')
+assert((doc.sequences ?? []).length === 0, 'sequences empty array preserved')
+
+const docNoSeq = parseBackup({
+  format: BACKUP_FORMAT,
+  version: BACKUP_VERSION,
+  exportedAt: '2026-11-09T12:00:00.000Z',
+  prefs: {},
+  userPresets: [],
+})
+assert(docNoSeq.sequences === undefined, 'omitted sequences stay undefined')
+
+const sampleSeq = normalizeUserSequence({
+  id: 'my-wind',
+  name: 'My wind down',
+  summary: 'Saved copy',
+  stages: [
+    {
+      id: 's1',
+      name: 'Settle',
+      durationSec: 600,
+      recipe: {
+        noise: { enabled: true, kind: 'pink' },
+        tone: { enabled: false, frequencyHz: 528 },
+        beat: { enabled: false, mode: 'off', carrierHz: 220, beatHz: 8 },
+        nature: { enabled: false, soundId: null },
+        gains: { noise: 0.3, tone: 0, beat: 0, nature: 0 },
+        fadeInSec: 4,
+        fadeOutSec: 8,
+      },
+    },
+  ],
+})
+assert(sampleSeq?.id === 'my-wind', 'normalize user sequence')
+assert(sampleSeq?.source === 'user', 'force user source')
+assert(
+  normalizeUserSequence({
+    id: 'wind-down',
+    name: 'Nope',
+    stages: [{ id: 'x', name: 'x', durationSec: 60, presetId: 'sleep' }],
+  }) === null,
+  'rejects system sequence id',
+)
+assert(MAX_USER_SEQUENCES === 200, 'sequence cap mirrors presets')
+assert(
+  Object.values(STORAGE_KEYS).includes('meditateit:user-sequences:v1'),
+  'user sequences key listed for erase-all',
+)
+
+const docWithSeq = parseBackup({
+  format: BACKUP_FORMAT,
+  version: BACKUP_VERSION,
+  exportedAt: '2026-11-09T12:00:00.000Z',
+  prefs: {},
+  userPresets: [],
+  sequences: [sampleSeq],
+})
+assert((docWithSeq.sequences ?? []).length === 1, 'sequences round-trip in parse')
 
 let threw = false
 try {

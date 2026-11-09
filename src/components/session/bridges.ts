@@ -26,19 +26,25 @@ import {
   type Preset,
   type SessionRecipe,
 } from '../../presets'
+import type { Sequence, SequenceStage } from '../../sequences'
 import {
   appendSessionRecord,
   deleteUserPresetAndForget,
+  deleteUserSequenceAndForget,
   getLastUsedPreset,
   getPreset,
+  getSequence,
   listSessionHistory,
   listUserPresets,
+  listUserSequences,
   loadPrefs,
   rememberLastPreset as persistLastPreset,
   saveUserPreset,
+  saveUserSequence,
   updatePrefs,
   type AppendSessionInput,
   type SaveUserPresetInput,
+  type SaveUserSequenceInput,
   type SessionRecord,
 } from '../../storage'
 
@@ -56,6 +62,8 @@ export type {
   NatureSoundId,
   NoiseKind,
   Preset,
+  Sequence,
+  SequenceStage,
   SessionRecipe,
 }
 
@@ -238,6 +246,27 @@ export async function loadUserPresets(): Promise<Preset[]> {
 
 export async function removeUserPreset(id: string): Promise<boolean> {
   return deleteUserPresetAndForget(id)
+}
+
+export async function resolveSequence(
+  sequenceId: string | undefined,
+): Promise<Sequence | null> {
+  if (!sequenceId) return null
+  return getSequence(sequenceId)
+}
+
+export async function loadUserSequences(): Promise<Sequence[]> {
+  return listUserSequences()
+}
+
+export async function persistUserSequence(
+  input: SaveUserSequenceInput,
+): Promise<Sequence> {
+  return saveUserSequence(input)
+}
+
+export async function removeUserSequence(id: string): Promise<boolean> {
+  return deleteUserSequenceAndForget(id)
 }
 
 export async function recordFinishedSession(

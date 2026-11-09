@@ -1,4 +1,5 @@
 import type { Preset, UserPrefs } from '../presets/index.ts'
+import type { Sequence } from '../sequences/types.ts'
 
 /** One finished (or abandoned-while-playing) listening session. */
 export interface SessionRecord {
@@ -13,7 +14,7 @@ export interface SessionRecord {
   presetId: string | null
   /** Display name snapshot (preset may be deleted later) */
   presetName: string
-  /** Reserved for W3-2 multi-stage sequences */
+  /** Multi-stage sequence id when the listen came from a sequence */
   sequenceId: string | null
 }
 
@@ -24,8 +25,12 @@ export interface BackupDocument {
   exportedAt: string
   prefs: UserPrefs
   userPresets: Preset[]
-  /** Optional — present when sequences exist; ignored if empty */
-  sequences?: unknown[]
+  /**
+   * User sequences. Always present on export (may be `[]`).
+   * On import `replace`, omitted / non-array → wipe stored sequences
+   * (same honesty as history when omitted).
+   */
+  sequences?: Sequence[] | unknown[]
   /** Optional — included so a full device restore can bring history too */
   sessionHistory?: SessionRecord[]
 }
@@ -36,5 +41,6 @@ export interface BackupImportResult {
   mode: BackupImportMode
   prefs: UserPrefs
   userPresetCount: number
+  userSequenceCount: number
   historyCount: number
 }

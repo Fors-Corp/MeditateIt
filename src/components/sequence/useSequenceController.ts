@@ -11,12 +11,14 @@ import {
   loadSessionPrefs,
   persistHeadphonesAck,
   persistMasterVolume,
+  persistUserSequence,
   recordFinishedSession,
+  resolveSequence,
+  type SequenceStage,
   type SessionAudioEngine,
 } from '../session/bridges'
 import {
   cloneSequence,
-  getSystemSequence,
   resolveStage,
   totalDurationSec,
   type ResolvedStage,
@@ -46,16 +48,37 @@ export interface SequenceController {
   engineStatus: string
   /** True when auto-resume after background was blocked — show tap affordance. */
   needsAudioGesture: boolean
+  /** Calm status copy for the live region (skip / stage / complete). */
+  statusMessage: string
+  showSaveSequence: boolean
+  saveSequenceName: string
+  saveSequenceError: string | null
+  saveSequenceBusy: boolean
+  canOverwriteSequence: boolean
   togglePlay: () => Promise<void>
   continueAudio: () => Promise<void>
   skipStage: () => void
   setMasterVolume: (value: number) => void
   acknowledgeHeadphones: () => void
   dismissHeadphoneWarning: () => void
+  openSaveSequence: () => void
+  dismissSaveSequence: () => void
+  setSaveSequenceName: (name: string) => void
+  saveSequenceAsNew: () => Promise<void>
+  overwriteSequence: () => Promise<void>
 }
 
 function clamp01(n: number): number {
   return Math.min(1, Math.max(0, n))
+}
+
+function materializeStages(resolved: ResolvedStage[]): SequenceStage[] {
+  return resolved.map((r) => ({
+    id: r.stage.id,
+    name: r.stage.name,
+    durationSec: r.stage.durationSec,
+    recipe: r.recipe,
+  }))
 }
 
 export function useSequenceController(
@@ -74,6 +97,13 @@ export function useSequenceController(
   const [showHeadphoneWarning, setShowHeadphoneWarning] = useState(false)
   const [engineStatus, setEngineStatus] = useState('idle')
   const [needsAudioGesture, setNeedsAudioGesture] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('Ready when you are')
+  const [showSaveSequence, setShowSaveSequence] = useState(false)
+  const [saveSequenceName, setSaveSequenceName] = useState('')
+  const [saveSequenceError, setSaveSequenceError] = useState<string | null>(
+    null,
+  )
+  const [saveSequenceBusy, setSaveSequenceBusy] = useState(false)
 
   const engineRef = useRef<SessionAudioEngine | null>(null)
   const timerRef = useRef<number | null>(null)
@@ -122,7 +152,7 @@ export function useSequenceController(
         return
       }
 
-      const found = getSystemSequence(sequenceId)
+      const found = await resolveSequence(sequenceId)
       if (!found || found.stages.length === 0) {
         setMissing(true)
         setReady(true)
@@ -139,6 +169,7 @@ export function useSequenceController(
       setStageRemainingSec(stages[0]!.stage.durationSec)
       setCompleted(false)
       setMissing(false)
+      setStatusMessage('Ready when you are')
       setReady(true)
 
       const needsPhones = stages.some(
@@ -224,6 +255,7 @@ export function useSequenceController(
     setPlaying(false)
     setNeedsAudioGesture(false)
     setEngineStatus(engineRef.current?.getStatus() ?? 'idle')
+    setStatusMessage('Paused')
     setMediaSessionPlaybackState('paused')
     commitSequenceHistory()
   }, [clearTimer, commitSequenceHistory])
@@ -253,6 +285,7 @@ export function useSequenceController(
     completedRef.current = true
     setStageRemainingSec(0)
     setEngineStatus(engineRef.current?.getStatus() ?? 'idle')
+    setStatusMessage('Sequence complete')
     setMediaSessionPlaybackState('paused')
     commitSequenceHistory()
   }, [clearTimer, commitSequenceHistory])
@@ -276,7 +309,10 @@ export function useSequenceController(
   }, [clearTimer])
 
   const applyStage = useCallback(
-    (index: number, opts: { crossfade: boolean }) => {
+    (
+      index: number,
+      opts: { crossfade: boolean; announce?: 'skip' | 'advance' | 'start' },
+    ) => {
       const stages = resolvedRef.current
       const seq = sequenceRef.current
       const next = stages[index]
@@ -289,6 +325,15 @@ export function useSequenceController(
       completedRef.current = false
       fadeOutRef.current = next.recipe.fadeOutSec
       updateMediaMeta(seq.name, next.stage.name)
+
+      const label = `Stage ${index + 1} of ${stages.length} · ${next.stage.name}`
+      if (opts.announce === 'skip') {
+        setStatusMessage(`Skipped to ${next.stage.name}`)
+      } else if (opts.announce === 'advance') {
+        setStatusMessage(`Now playing ${next.stage.name}`)
+      } else if (opts.announce === 'start') {
+        setStatusMessage(label)
+      }
 
       if (!playingRef.current) return
 
@@ -319,7 +364,10 @@ export function useSequenceController(
       return
     }
 
-    applyStage(nextIndex, { crossfade: playingRef.current })
+    applyStage(nextIndex, {
+      crossfade: playingRef.current,
+      announce: 'advance',
+    })
 
     if (playingRef.current) {
       startTimer()
@@ -338,7 +386,7 @@ export function useSequenceController(
 
     if (completedRef.current) {
       // Restart from stage 0
-      applyStage(0, { crossfade: false })
+      applyStage(0, { crossfade: false, announce: 'start' })
     }
 
     const engine = engineRef.current
@@ -357,6 +405,9 @@ export function useSequenceController(
     completedRef.current = false
     setEngineStatus(engine.getStatus())
     updateMediaMeta(seq.name, current.stage.name)
+    setStatusMessage(
+      `Playing ${current.stage.name} · stage ${idx + 1} of ${stages.length}`,
+    )
     setMediaSessionPlaybackState('playing')
 
     if (stageRemainingSec <= 0) {
@@ -384,8 +435,15 @@ export function useSequenceController(
       finishSequence()
       return
     }
-    advance()
-  }, [advance, finishSequence])
+    const nextIndex = stageIndexRef.current + 1
+    applyStage(nextIndex, {
+      crossfade: playingRef.current,
+      announce: 'skip',
+    })
+    if (playingRef.current) {
+      startTimer()
+    }
+  }, [applyStage, finishSequence, startTimer])
 
   useEffect(() => {
     skipStageRef.current = skipStage
@@ -455,6 +513,78 @@ export function useSequenceController(
     setShowHeadphoneWarning(false)
   }, [])
 
+  const canOverwriteSequence =
+    sequence?.source === 'user' && Boolean(sequence.id)
+
+  const openSaveSequence = useCallback(() => {
+    if (!sequence) return
+    const defaultName =
+      sequence.source === 'system'
+        ? `${sequence.name} (mine)`
+        : sequence.name
+    setSaveSequenceName(defaultName)
+    setSaveSequenceError(null)
+    setShowSaveSequence(true)
+  }, [sequence])
+
+  const dismissSaveSequence = useCallback(() => {
+    if (saveSequenceBusy) return
+    setShowSaveSequence(false)
+    setSaveSequenceError(null)
+  }, [saveSequenceBusy])
+
+  const commitSequence = useCallback(
+    async (mode: 'new' | 'overwrite') => {
+      const name = saveSequenceName.trim()
+      if (!name) {
+        setSaveSequenceError('Name is required')
+        return
+      }
+      const seq = sequenceRef.current
+      const stages = resolvedRef.current
+      if (!seq || stages.length === 0) {
+        setSaveSequenceError('Nothing to save')
+        return
+      }
+
+      setSaveSequenceBusy(true)
+      setSaveSequenceError(null)
+      try {
+        const saved = await persistUserSequence({
+          id:
+            mode === 'overwrite' && canOverwriteSequence
+              ? seq.id
+              : undefined,
+          name,
+          summary:
+            seq.source === 'system'
+              ? `Saved from ${seq.name}`
+              : seq.summary || `${stages.length} stages`,
+          stages: materializeStages(stages),
+        })
+        setSequence(saved)
+        sequenceRef.current = saved
+        setShowSaveSequence(false)
+        setStatusMessage(`Saved “${saved.name}” on this device`)
+      } catch (err) {
+        setSaveSequenceError(
+          err instanceof Error ? err.message : 'Could not save sequence',
+        )
+      } finally {
+        setSaveSequenceBusy(false)
+      }
+    },
+    [canOverwriteSequence, saveSequenceName],
+  )
+
+  const saveSequenceAsNew = useCallback(async () => {
+    await commitSequence('new')
+  }, [commitSequence])
+
+  const overwriteSequence = useCallback(async () => {
+    await commitSequence('overwrite')
+  }, [commitSequence])
+
   const current = resolved[stageIndex]
   const stageDurationSec = current?.stage.durationSec ?? 0
   const elapsedInStage = Math.max(0, stageDurationSec - stageRemainingSec)
@@ -491,11 +621,22 @@ export function useSequenceController(
     showHeadphoneWarning,
     engineStatus,
     needsAudioGesture,
+    statusMessage,
+    showSaveSequence,
+    saveSequenceName,
+    saveSequenceError,
+    saveSequenceBusy,
+    canOverwriteSequence,
     togglePlay,
     continueAudio,
     skipStage,
     setMasterVolume,
     acknowledgeHeadphones,
     dismissHeadphoneWarning,
+    openSaveSequence,
+    dismissSaveSequence,
+    setSaveSequenceName,
+    saveSequenceAsNew,
+    overwriteSequence,
   }
 }

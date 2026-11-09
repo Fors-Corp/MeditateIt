@@ -17,8 +17,9 @@ export type EraseAllResult = {
 }
 
 /**
- * Wipe every MeditateIt localStorage key (prefs, presets, history, retention).
- * Optionally clears Cache Storage and unregisters service workers.
+ * Wipe every MeditateIt localStorage key (prefs, presets, sequences,
+ * history, retention). Optionally clears Cache Storage and unregisters
+ * service workers.
  */
 export async function eraseAllLocalData(
   options?: EraseAllOptions,
