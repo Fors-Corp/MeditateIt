@@ -1,23 +1,34 @@
 /**
- * Presets ownership: sibling agents.
- * System templates (Sleep, Focus, …) + user preset CRUD live here.
- * Scaffold only — no real recipes yet.
+ * Presets — system templates + recipe helpers.
+ * Persistence (save/load/delete user presets, prefs) lives in `src/storage`.
  */
 
-export type PresetSource = 'system' | 'user'
+export type {
+  BeatMode,
+  BeatParams,
+  LayerGains,
+  NatureParams,
+  NoiseKind,
+  NoiseParams,
+  Preset,
+  PresetSource,
+  SessionRecipe,
+  ToneParams,
+  UserPrefs,
+} from './types.ts'
 
-export interface PresetStub {
-  id: string
-  name: string
-  source: PresetSource
-}
+export {
+  cloneRecipe,
+  createBlankRecipe,
+  DEFAULT_FADE_IN_SEC,
+  DEFAULT_FADE_OUT_SEC,
+  DEFAULT_GAINS,
+} from './recipe.ts'
 
-export const SYSTEM_PRESET_STUBS: readonly PresetStub[] = [
-  { id: 'daily-calm', name: 'Daily calm', source: 'system' },
-  { id: 'sleep', name: 'Sleep', source: 'system' },
-  { id: 'focus', name: 'Focus', source: 'system' },
-] as const
-
-export function listSystemPresets(): readonly PresetStub[] {
-  return SYSTEM_PRESET_STUBS
-}
+export {
+  cloneAsUserPreset,
+  getSystemPreset,
+  isSystemPresetId,
+  listSystemPresets,
+  SYSTEM_PRESETS,
+} from './system.ts'
