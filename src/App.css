@@ -478,6 +478,47 @@
   font-weight: 600;
 }
 
+.settings-check {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.settings-check input {
+  margin-top: 0.3rem;
+}
+
+.settings-select-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 20rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.settings-select {
+  font: inherit;
+  font-weight: 500;
+  color: var(--ink);
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+}
+
+.settings-erase-btn {
+  color: #8a3a32;
+  border-color: color-mix(in srgb, #8a3a32 35%, var(--border));
+}
+
+.settings-erase-btn:hover:not(:disabled) {
+  color: #6e2e28;
+}
+
 .settings-status {
   margin: 0;
   font-size: 0.9rem;

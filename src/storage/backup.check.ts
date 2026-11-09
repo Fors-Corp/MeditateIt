@@ -9,8 +9,16 @@ import {
   BACKUP_VERSION,
   parseBackup,
 } from './backup.ts'
+import { STORAGE_ERROR, messageForStorageError } from './errors.ts'
+import {
+  normalizeHistoryRetentionDays,
+} from './historyRetention.ts'
 import { MAX_BACKUP_CHARS } from './limits.ts'
-import { normalizeSessionRecord } from './sessionHistory.ts'
+import { STORAGE_KEYS } from './keys.ts'
+import {
+  filterHistoryByRetention,
+  normalizeSessionRecord,
+} from './sessionHistory.ts'
 import { normalizePrefs } from './prefs.ts'
 
 function assert(cond: boolean, msg: string): void {
@@ -53,10 +61,11 @@ assert((doc.sequences ?? []).length === 0, 'sequences ignored')
 let threw = false
 try {
   parseBackup({ format: 'nope', version: 1, prefs: {}, userPresets: [] })
-} catch {
-  threw = true
+} catch (err) {
+  threw =
+    err instanceof Error && err.message === STORAGE_ERROR.BAD_FORMAT
 }
-assert(threw, 'rejects bad format')
+assert(threw, 'rejects bad format with stable message')
 
 // --- adversarial / security probes ---
 
@@ -64,19 +73,71 @@ threw = false
 try {
   parseBackup('x'.repeat(MAX_BACKUP_CHARS + 1))
 } catch (err) {
-  threw = err instanceof Error && /too large/i.test(err.message)
+  threw =
+    err instanceof Error && err.message === STORAGE_ERROR.TOO_LARGE
 }
-assert(threw, 'rejects oversized string')
+assert(threw, 'rejects oversized string with stable message')
 
 threw = false
 try {
   parseBackup(
     `{"format":"${BACKUP_FORMAT}","version":${BACKUP_VERSION},"__proto__":{"polluted":true},"userPresets":[]}`,
   )
-} catch {
-  threw = true
+} catch (err) {
+  threw =
+    err instanceof Error && err.message === STORAGE_ERROR.FORBIDDEN_KEY
 }
-assert(threw, 'rejects __proto__ key')
+assert(threw, 'rejects __proto__ key with stable message')
+
+assert(
+  messageForStorageError(new Error('Backup is not valid JSON')) ===
+    STORAGE_ERROR.INVALID_JSON,
+  'maps legacy JSON message',
+)
+assert(
+  messageForStorageError(new Error('surprise')) === STORAGE_ERROR.IMPORT_FAILED,
+  'unknown errors fall back',
+)
+
+assert(
+  Object.values(STORAGE_KEYS).includes('meditateit:history-retention:v1'),
+  'retention key listed for erase-all',
+)
+assert(normalizeHistoryRetentionDays(30) === 30, 'retention 30')
+assert(normalizeHistoryRetentionDays({ days: 7 }) === 7, 'retention nested')
+assert(normalizeHistoryRetentionDays(12) === null, 'retention rejects junk')
+assert(normalizeHistoryRetentionDays(null) === null, 'retention forever')
+
+const now = Date.parse('2026-11-09T12:00:00.000Z')
+const kept = filterHistoryByRetention(
+  [
+    {
+      id: 'old',
+      startedAt: '2026-01-01T10:00:00.000Z',
+      endedAt: '2026-01-01T10:05:00.000Z',
+      durationSec: 300,
+      presetId: 'daily-calm',
+      presetName: 'Daily calm',
+      sequenceId: null,
+    },
+    {
+      id: 'new',
+      startedAt: '2026-11-08T10:00:00.000Z',
+      endedAt: '2026-11-08T10:05:00.000Z',
+      durationSec: 300,
+      presetId: 'daily-calm',
+      presetName: 'Daily calm',
+      sequenceId: null,
+    },
+  ],
+  30,
+  now,
+)
+assert(kept.length === 1 && kept[0]!.id === 'new', 'TTL drops old history')
+assert(
+  filterHistoryByRetention(kept, null, now).length === 1,
+  'null retention keeps all',
+)
 
 assert(
   normalizeRecipe({

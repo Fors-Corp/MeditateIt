@@ -1,3 +1,7 @@
+import {
+  loadHistoryRetentionDays,
+  type HistoryRetentionDays,
+} from './historyRetention.ts'
 import { STORAGE_KEYS } from './keys.ts'
 import {
   MAX_DURATION_SEC,
@@ -12,6 +16,8 @@ export const SESSION_HISTORY_LIMIT = 100
 
 /** Skip accidental play taps shorter than this. */
 export const MIN_SESSION_DURATION_SEC = 1
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -67,6 +73,35 @@ export function normalizeSessionRecord(raw: unknown): SessionRecord | null {
   }
 }
 
+/**
+ * Drop records older than the retention window (by endedAt).
+ * null retentionDays = no time filter (caller still applies count cap).
+ */
+export function filterHistoryByRetention(
+  records: SessionRecord[],
+  retentionDays: HistoryRetentionDays,
+  nowMs: number = Date.now(),
+): SessionRecord[] {
+  if (retentionDays == null) return records
+  const cutoff = nowMs - retentionDays * MS_PER_DAY
+  return records.filter((r) => {
+    const t = Date.parse(r.endedAt)
+    return Number.isFinite(t) && t >= cutoff
+  })
+}
+
+function newestFirst(records: SessionRecord[]): SessionRecord[] {
+  return [...records].sort((a, b) => (a.endedAt < b.endedAt ? 1 : -1))
+}
+
+function sameIds(a: SessionRecord[], b: SessionRecord[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i]!.id !== b[i]!.id) return false
+  }
+  return true
+}
+
 async function readAll(): Promise<SessionRecord[]> {
   const raw = await readJson<unknown>(STORAGE_KEYS.sessionHistory)
   if (!Array.isArray(raw)) return []
@@ -82,10 +117,27 @@ async function writeAll(records: SessionRecord[]): Promise<void> {
   await writeJson(STORAGE_KEYS.sessionHistory, records)
 }
 
-/** Newest first. */
-export async function listSessionHistory(): Promise<SessionRecord[]> {
+/**
+ * Apply time retention + count cap; rewrite storage when anything drops.
+ * Returns newest-first list.
+ */
+export async function applySessionHistoryRetention(
+  nowMs: number = Date.now(),
+): Promise<SessionRecord[]> {
+  const days = await loadHistoryRetentionDays()
   const all = await readAll()
-  return all.sort((a, b) => (a.endedAt < b.endedAt ? 1 : -1))
+  const filtered = filterHistoryByRetention(all, days, nowMs)
+  const capped = newestFirst(filtered).slice(0, SESSION_HISTORY_LIMIT)
+  const prior = newestFirst(all)
+  if (!sameIds(prior, capped)) {
+    await writeAll(capped)
+  }
+  return capped
+}
+
+/** Newest first; also purges by TTL + count cap. */
+export async function listSessionHistory(): Promise<SessionRecord[]> {
+  return applySessionHistoryRetention()
 }
 
 export type AppendSessionInput = {
@@ -100,7 +152,8 @@ export type AppendSessionInput = {
 
 /**
  * Append a finished session. Returns null when duration is below the
- * minimum (ignored accidental taps). Newest records are kept within limit.
+ * minimum (ignored accidental taps). Newest records are kept within limit
+ * and time retention.
  */
 export async function appendSessionRecord(
   input: AppendSessionInput,
@@ -135,9 +188,11 @@ export async function appendSessionRecord(
         : truncate(input.sequenceId, MAX_ID_CHARS) || null,
   }
 
+  const days = await loadHistoryRetentionDays()
   const all = await readAll()
   all.unshift(record)
-  await writeAll(all.slice(0, SESSION_HISTORY_LIMIT))
+  const filtered = filterHistoryByRetention(all, days)
+  await writeAll(newestFirst(filtered).slice(0, SESSION_HISTORY_LIMIT))
   return record
 }
 
@@ -145,13 +200,14 @@ export async function appendSessionRecord(
 export async function replaceSessionHistory(
   records: SessionRecord[],
 ): Promise<SessionRecord[]> {
+  const days = await loadHistoryRetentionDays()
   const normalized: SessionRecord[] = []
   for (const item of records) {
     const record = normalizeSessionRecord(item)
     if (record) normalized.push(record)
   }
-  normalized.sort((a, b) => (a.endedAt < b.endedAt ? 1 : -1))
-  const capped = normalized.slice(0, SESSION_HISTORY_LIMIT)
+  const filtered = filterHistoryByRetention(normalized, days)
+  const capped = newestFirst(filtered).slice(0, SESSION_HISTORY_LIMIT)
   await writeAll(capped)
   return capped
 }
@@ -160,6 +216,7 @@ export async function replaceSessionHistory(
 export async function mergeSessionHistory(
   incoming: SessionRecord[],
 ): Promise<SessionRecord[]> {
+  const days = await loadHistoryRetentionDays()
   const current = await readAll()
   const byId = new Map<string, SessionRecord>()
   for (const r of current) byId.set(r.id, r)
@@ -167,10 +224,8 @@ export async function mergeSessionHistory(
     const record = normalizeSessionRecord(item)
     if (record) byId.set(record.id, record)
   }
-  const merged = [...byId.values()].sort((a, b) =>
-    a.endedAt < b.endedAt ? 1 : -1,
-  )
-  const capped = merged.slice(0, SESSION_HISTORY_LIMIT)
+  const filtered = filterHistoryByRetention([...byId.values()], days)
+  const capped = newestFirst(filtered).slice(0, SESSION_HISTORY_LIMIT)
   await writeAll(capped)
   return capped
 }

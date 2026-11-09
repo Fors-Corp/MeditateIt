@@ -54,7 +54,9 @@ export {
 
 export {
   appendSessionRecord,
+  applySessionHistoryRetention,
   clearSessionHistory,
+  filterHistoryByRetention,
   listSessionHistory,
   mergeSessionHistory,
   MIN_SESSION_DURATION_SEC,
@@ -65,6 +67,27 @@ export {
 } from './sessionHistory.ts'
 
 export {
+  HISTORY_RETENTION_DAY_OPTIONS,
+  labelForHistoryRetention,
+  loadHistoryRetentionDays,
+  normalizeHistoryRetentionDays,
+  saveHistoryRetentionDays,
+  type HistoryRetentionDays,
+} from './historyRetention.ts'
+
+export {
+  eraseAllLocalData,
+  type EraseAllOptions,
+  type EraseAllResult,
+} from './erase.ts'
+
+export {
+  messageForStorageError,
+  STORAGE_ERROR,
+  type StorageErrorCode,
+} from './errors.ts'
+
+export {
   BACKUP_FORMAT,
   BACKUP_VERSION,
   downloadBackup,
@@ -72,6 +95,7 @@ export {
   importBackup,
   parseBackup,
   stringifyBackup,
+  type ImportBackupOptions,
 } from './backup.ts'
 
 /** System templates first, then user presets (insertion / save order). */
