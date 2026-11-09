@@ -5,6 +5,7 @@ import {
 } from './crossfade'
 import { DEFAULT_ENGINE_PARAMS, GAIN, RAMP_SEC } from './constants'
 import { LayerBank } from './LayerBank'
+import { ensureNoiseWorklet } from './noiseWorklet'
 import { clamp, rampParam } from './ramp'
 import type {
   AudioEngineStatus,
@@ -96,6 +97,9 @@ export class AudioEngine {
     if (ctx.state === 'suspended') {
       await ctx.resume()
     }
+
+    // Prefer AudioWorklet noise when available (falls back inside NoiseLayer).
+    await ensureNoiseWorklet(ctx)
 
     const fadeIn = Math.max(
       RAMP_SEC.fadeMin,

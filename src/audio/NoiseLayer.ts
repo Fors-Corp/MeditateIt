@@ -1,18 +1,23 @@
 import { FREQ, GAIN, RAMP_SEC } from './constants'
 import { createNoiseBuffer } from './noiseBuffers'
+import { tryCreateNoiseWorkletNode } from './noiseWorklet'
 import { clamp, rampParam } from './ramp'
 import type { NoiseKind, NoiseParams } from './types'
 
 /**
- * Filtered looping noise (white / pink / brown).
- * Graph: BufferSource(loop) → HPF → LPF → gain → output
+ * Filtered noise (white / pink / brown).
+ *
+ * Prefers an AudioWorklet source (continuous, no loop seam, kind switch
+ * via message). Falls back to a looping AudioBuffer when the worklet is
+ * unavailable. Graph: source → HPF → LPF → gain → output
  */
 export class NoiseLayer {
   private readonly ctx: AudioContext
   private readonly hpf: BiquadFilterNode
   private readonly lpf: BiquadFilterNode
   private readonly gainNode: GainNode
-  private source: AudioBufferSourceNode | null = null
+  private source: AudioBufferSourceNode | AudioWorkletNode | null = null
+  private usingWorklet = false
   private kind: NoiseKind = 'pink'
   private running = false
   private disposed = false
@@ -92,6 +97,16 @@ export class NoiseLayer {
       : 0
     rampParam(this.gainNode.gain, targetGain, t, RAMP_SEC.gain)
 
+    if (
+      this.usingWorklet &&
+      this.source instanceof AudioWorkletNode &&
+      params.kind !== this.kind
+    ) {
+      this.kind = params.kind
+      this.source.port.postMessage({ type: 'setKind', kind: params.kind })
+      return
+    }
+
     if (forceRestart || !this.source) {
       this.restartSource(params.kind)
     }
@@ -100,6 +115,16 @@ export class NoiseLayer {
   private restartSource(kind: NoiseKind): void {
     this.teardownSource()
     this.kind = kind
+
+    const worklet = tryCreateNoiseWorkletNode(this.ctx)
+    if (worklet) {
+      worklet.port.postMessage({ type: 'setKind', kind })
+      worklet.connect(this.hpf)
+      this.source = worklet
+      this.usingWorklet = true
+      return
+    }
+
     const buffer = createNoiseBuffer(this.ctx, kind)
     const source = this.ctx.createBufferSource()
     source.buffer = buffer
@@ -107,14 +132,17 @@ export class NoiseLayer {
     source.connect(this.hpf)
     source.start()
     this.source = source
+    this.usingWorklet = false
   }
 
   private teardownSource(): void {
     if (!this.source) return
-    try {
-      this.source.stop()
-    } catch {
-      /* already stopped */
+    if (this.source instanceof AudioBufferSourceNode) {
+      try {
+        this.source.stop()
+      } catch {
+        /* already stopped */
+      }
     }
     try {
       this.source.disconnect()
@@ -122,5 +150,6 @@ export class NoiseLayer {
       /* already disconnected */
     }
     this.source = null
+    this.usingWorklet = false
   }
 }
