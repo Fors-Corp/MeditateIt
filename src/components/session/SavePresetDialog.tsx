@@ -1,3 +1,5 @@
+import { useModalDialogFocus } from './useModalDialogFocus'
+
 interface SavePresetDialogProps {
   open: boolean
   name: string
@@ -21,6 +23,10 @@ export function SavePresetDialog({
   onSaveNew,
   onOverwrite,
 }: SavePresetDialogProps) {
+  const panelRef = useModalDialogFocus(open, onCancel, {
+    initialFocus: 'first',
+  })
+
   if (!open) return null
 
   return (
@@ -30,6 +36,7 @@ export function SavePresetDialog({
       onClick={onCancel}
     >
       <div
+        ref={panelRef}
         className="headphone-dialog"
         role="dialog"
         aria-modal="true"
@@ -48,7 +55,6 @@ export function SavePresetDialog({
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
             maxLength={60}
-            autoFocus
             disabled={saving}
             aria-invalid={Boolean(error)}
           />

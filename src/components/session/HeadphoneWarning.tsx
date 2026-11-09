@@ -1,4 +1,5 @@
 import { BINAURAL_REQUIRES_HEADPHONES } from './bridges'
+import { useModalDialogFocus } from './useModalDialogFocus'
 
 interface HeadphoneWarningProps {
   open: boolean
@@ -11,6 +12,10 @@ export function HeadphoneWarning({
   onConfirm,
   onCancel,
 }: HeadphoneWarningProps) {
+  const panelRef = useModalDialogFocus(open, onCancel, {
+    initialFocus: 'primary',
+  })
+
   if (!open) return null
 
   return (
@@ -20,6 +25,7 @@ export function HeadphoneWarning({
       onClick={onCancel}
     >
       <div
+        ref={panelRef}
         className="headphone-dialog"
         role="alertdialog"
         aria-modal="true"
