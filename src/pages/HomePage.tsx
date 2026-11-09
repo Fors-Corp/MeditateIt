@@ -5,42 +5,49 @@ import {
   loadSystemPresets,
   loadUserPresets,
   loadUserSequences,
-  PRESET_BLURBS,
   removeUserPreset,
   removeUserSequence,
 } from '../components/session/bridges'
-import { messages } from '../i18n'
+import {
+  formatLocaleDateTime,
+  systemPresetLabel,
+  systemSequenceLabel,
+  type Messages,
+} from '../i18n'
+import { useI18n } from '../i18n/useI18n'
 import { isSystemPresetId, type Preset } from '../presets'
 import {
-  formatSequenceDuration,
   isSystemSequenceId,
   listSystemSequences,
+  totalDurationSec,
   type Sequence,
 } from '../sequences'
 import { getLastUsedPreset, type SessionRecord } from '../storage'
 
-function formatDuration(sec: number | null): string {
+function formatDuration(sec: number | null, messages: Messages): string {
   if (sec == null) return messages.home.openEnded
   const m = Math.round(sec / 60)
   return messages.home.minutes(m)
 }
 
-function formatHistoryDuration(sec: number): string {
-  if (sec < 60) return `${sec}s`
+function formatHistoryDuration(sec: number, messages: Messages): string {
+  if (sec < 60) return messages.home.historySeconds(sec)
   const m = Math.floor(sec / 60)
   const s = sec % 60
-  return s > 0 ? `${m}m ${s}s` : `${m}m`
+  return messages.home.historyMinutes(m, s)
 }
 
-function formatHistoryWhen(iso: string): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+function formatSequenceDurationLabel(
+  sequence: Sequence,
+  messages: Messages,
+): string {
+  const total = totalDurationSec(sequence)
+  const m = Math.round(total / 60)
+  return messages.home.sequenceDuration(m, sequence.stages.length)
+}
+
+function presetBlurb(id: string, messages: Messages): string | undefined {
+  return messages.blurbs[id]
 }
 
 /** Prefer sequence replay when resolvable; else preset session. */
@@ -66,6 +73,7 @@ function resolveHistoryHref(
 }
 
 export default function HomePage() {
+  const { messages } = useI18n()
   const presets = loadSystemPresets()
   const sequences = listSystemSequences()
   const [quickStartId, setQuickStartId] = useState('daily-calm')
@@ -125,10 +133,6 @@ export default function HomePage() {
     try {
       await removeUserPreset(id)
       refreshUserPresets()
-      if (quickStartId === id) {
-        const last = await getLastUsedPreset()
-        setQuickStartId(last.id)
-      }
     } finally {
       setDeletingId(null)
     }
@@ -182,10 +186,14 @@ export default function HomePage() {
           {sequences.map((seq, index) => (
             <li key={seq.id} style={{ animationDelay: `${50 + index * 45}ms` }}>
               <Link className="preset-link" to={`/sequence/${seq.id}`}>
-                <span className="preset-name">{seq.name}</span>
-                <span className="preset-meta">{seq.summary}</span>
+                <span className="preset-name">
+                  {systemSequenceLabel(seq.id, 'name', seq.name)}
+                </span>
+                <span className="preset-meta">
+                  {systemSequenceLabel(seq.id, 'summary', seq.summary)}
+                </span>
                 <span className="preset-duration">
-                  {formatSequenceDuration(seq)}
+                  {formatSequenceDurationLabel(seq, messages)}
                 </span>
               </Link>
             </li>
@@ -212,7 +220,7 @@ export default function HomePage() {
                     {seq.summary || messages.home.savedOnDevice}
                   </span>
                   <span className="preset-duration">
-                    {formatSequenceDuration(seq)}
+                    {formatSequenceDurationLabel(seq, messages)}
                   </span>
                 </Link>
                 <button
@@ -246,7 +254,7 @@ export default function HomePage() {
                 knownUserSequenceIds,
               )
               const meta = [
-                formatHistoryWhen(row.endedAt),
+                formatLocaleDateTime(row.endedAt),
                 row.sequenceId &&
                 (isSystemSequenceId(row.sequenceId) ||
                   knownUserSequenceIds.has(row.sequenceId))
@@ -263,7 +271,7 @@ export default function HomePage() {
                       <span className="history-name">{row.presetName}</span>
                       <span className="history-meta">{meta}</span>
                       <span className="history-duration">
-                        {formatHistoryDuration(row.durationSec)}
+                        {formatHistoryDuration(row.durationSec, messages)}
                       </span>
                       <span className="history-replay">
                         {messages.home.replay}
@@ -274,7 +282,7 @@ export default function HomePage() {
                       <span className="history-name">{row.presetName}</span>
                       <span className="history-meta">{meta}</span>
                       <span className="history-duration">
-                        {formatHistoryDuration(row.durationSec)}
+                        {formatHistoryDuration(row.durationSec, messages)}
                       </span>
                     </>
                   )}
@@ -299,7 +307,7 @@ export default function HomePage() {
                   <span className="preset-name">{preset.name}</span>
                   <span className="preset-meta">{messages.home.savedOnDevice}</span>
                   <span className="preset-duration">
-                    {formatDuration(preset.defaultDurationSec)}
+                    {formatDuration(preset.defaultDurationSec, messages)}
                   </span>
                 </Link>
                 <button
@@ -323,12 +331,15 @@ export default function HomePage() {
           {presets.map((preset, index) => (
             <li key={preset.id} style={{ animationDelay: `${80 + index * 50}ms` }}>
               <Link className="preset-link" to={`/session/${preset.id}`}>
-                <span className="preset-name">{preset.name}</span>
+                <span className="preset-name">
+                  {systemPresetLabel(preset.id, preset.name)}
+                </span>
                 <span className="preset-meta">
-                  {PRESET_BLURBS[preset.id] ?? formatDuration(preset.defaultDurationSec)}
+                  {presetBlurb(preset.id, messages) ??
+                    formatDuration(preset.defaultDurationSec, messages)}
                 </span>
                 <span className="preset-duration">
-                  {formatDuration(preset.defaultDurationSec)}
+                  {formatDuration(preset.defaultDurationSec, messages)}
                 </span>
               </Link>
             </li>

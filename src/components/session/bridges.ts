@@ -16,7 +16,7 @@ import {
   type EngineParamsPatch,
   type NatureSoundId,
 } from '../../audio'
-import { messages } from '../../i18n'
+import { getMessages } from '../../i18n'
 import {
   cloneRecipe,
   createBlankRecipe,
@@ -283,5 +283,27 @@ export async function loadRecentSessions(
   return all.slice(0, Math.max(0, limit))
 }
 
-/** System preset blurbs from the EN catalog. */
-export const PRESET_BLURBS: Record<string, string> = { ...messages.blurbs }
+/** System preset blurbs from the active catalog. */
+export function presetBlurbs(): Record<string, string> {
+  return { ...getMessages().blurbs }
+}
+
+/** @deprecated Prefer `presetBlurbs()` so locale switches stay live. */
+export const PRESET_BLURBS: Record<string, string> = new Proxy(
+  {} as Record<string, string>,
+  {
+    get(_target, prop) {
+      if (typeof prop !== 'string') return undefined
+      return getMessages().blurbs[prop]
+    },
+    ownKeys() {
+      return Reflect.ownKeys(getMessages().blurbs)
+    },
+    getOwnPropertyDescriptor(_target, prop) {
+      if (typeof prop !== 'string') return undefined
+      const value = getMessages().blurbs[prop]
+      if (value === undefined) return undefined
+      return { configurable: true, enumerable: true, value }
+    },
+  },
+)

@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
-import { messages } from '../i18n'
+import { useI18n } from '../i18n/useI18n'
 
 /** Shared disclaimer + legal links (product hygiene stub, not counsel copy). */
 export default function AppFooter() {
+  const { messages } = useI18n()
   return (
     <footer className="app-footer">
       <p className="app-disclaimer">{messages.app.disclaimer}</p>

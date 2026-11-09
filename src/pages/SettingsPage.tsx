@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import LanguagePicker from '../components/LanguagePicker'
 import { ThemePicker } from '../components/ThemePicker'
 import { useThemePreference } from '../components/useThemePreference'
-import { messages } from '../i18n'
+import {
+  formatLocaleDateTime,
+  type Messages,
+} from '../i18n'
+import { useI18n } from '../i18n/useI18n'
 import {
   applySessionHistoryRetention,
   clearSessionHistory,
@@ -23,28 +28,18 @@ import {
 } from '../storage'
 import { applyThemePreference } from '../theme'
 
-function formatWhen(iso: string): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso
-  return d.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function formatDuration(sec: number): string {
-  if (sec < 60) return `${sec}s`
+function formatDuration(sec: number, messages: Messages): string {
+  if (sec < 60) return messages.home.historySeconds(sec)
   const m = Math.floor(sec / 60)
   const s = sec % 60
-  if (m < 60) return s > 0 ? `${m}m ${s}s` : `${m}m`
+  if (m < 60) return messages.home.historyMinutes(m, s)
   const h = Math.floor(m / 60)
   const rm = m % 60
-  return rm > 0 ? `${h}h ${rm}m` : `${h}h`
+  return messages.home.historyHours(h, rm)
 }
 
 export default function SettingsPage() {
+  const { messages } = useI18n()
   const fileRef = useRef<HTMLInputElement>(null)
   const [history, setHistory] = useState<SessionRecord[]>([])
   const [busy, setBusy] = useState(false)
@@ -217,7 +212,11 @@ export default function SettingsPage() {
         />
       </section>
 
-      {/* Language section: parallel i18n agent owns this — do not expand locales here. */}
+      <section className="settings-section" aria-labelledby="language-heading">
+        <h2 id="language-heading">{messages.settings.languageHeading}</h2>
+        <p className="settings-lede">{messages.settings.languageLede}</p>
+        <LanguagePicker disabled={busy} />
+      </section>
 
       <section className="settings-section" aria-labelledby="backup-heading">
         <h2 id="backup-heading">{messages.settings.backupHeading}</h2>
@@ -344,9 +343,11 @@ export default function SettingsPage() {
             {history.map((row) => (
               <li key={row.id} className="history-row">
                 <span className="history-name">{row.presetName}</span>
-                <span className="history-meta">{formatWhen(row.endedAt)}</span>
+                <span className="history-meta">
+                  {formatLocaleDateTime(row.endedAt)}
+                </span>
                 <span className="history-duration">
-                  {formatDuration(row.durationSec)}
+                  {formatDuration(row.durationSec, messages)}
                 </span>
               </li>
             ))}

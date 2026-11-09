@@ -1,4 +1,4 @@
-import { messages } from '../i18n/index.ts'
+import { getMessages } from '../i18n/index.ts'
 import { STORAGE_KEYS } from './keys.ts'
 import { readJson, writeJson } from './local.ts'
 
@@ -46,6 +46,7 @@ export async function saveHistoryRetentionDays(
 }
 
 export function labelForHistoryRetention(days: HistoryRetentionDays): string {
+  const messages = getMessages()
   if (days === null) return messages.settings.retentionForever
   return messages.settings.retentionDays(days)
 }

@@ -1,28 +1,9 @@
-import { messages } from '../i18n'
+import { useI18n } from '../i18n/useI18n'
 import {
   applyThemePreference,
   THEME_IDS,
   type ThemePreference,
 } from '../theme'
-
-type PickerOption = {
-  preference: ThemePreference
-  label: string
-  key: string
-}
-
-const OPTIONS: readonly PickerOption[] = [
-  {
-    key: 'system',
-    preference: null,
-    label: messages.settings.themeSystem,
-  },
-  ...THEME_IDS.map((id) => ({
-    key: id,
-    preference: id as ThemePreference,
-    label: messages.settings.themes[id],
-  })),
-]
 
 type ThemePickerProps = {
   value: ThemePreference
@@ -32,16 +13,34 @@ type ThemePickerProps = {
 
 /**
  * Accessible theme chips (radiogroup + aria-checked). Applies live;
- * parent persists via onChange.
+ * parent persists via onChange. Labels follow the active locale.
  */
 export function ThemePicker({ value, onChange, disabled }: ThemePickerProps) {
+  const { messages } = useI18n()
+  const options: {
+    preference: ThemePreference
+    label: string
+    key: string
+  }[] = [
+    {
+      key: 'system',
+      preference: null,
+      label: messages.settings.themeSystem,
+    },
+    ...THEME_IDS.map((id) => ({
+      key: id,
+      preference: id as ThemePreference,
+      label: messages.settings.themes[id],
+    })),
+  ]
+
   return (
     <div
       className="chip-row theme-picker"
       role="radiogroup"
       aria-labelledby="theme-heading"
     >
-      {OPTIONS.map((opt) => {
+      {options.map((opt) => {
         const selected = value === opt.preference
         return (
           <button

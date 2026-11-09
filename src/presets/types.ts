@@ -112,4 +112,9 @@ export interface UserPrefs {
    * Named extras (dusk / mist / forest) always win over system.
    */
   themeId: ThemeId | null
+  /**
+   * UI locale preference (`en` | `es` | `ca` | `fr` | `pt`).
+   * `null` = follow the browser language when supported, else `en`.
+   */
+  locale: string | null
 }

@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom'
-import { messages } from '../../i18n'
+import {
+  systemSequenceLabel,
+  systemStageLabel,
+} from '../../i18n'
+import { useI18n } from '../../i18n/useI18n'
 import { HeadphoneWarning } from '../session/HeadphoneWarning'
 import { SavePresetDialog } from '../session/SavePresetDialog'
 import '../session/session.css'
@@ -17,6 +21,7 @@ interface SequenceControlsProps {
 }
 
 export function SequenceControls({ session }: SequenceControlsProps) {
+  const { messages } = useI18n()
   const {
     ready,
     missing,
@@ -73,6 +78,16 @@ export function SequenceControls({ session }: SequenceControlsProps) {
     )
   }
 
+  const displaySequenceName = systemSequenceLabel(
+    sequence.id,
+    'name',
+    sequence.name,
+  )
+  const currentStage = sequence.stages[stageIndex]
+  const displayStageName = currentStage
+    ? systemStageLabel(sequence.id, currentStage.id, stageName || currentStage.name)
+    : systemStageLabel(sequence.id, '', stageName)
+
   const statusLabel = completed
     ? messages.sequence.complete
     : engineStatus === 'unavailable'
@@ -81,7 +96,7 @@ export function SequenceControls({ session }: SequenceControlsProps) {
         ? messages.sequence.pausedByBrowser
         : crossfading
           ? messages.sequence.crossfadingTo(
-              stageName || messages.sequence.nextStage,
+              displayStageName || messages.sequence.nextStage,
             )
           : statusMessage
 
@@ -91,7 +106,7 @@ export function SequenceControls({ session }: SequenceControlsProps) {
   const stageProgressLabel = completed
     ? messages.sequence.allStagesComplete(stageCount)
     : messages.sequence.stageProgress(
-        stageName,
+        displayStageName,
         formatTime(stageRemainingSec),
         formatTime(stageDurationSec),
         Math.min(stageIndex + 1, stageCount),
@@ -102,8 +117,10 @@ export function SequenceControls({ session }: SequenceControlsProps) {
   return (
     <div className={`sequence-panel${playing ? ' is-playing' : ''}`}>
       <div className="sequence-hero">
-        <p className="sequence-kicker">{sequence.name}</p>
-        <h2 className="sequence-stage-name">{stageName || sequence.name}</h2>
+        <p className="sequence-kicker">{displaySequenceName}</p>
+        <h2 className="sequence-stage-name">
+          {displayStageName || displaySequenceName}
+        </h2>
         <p className="sequence-stage-sub">
           {completed
             ? messages.sequence.finished
@@ -126,7 +143,7 @@ export function SequenceControls({ session }: SequenceControlsProps) {
           className="sequence-progress"
           role="progressbar"
           aria-label={messages.sequence.stageProgressAria(
-            stageName || messages.sequence.heading,
+            displayStageName || messages.sequence.heading,
           )}
           aria-valuemin={0}
           aria-valuemax={100}
@@ -203,7 +220,7 @@ export function SequenceControls({ session }: SequenceControlsProps) {
         <div
           className="sequence-progress sequence-progress-overall"
           role="progressbar"
-          aria-label={messages.sequence.stageProgressAria(sequence.name)}
+          aria-label={messages.sequence.stageProgressAria(displaySequenceName)}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(sequenceProgress * 100)}
@@ -227,7 +244,9 @@ export function SequenceControls({ session }: SequenceControlsProps) {
                 className={`sequence-stage-item is-${state}`}
                 aria-current={state === 'current' ? 'step' : undefined}
               >
-                <span className="sequence-stage-item-name">{stage.name}</span>
+                <span className="sequence-stage-item-name">
+                  {systemStageLabel(sequence.id, stage.id, stage.name)}
+                </span>
                 <span className="sequence-stage-item-meta">
                   {formatTime(stage.durationSec)}
                 </span>

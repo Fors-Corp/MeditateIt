@@ -6,6 +6,11 @@ import {
   setSessionMediaMetadata,
 } from '../../audio'
 import {
+  getMessages,
+  systemSequenceLabel,
+  systemStageLabel,
+} from '../../i18n'
+import {
   CROSSFADE_SEC,
   createSessionAudio,
   loadSessionPrefs,
@@ -97,7 +102,9 @@ export function useSequenceController(
   const [showHeadphoneWarning, setShowHeadphoneWarning] = useState(false)
   const [engineStatus, setEngineStatus] = useState('idle')
   const [needsAudioGesture, setNeedsAudioGesture] = useState(false)
-  const [statusMessage, setStatusMessage] = useState('Ready when you are')
+  const [statusMessage, setStatusMessage] = useState<string>(
+    () => getMessages().sequence.ready,
+  )
   const [showSaveSequence, setShowSaveSequence] = useState(false)
   const [saveSequenceName, setSaveSequenceName] = useState('')
   const [saveSequenceError, setSaveSequenceError] = useState<string | null>(
@@ -169,7 +176,7 @@ export function useSequenceController(
       setStageRemainingSec(stages[0]!.stage.durationSec)
       setCompleted(false)
       setMissing(false)
-      setStatusMessage('Ready when you are')
+      setStatusMessage(getMessages().sequence.ready)
       setReady(true)
 
       const needsPhones = stages.some(
@@ -255,7 +262,7 @@ export function useSequenceController(
     setPlaying(false)
     setNeedsAudioGesture(false)
     setEngineStatus(engineRef.current?.getStatus() ?? 'idle')
-    setStatusMessage('Paused')
+    setStatusMessage(getMessages().sequence.paused)
     setMediaSessionPlaybackState('paused')
     commitSequenceHistory()
   }, [clearTimer, commitSequenceHistory])
@@ -285,7 +292,7 @@ export function useSequenceController(
     completedRef.current = true
     setStageRemainingSec(0)
     setEngineStatus(engineRef.current?.getStatus() ?? 'idle')
-    setStatusMessage('Sequence complete')
+    setStatusMessage(getMessages().sequence.complete)
     setMediaSessionPlaybackState('paused')
     commitSequenceHistory()
   }, [clearTimer, commitSequenceHistory])
@@ -324,15 +331,23 @@ export function useSequenceController(
       setCompleted(false)
       completedRef.current = false
       fadeOutRef.current = next.recipe.fadeOutSec
-      updateMediaMeta(seq.name, next.stage.name)
+      const displaySeqName = systemSequenceLabel(seq.id, 'name', seq.name)
+      const displayStageName = systemStageLabel(
+        seq.id,
+        next.stage.id,
+        next.stage.name,
+      )
+      updateMediaMeta(displaySeqName, displayStageName)
 
-      const label = `Stage ${index + 1} of ${stages.length} · ${next.stage.name}`
+      const m = getMessages()
       if (opts.announce === 'skip') {
-        setStatusMessage(`Skipped to ${next.stage.name}`)
+        setStatusMessage(m.sequence.skippedTo(displayStageName))
       } else if (opts.announce === 'advance') {
-        setStatusMessage(`Now playing ${next.stage.name}`)
+        setStatusMessage(m.sequence.nowPlaying(displayStageName))
       } else if (opts.announce === 'start') {
-        setStatusMessage(label)
+        setStatusMessage(
+          m.sequence.stageOfNamed(index + 1, stages.length, displayStageName),
+        )
       }
 
       if (!playingRef.current) return
@@ -404,9 +419,19 @@ export function useSequenceController(
     setCompleted(false)
     completedRef.current = false
     setEngineStatus(engine.getStatus())
-    updateMediaMeta(seq.name, current.stage.name)
+    const displaySeqName = systemSequenceLabel(seq.id, 'name', seq.name)
+    const displayStageName = systemStageLabel(
+      seq.id,
+      current.stage.id,
+      current.stage.name,
+    )
+    updateMediaMeta(displaySeqName, displayStageName)
     setStatusMessage(
-      `Playing ${current.stage.name} · stage ${idx + 1} of ${stages.length}`,
+      getMessages().sequence.playingStage(
+        displayStageName,
+        idx + 1,
+        stages.length,
+      ),
     )
     setMediaSessionPlaybackState('playing')
 
@@ -518,9 +543,15 @@ export function useSequenceController(
 
   const openSaveSequence = useCallback(() => {
     if (!sequence) return
+    const m = getMessages()
+    const displayName = systemSequenceLabel(
+      sequence.id,
+      'name',
+      sequence.name,
+    )
     const defaultName =
       sequence.source === 'system'
-        ? `${sequence.name} (mine)`
+        ? m.sequence.mineSuffix(displayName)
         : sequence.name
     setSaveSequenceName(defaultName)
     setSaveSequenceError(null)
@@ -558,17 +589,21 @@ export function useSequenceController(
           name,
           summary:
             seq.source === 'system'
-              ? `Saved from ${seq.name}`
-              : seq.summary || `${stages.length} stages`,
+              ? getMessages().sequence.savedFrom(
+                  systemSequenceLabel(seq.id, 'name', seq.name),
+                )
+              : seq.summary || getMessages().sequence.stagesCount(stages.length),
           stages: materializeStages(stages),
         })
         setSequence(saved)
         sequenceRef.current = saved
         setShowSaveSequence(false)
-        setStatusMessage(`Saved “${saved.name}” on this device`)
+        setStatusMessage(getMessages().sequence.savedOnDevice(saved.name))
       } catch (err) {
         setSaveSequenceError(
-          err instanceof Error ? err.message : 'Could not save sequence',
+          err instanceof Error
+            ? err.message
+            : getMessages().sequence.saveFailed,
         )
       } finally {
         setSaveSequenceBusy(false)

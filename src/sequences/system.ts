@@ -1,3 +1,4 @@
+import { getMessages } from '../i18n'
 import type { SessionRecipe } from '../presets'
 import type { Sequence, SequenceStage } from './types'
 import { cloneSequence, totalDurationSec } from './resolve'
@@ -145,5 +146,5 @@ export function isSystemSequenceId(id: string): boolean {
 export function formatSequenceDuration(sequence: Sequence): string {
   const total = totalDurationSec(sequence)
   const m = Math.round(total / 60)
-  return `${m} min · ${sequence.stages.length} stages`
+  return getMessages().home.sequenceDuration(m, sequence.stages.length)
 }

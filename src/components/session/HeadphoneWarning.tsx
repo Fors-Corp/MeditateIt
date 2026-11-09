@@ -1,4 +1,4 @@
-import { messages } from '../../i18n'
+import { useI18n } from '../../i18n/useI18n'
 import { useModalDialogFocus } from './useModalDialogFocus'
 
 interface HeadphoneWarningProps {
@@ -12,6 +12,7 @@ export function HeadphoneWarning({
   onConfirm,
   onCancel,
 }: HeadphoneWarningProps) {
+  const { messages } = useI18n()
   const panelRef = useModalDialogFocus(open, onCancel, {
     initialFocus: 'primary',
   })
