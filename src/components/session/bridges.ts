@@ -5,8 +5,11 @@
 import {
   audioEngine,
   BINAURAL_REQUIRES_HEADPHONES,
+  CROSSFADE_SEC,
+  DEFAULT_ENGINE_PARAMS,
   SOLFEGGIO_FREQUENCIES,
   type AudioEngineStatus,
+  type EngineParams,
   type EngineParamsPatch,
 } from '../../audio'
 import {
@@ -26,14 +29,40 @@ import {
   updatePrefs,
 } from '../../storage'
 
-export { BINAURAL_REQUIRES_HEADPHONES, SOLFEGGIO_FREQUENCIES }
+export {
+  BINAURAL_REQUIRES_HEADPHONES,
+  CROSSFADE_SEC,
+  SOLFEGGIO_FREQUENCIES,
+}
 export type { BeatMode, NoiseKind, Preset, SessionRecipe }
 
 export interface SessionAudioEngine {
   getStatus: () => AudioEngineStatus
+  isCrossfading: () => boolean
   start: (fadeInSec?: number) => Promise<void>
   stop: (fadeOutSec?: number) => void
   applyRecipe: (recipe: SessionRecipe, masterVolume: number) => void
+  crossfadeToRecipe: (
+    recipe: SessionRecipe,
+    masterVolume: number,
+    durationSec?: number,
+  ) => void
+}
+
+export function recipeToEngineParams(
+  recipe: SessionRecipe,
+  masterVolume: number,
+): EngineParams {
+  const patch = recipeToPatch(recipe, masterVolume)
+  return {
+    ...DEFAULT_ENGINE_PARAMS,
+    masterGain: patch.masterGain ?? DEFAULT_ENGINE_PARAMS.masterGain,
+    fadeInSec: patch.fadeInSec ?? DEFAULT_ENGINE_PARAMS.fadeInSec,
+    fadeOutSec: patch.fadeOutSec ?? DEFAULT_ENGINE_PARAMS.fadeOutSec,
+    noise: { ...DEFAULT_ENGINE_PARAMS.noise, ...patch.noise },
+    tone: { ...DEFAULT_ENGINE_PARAMS.tone, ...patch.tone },
+    beat: { ...DEFAULT_ENGINE_PARAMS.beat, ...patch.beat },
+  }
 }
 
 function recipeToPatch(
@@ -72,10 +101,16 @@ function recipeToPatch(
 export function createSessionAudio(): SessionAudioEngine {
   return {
     getStatus: () => audioEngine.getStatus(),
+    isCrossfading: () => audioEngine.isCrossfading(),
     start: (fadeInSec) => audioEngine.start({ fadeInSec }),
     stop: (fadeOutSec) => audioEngine.stop({ fadeOutSec }),
     applyRecipe(recipe, masterVolume) {
       audioEngine.setParams(recipeToPatch(recipe, masterVolume))
+    },
+    crossfadeToRecipe(recipe, masterVolume, durationSec) {
+      audioEngine.crossfadeTo(recipeToEngineParams(recipe, masterVolume), {
+        durationSec,
+      })
     },
   }
 }

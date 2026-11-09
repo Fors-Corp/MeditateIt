@@ -241,6 +241,18 @@
   color: var(--ink-muted);
 }
 
+.crossfade-hint {
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.preset-switch-row .chip:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
 .session-panel input[type='range'] {
   width: 100%;
   accent-color: var(--accent);

@@ -1,8 +1,11 @@
-import { BeatLayer } from './BeatLayer'
+import {
+  CROSSFADE_SEC,
+  clampCrossfadeDuration,
+  dualRampCrossfade,
+} from './crossfade'
 import { DEFAULT_ENGINE_PARAMS, GAIN, RAMP_SEC } from './constants'
-import { NoiseLayer } from './NoiseLayer'
+import { LayerBank } from './LayerBank'
 import { clamp, rampParam } from './ramp'
-import { ToneLayer } from './ToneLayer'
 import type {
   AudioEngineStatus,
   BeatParams,
@@ -23,10 +26,20 @@ export interface StopOptions {
   fadeOutSec?: number
 }
 
+export interface CrossfadeOptions {
+  /**
+   * Crossfade length in seconds (clamped to 1–3).
+   * Defaults to {@link CROSSFADE_SEC.default}.
+   */
+  durationSec?: number
+}
+
+type BankKey = 'a' | 'b'
+
 /**
  * Singleton Web Audio engine.
  *
- * Master chain: layer sum → masterGain → softLimiter (DynamicsCompressor) → destination
+ * Master chain: dual layer banks → masterGain → softLimiter → destination
  *
  * UI should call only this class (via {@link audioEngine}): never touch raw nodes.
  */
@@ -36,13 +49,15 @@ export class AudioEngine {
   private ctx: AudioContext | null = null
   private masterGain: GainNode | null = null
   private limiter: DynamicsCompressorNode | null = null
-  private bus: GainNode | null = null
-  private noise: NoiseLayer | null = null
-  private tone: ToneLayer | null = null
-  private beat: BeatLayer | null = null
+  private sumBus: GainNode | null = null
+  private bankA: LayerBank | null = null
+  private bankB: LayerBank | null = null
+  private active: BankKey = 'a'
   private params: EngineParams = structuredClone(DEFAULT_ENGINE_PARAMS)
   private status: AudioEngineStatus = 'idle'
   private stopTimer: number | null = null
+  private crossfadeTimer: number | null = null
+  private crossfading = false
 
   getStatus(): AudioEngineStatus {
     return this.status
@@ -50,6 +65,11 @@ export class AudioEngine {
 
   getParams(): EngineParams {
     return structuredClone(this.params)
+  }
+
+  /** True while a mid-session preset crossfade is in flight. */
+  isCrossfading(): boolean {
+    return this.crossfading
   }
 
   /**
@@ -62,6 +82,7 @@ export class AudioEngine {
       return
     }
     this.clearStopTimer()
+    this.settleCrossfadeImmediate()
 
     try {
       this.ensureGraph()
@@ -80,11 +101,13 @@ export class AudioEngine {
       options.fadeInSec ?? this.params.fadeInSec,
     )
 
-    // Start layers muted; master fades in.
+    const activeBank = this.activeBank()
+    const idleBank = this.idleBank()
+    idleBank.bus.gain.setValueAtTime(0, ctx.currentTime)
+    activeBank.bus.gain.setValueAtTime(1, ctx.currentTime)
+
     this.masterGain!.gain.setValueAtTime(0, ctx.currentTime)
-    this.noise!.start(this.params.noise)
-    this.tone!.start(this.params.tone)
-    this.beat!.start(this.params.beat)
+    activeBank.start(this.params)
 
     const targetMaster = clamp(this.params.masterGain, 0, GAIN.masterMax)
     rampParam(this.masterGain!.gain, targetMaster, ctx.currentTime, fadeIn)
@@ -99,21 +122,66 @@ export class AudioEngine {
     }
 
     this.clearStopTimer()
+    this.settleCrossfadeImmediate()
+
     const fadeOut = Math.max(
       RAMP_SEC.fadeMin,
       options.fadeOutSec ?? this.params.fadeOutSec,
     )
     const t = this.ctx.currentTime
     rampParam(this.masterGain.gain, 0, t, fadeOut)
-    this.noise?.stop(fadeOut)
-    this.tone?.stop(fadeOut)
-    this.beat?.stop(fadeOut)
+    this.activeBank().stop(fadeOut)
 
     this.stopTimer = window.setTimeout(() => {
       void this.ctx?.suspend()
       this.status = 'idle'
       this.stopTimer = null
     }, Math.ceil(fadeOut * 1000) + 40)
+  }
+
+  /**
+   * Crossfade from the current recipe to `next` over ~1–3s using dual bus gains.
+   * No-ops (falls back to setParams) when not running.
+   */
+  crossfadeTo(next: EngineParams, options: CrossfadeOptions = {}): void {
+    this.params = normalizeParams(next)
+
+    if (this.status !== 'running' || !this.ctx) {
+      return
+    }
+
+    this.clearStopTimer()
+    this.settleCrossfadeImmediate()
+
+    const ctx = this.ctx
+    const from = this.activeBank()
+    const to = this.idleBank()
+    const duration = clampCrossfadeDuration(
+      options.durationSec ?? CROSSFADE_SEC.default,
+    )
+
+    // Incoming bank starts muted, then dual-ramp with the outgoing bank.
+    to.bus.gain.setValueAtTime(0, ctx.currentTime)
+    to.start(this.params)
+
+    const used = dualRampCrossfade(
+      from.bus.gain,
+      to.bus.gain,
+      ctx.currentTime,
+      duration,
+    )
+
+    this.crossfading = true
+    const nextActive: BankKey = this.active === 'a' ? 'b' : 'a'
+    this.crossfadeTimer = window.setTimeout(() => {
+      // Promote incoming bank before clearing the flag so live setParams
+      // cannot briefly target the outgoing stack.
+      this.active = nextActive
+      this.crossfading = false
+      this.crossfadeTimer = null
+      from.stop(RAMP_SEC.fadeMin)
+      from.bus.gain.setValueAtTime(0, this.ctx?.currentTime ?? 0)
+    }, Math.ceil(used * 1000) + 30)
   }
 
   /** Merge a partial param update; applies immediately when running. */
@@ -151,8 +219,8 @@ export class AudioEngine {
     }
 
     const ctx = new Ctx()
-    const bus = ctx.createGain()
-    bus.gain.value = 1
+    const sumBus = ctx.createGain()
+    sumBus.gain.value = 1
 
     const masterGain = ctx.createGain()
     masterGain.gain.value = 0
@@ -165,24 +233,22 @@ export class AudioEngine {
     limiter.attack.value = 0.003
     limiter.release.value = 0.12
 
-    bus.connect(masterGain)
+    const bankA = new LayerBank(ctx)
+    const bankB = new LayerBank(ctx)
+    bankA.connect(sumBus)
+    bankB.connect(sumBus)
+
+    sumBus.connect(masterGain)
     masterGain.connect(limiter)
     limiter.connect(ctx.destination)
 
-    const noise = new NoiseLayer(ctx)
-    const tone = new ToneLayer(ctx)
-    const beat = new BeatLayer(ctx)
-    noise.connect(bus)
-    tone.connect(bus)
-    beat.connect(bus)
-
     this.ctx = ctx
-    this.bus = bus
+    this.sumBus = sumBus
     this.masterGain = masterGain
     this.limiter = limiter
-    this.noise = noise
-    this.tone = tone
-    this.beat = beat
+    this.bankA = bankA
+    this.bankB = bankB
+    this.active = 'a'
 
     if (!this.hasMasterChain()) {
       throw new Error('Audio master chain failed to initialize')
@@ -198,9 +264,41 @@ export class AudioEngine {
       t,
       RAMP_SEC.gain,
     )
-    this.noise?.setParams(this.params.noise)
-    this.tone?.setParams(this.params.tone)
-    this.beat?.setParams(this.params.beat)
+    // Live tweaks land on the bank currently audible (incoming during fade).
+    const target = this.crossfading ? this.idleBank() : this.activeBank()
+    target.setParams(this.params)
+  }
+
+  private activeBank(): LayerBank {
+    return this.active === 'a' ? this.bankA! : this.bankB!
+  }
+
+  private idleBank(): LayerBank {
+    return this.active === 'a' ? this.bankB! : this.bankA!
+  }
+
+  /**
+   * Finish an in-flight crossfade immediately so a new start/stop/crossfade
+   * does not leave two banks sounding.
+   */
+  private settleCrossfadeImmediate(): void {
+    if (!this.crossfading || !this.ctx) {
+      this.clearCrossfadeTimer()
+      this.crossfading = false
+      return
+    }
+
+    const from = this.activeBank()
+    const to = this.idleBank()
+    const t = this.ctx.currentTime
+    from.bus.gain.cancelScheduledValues(t)
+    from.bus.gain.setValueAtTime(0, t)
+    to.bus.gain.cancelScheduledValues(t)
+    to.bus.gain.setValueAtTime(1, t)
+    from.stop(RAMP_SEC.fadeMin)
+    this.active = this.active === 'a' ? 'b' : 'a'
+    this.clearCrossfadeTimer()
+    this.crossfading = false
   }
 
   private clearStopTimer(): void {
@@ -210,10 +308,33 @@ export class AudioEngine {
     }
   }
 
+  private clearCrossfadeTimer(): void {
+    if (this.crossfadeTimer != null) {
+      window.clearTimeout(this.crossfadeTimer)
+      this.crossfadeTimer = null
+    }
+  }
+
   /** True once the master bus + limiter are connected to the destination. */
   private hasMasterChain(): boolean {
-    return this.bus != null && this.limiter != null
+    return (
+      this.sumBus != null &&
+      this.limiter != null &&
+      this.bankA != null &&
+      this.bankB != null
+    )
   }
+}
+
+function normalizeParams(params: EngineParams): EngineParams {
+  return mergeParams(DEFAULT_ENGINE_PARAMS, {
+    masterGain: params.masterGain,
+    fadeInSec: params.fadeInSec,
+    fadeOutSec: params.fadeOutSec,
+    noise: params.noise,
+    tone: params.tone,
+    beat: params.beat,
+  })
 }
 
 function mergeParams(

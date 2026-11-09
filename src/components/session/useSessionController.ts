@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  bindMediaSessionHandlers,
+  setMediaSessionPlaybackState,
+  setSessionMediaMetadata,
+} from '../../audio'
 import { cloneRecipe } from '../../presets'
 import type { Preset, SessionRecipe } from '../../presets'
 import {
   blankCustomPreset,
+  CROSSFADE_SEC,
   createSessionAudio,
   loadSessionPrefs,
+  loadSystemPresets,
   persistHeadphonesAck,
   persistMasterVolume,
   rememberLastPreset,
@@ -20,6 +27,8 @@ export interface SessionController {
   preset: Preset
   recipe: SessionRecipe
   playing: boolean
+  crossfading: boolean
+  switchablePresets: Preset[]
   masterVolume: number
   remainingSec: number | null
   openEnded: boolean
@@ -27,6 +36,7 @@ export interface SessionController {
   showHeadphoneWarning: boolean
   engineStatus: string
   togglePlay: () => Promise<void>
+  switchPreset: (presetId: string) => void
   setMasterVolume: (value: number) => void
   setFadeIn: (sec: number) => void
   setFadeOut: (sec: number) => void
@@ -55,6 +65,8 @@ export function useSessionController(
     () => blankCustomPreset().recipe,
   )
   const [playing, setPlaying] = useState(false)
+  const [crossfading, setCrossfading] = useState(false)
+  const [switchablePresets] = useState<Preset[]>(() => loadSystemPresets())
   const [masterVolume, setMasterVolumeState] = useState(0.45)
   const [remainingSec, setRemainingSec] = useState<number | null>(10 * 60)
   const [openEnded, setOpenEndedState] = useState(false)
@@ -64,17 +76,22 @@ export function useSessionController(
 
   const engineRef = useRef<SessionAudioEngine | null>(null)
   const timerRef = useRef<number | null>(null)
+  const crossfadePollRef = useRef<number | null>(null)
   const recipeRef = useRef(recipe)
   const masterRef = useRef(masterVolume)
   const playingRef = useRef(playing)
   const fadeOutRef = useRef(10)
+  const presetRef = useRef(preset)
+  const togglePlayRef = useRef<() => Promise<void>>(async () => undefined)
+  const stopPlaybackRef = useRef<() => void>(() => undefined)
 
   useEffect(() => {
     recipeRef.current = recipe
     masterRef.current = masterVolume
     playingRef.current = playing
     fadeOutRef.current = recipe.fadeOutSec
-  }, [recipe, masterVolume, playing])
+    presetRef.current = preset
+  }, [recipe, masterVolume, playing, preset])
 
   const pushToEngine = useCallback((next: SessionRecipe, volume: number) => {
     engineRef.current?.applyRecipe(next, volume)
@@ -126,6 +143,9 @@ export function useSessionController(
       if (timerRef.current != null) {
         window.clearInterval(timerRef.current)
       }
+      if (crossfadePollRef.current != null) {
+        window.clearInterval(crossfadePollRef.current)
+      }
       engineRef.current?.stop(0.05)
     }
   }, [routePresetId])
@@ -139,9 +159,15 @@ export function useSessionController(
 
   const stopPlayback = useCallback(() => {
     clearTimer()
+    if (crossfadePollRef.current != null) {
+      window.clearInterval(crossfadePollRef.current)
+      crossfadePollRef.current = null
+    }
     engineRef.current?.stop(fadeOutRef.current)
     setPlaying(false)
+    setCrossfading(false)
     setEngineStatus(engineRef.current?.getStatus() ?? 'idle')
+    setMediaSessionPlaybackState('paused')
   }, [clearTimer])
 
   const startTimer = useCallback(() => {
@@ -172,6 +198,12 @@ export function useSessionController(
     await engine.start(recipeRef.current.fadeInSec)
     setPlaying(true)
     setEngineStatus(engine.getStatus())
+    setSessionMediaMetadata({
+      title: presetRef.current.name,
+      artist: 'MeditateIt',
+      album: 'Live session',
+    })
+    setMediaSessionPlaybackState('playing')
     if (!openEnded && (remainingSec == null || remainingSec <= 0)) {
       setRemainingSec(preset.defaultDurationSec ?? 10 * 60)
     }
@@ -185,6 +217,87 @@ export function useSessionController(
     preset.defaultDurationSec,
     startTimer,
   ])
+
+  useEffect(() => {
+    togglePlayRef.current = togglePlay
+    stopPlaybackRef.current = stopPlayback
+  }, [togglePlay, stopPlayback])
+
+  // Media Session play/pause while a session screen is mounted.
+  useEffect(() => {
+    const unbind = bindMediaSessionHandlers({
+      onPlay: async () => {
+        if (!playingRef.current) {
+          await togglePlayRef.current()
+        }
+      },
+      onPause: () => {
+        if (playingRef.current) {
+          stopPlaybackRef.current()
+        }
+      },
+    })
+    return unbind
+  }, [])
+
+  const watchCrossfade = useCallback(() => {
+    if (crossfadePollRef.current != null) {
+      window.clearInterval(crossfadePollRef.current)
+    }
+    setCrossfading(true)
+    crossfadePollRef.current = window.setInterval(() => {
+      const still = engineRef.current?.isCrossfading() ?? false
+      if (!still) {
+        setCrossfading(false)
+        if (crossfadePollRef.current != null) {
+          window.clearInterval(crossfadePollRef.current)
+          crossfadePollRef.current = null
+        }
+      }
+    }, 80)
+  }, [])
+
+  const switchPreset = useCallback(
+    (presetId: string) => {
+      if (presetId === presetRef.current.id) return
+      const next = switchablePresets.find((p) => p.id === presetId)
+      if (!next) return
+
+      const nextRecipe = cloneRecipe(next.recipe)
+      setPreset(next)
+      setRecipe(nextRecipe)
+      presetRef.current = next
+      recipeRef.current = nextRecipe
+
+      setSessionMediaMetadata({
+        title: next.name,
+        artist: 'MeditateIt',
+        album: 'Live session',
+      })
+
+      if (playingRef.current) {
+        engineRef.current?.crossfadeToRecipe(
+          nextRecipe,
+          masterRef.current,
+          CROSSFADE_SEC.default,
+        )
+        watchCrossfade()
+      }
+
+      if (next.id !== 'custom') {
+        void rememberLastPreset(next.id, nextRecipe)
+      }
+
+      // Keep remaining time; only adopt open-ended flag from the template
+      // when not currently playing a timed session.
+      if (!playingRef.current) {
+        const open = next.defaultDurationSec == null
+        setOpenEndedState(open)
+        setRemainingSec(open ? null : next.defaultDurationSec)
+      }
+    },
+    [switchablePresets, watchCrossfade],
+  )
 
   const setMasterVolume = useCallback(
     (value: number) => {
@@ -234,7 +347,6 @@ export function useSessionController(
       setRemainingSec(sec)
       if (playingRef.current) {
         clearTimer()
-        // restart interval after state settles
         window.setTimeout(() => {
           if (playingRef.current) {
             timerRef.current = window.setInterval(() => {
@@ -368,6 +480,8 @@ export function useSessionController(
     preset,
     recipe,
     playing,
+    crossfading,
+    switchablePresets,
     masterVolume,
     remainingSec,
     openEnded,
@@ -375,6 +489,7 @@ export function useSessionController(
     showHeadphoneWarning,
     engineStatus,
     togglePlay,
+    switchPreset,
     setMasterVolume,
     setFadeIn,
     setFadeOut,

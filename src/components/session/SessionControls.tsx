@@ -36,12 +36,15 @@ export function SessionControls({ session }: SessionControlsProps) {
     preset,
     recipe,
     playing,
+    crossfading,
+    switchablePresets,
     masterVolume,
     remainingSec,
     openEnded,
     showHeadphoneWarning,
     engineStatus,
     togglePlay,
+    switchPreset,
     setMasterVolume,
     setFadeIn,
     setFadeOut,
@@ -85,11 +88,46 @@ export function SessionControls({ session }: SessionControlsProps) {
         <p className="session-engine-status" data-status={engineStatus}>
           {engineStatus === 'unavailable'
             ? 'Audio unavailable in this browser'
-            : playing
-              ? 'Soundscape running'
-              : 'Ready when you are'}
+            : crossfading
+              ? 'Crossfading presets…'
+              : playing
+                ? 'Soundscape running'
+                : 'Ready when you are'}
         </p>
       </header>
+
+      <section className="control-block" aria-labelledby="preset-switch-label">
+        <div className="control-row">
+          <h2 id="preset-switch-label">Preset</h2>
+          {crossfading && (
+            <span className="crossfade-hint" aria-live="polite">
+              Fading ~2s
+            </span>
+          )}
+        </div>
+        <div
+          className="chip-row preset-switch-row"
+          role="group"
+          aria-label="Switch preset"
+        >
+          {switchablePresets.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              className={`chip${preset.id === p.id ? ' is-selected' : ''}`}
+              disabled={crossfading && preset.id !== p.id}
+              onClick={() => switchPreset(p.id)}
+            >
+              {p.name}
+            </button>
+          ))}
+        </div>
+        <p className="layer-note">
+          {playing
+            ? 'Switching while playing crossfades over ~2 seconds.'
+            : 'Pick a starting recipe, then press Play.'}
+        </p>
+      </section>
 
       <section className="control-block" aria-labelledby="master-label">
         <div className="control-row">
