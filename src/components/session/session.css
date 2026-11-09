@@ -282,6 +282,41 @@
   justify-content: flex-end;
 }
 
+.save-preset-btn {
+  align-self: center;
+  margin-top: var(--space-2);
+  padding: 0.65rem 1.1rem;
+  font-size: 0.95rem;
+}
+
+.save-preset-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+.save-preset-field input {
+  font: inherit;
+  color: var(--ink);
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+.save-preset-field input:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.save-preset-error {
+  margin: 0;
+  color: #8a3a32;
+  font-size: 0.9rem;
+}
+
 @keyframes session-fade-in {
   from {
     opacity: 0;

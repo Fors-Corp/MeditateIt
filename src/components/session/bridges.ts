@@ -19,11 +19,15 @@ import {
   type SessionRecipe,
 } from '../../presets'
 import {
+  deleteUserPresetAndForget,
   getLastUsedPreset,
   getPreset,
+  listUserPresets,
   loadPrefs,
   rememberLastPreset as persistLastPreset,
+  saveUserPreset,
   updatePrefs,
+  type SaveUserPresetInput,
 } from '../../storage'
 
 export { BINAURAL_REQUIRES_HEADPHONES, SOLFEGGIO_FREQUENCIES }
@@ -142,6 +146,22 @@ export async function persistHeadphonesAck(acked: boolean): Promise<void> {
 
 export async function persistMasterVolume(masterVolume: number): Promise<void> {
   await updatePrefs({ masterVolume })
+}
+
+export async function persistUserPreset(
+  input: SaveUserPresetInput,
+): Promise<Preset> {
+  const saved = await saveUserPreset(input)
+  await persistLastPreset(saved.id, saved.recipe)
+  return saved
+}
+
+export async function loadUserPresets(): Promise<Preset[]> {
+  return listUserPresets()
+}
+
+export async function removeUserPreset(id: string): Promise<boolean> {
+  return deleteUserPresetAndForget(id)
 }
 
 export const PRESET_BLURBS: Record<string, string> = {

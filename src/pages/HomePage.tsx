@@ -1,7 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { loadSystemPresets, PRESET_BLURBS } from '../components/session/bridges'
+import {
+  loadSystemPresets,
+  loadUserPresets,
+  PRESET_BLURBS,
+  removeUserPreset,
+} from '../components/session/bridges'
 import { getLastUsedPreset } from '../storage'
+import type { Preset } from '../presets'
 
 function formatDuration(sec: number | null): string {
   if (sec == null) return 'Open-ended'
@@ -12,16 +18,42 @@ function formatDuration(sec: number | null): string {
 export default function HomePage() {
   const presets = loadSystemPresets()
   const [quickStartId, setQuickStartId] = useState('daily-calm')
+  const [userPresets, setUserPresets] = useState<Preset[]>([])
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const refreshUserPresets = useCallback(() => {
+    void loadUserPresets().then(setUserPresets)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
     void getLastUsedPreset().then((p) => {
       if (!cancelled) setQuickStartId(p.id)
     })
+    void loadUserPresets().then((list) => {
+      if (!cancelled) setUserPresets(list)
+    })
     return () => {
       cancelled = true
     }
   }, [])
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Delete preset “${name}”? This cannot be undone.`)) {
+      return
+    }
+    setDeletingId(id)
+    try {
+      await removeUserPreset(id)
+      refreshUserPresets()
+      if (quickStartId === id) {
+        const last = await getLastUsedPreset()
+        setQuickStartId(last.id)
+      }
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   return (
     <div className="home-page">
@@ -44,6 +76,38 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+
+      {userPresets.length > 0 ? (
+        <section className="preset-section" aria-labelledby="user-presets-heading">
+          <h2 id="user-presets-heading">Your presets</h2>
+          <ul className="preset-list">
+            {userPresets.map((preset, index) => (
+              <li
+                key={preset.id}
+                className="preset-row"
+                style={{ animationDelay: `${60 + index * 40}ms` }}
+              >
+                <Link className="preset-link" to={`/session/${preset.id}`}>
+                  <span className="preset-name">{preset.name}</span>
+                  <span className="preset-meta">Saved on this device</span>
+                  <span className="preset-duration">
+                    {formatDuration(preset.defaultDurationSec)}
+                  </span>
+                </Link>
+                <button
+                  type="button"
+                  className="preset-delete"
+                  onClick={() => void handleDelete(preset.id, preset.name)}
+                  disabled={deletingId === preset.id}
+                  aria-label={`Delete ${preset.name}`}
+                >
+                  {deletingId === preset.id ? '…' : 'Delete'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="preset-section" aria-labelledby="presets-heading">
         <h2 id="presets-heading">System presets</h2>
