@@ -24,15 +24,19 @@ import {
   type SessionRecipe,
 } from '../../presets'
 import {
+  appendSessionRecord,
   deleteUserPresetAndForget,
   getLastUsedPreset,
   getPreset,
+  listSessionHistory,
   listUserPresets,
   loadPrefs,
   rememberLastPreset as persistLastPreset,
   saveUserPreset,
   updatePrefs,
+  type AppendSessionInput,
   type SaveUserPresetInput,
+  type SessionRecord,
 } from '../../storage'
 
 export {
@@ -206,6 +210,19 @@ export async function loadUserPresets(): Promise<Preset[]> {
 
 export async function removeUserPreset(id: string): Promise<boolean> {
   return deleteUserPresetAndForget(id)
+}
+
+export async function recordFinishedSession(
+  input: AppendSessionInput,
+): Promise<SessionRecord | null> {
+  return appendSessionRecord(input)
+}
+
+export async function loadRecentSessions(
+  limit = 10,
+): Promise<SessionRecord[]> {
+  const all = await listSessionHistory()
+  return all.slice(0, Math.max(0, limit))
 }
 
 export const PRESET_BLURBS: Record<string, string> = {

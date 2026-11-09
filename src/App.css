@@ -277,6 +277,187 @@
   cursor: wait;
 }
 
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.section-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.section-link:hover {
+  text-decoration: underline;
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border);
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 0.1rem 1rem;
+  padding: 0.85rem 0.15rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.history-name {
+  grid-column: 1;
+  grid-row: 1;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.history-meta {
+  grid-column: 1;
+  grid-row: 2;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.history-duration {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+/* —— Settings —— */
+
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-bottom: var(--space-4);
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.settings-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.settings-lede {
+  margin: 0;
+  max-width: 32rem;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.settings-fieldset {
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.settings-fieldset legend {
+  padding-inline: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.settings-radio {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.settings-radio input {
+  margin-top: 0.3rem;
+}
+
+.settings-radio strong {
+  font-weight: 600;
+}
+
+.settings-status {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+
+.settings-error {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #8a3a32;
+}
+
+.settings-empty {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+}
+
+.settings-text-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+}
+
+.settings-text-btn:hover:not(:disabled) {
+  color: #8a3a32;
+}
+
+.settings-text-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.settings-foot {
+  margin: 0;
+  padding-top: var(--space-2);
+}
+
+.settings-foot a {
+  color: var(--ink-muted);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.settings-foot a:hover {
+  color: var(--accent);
+}
+
 /* —— Session page chrome —— */
 
 .session-page {

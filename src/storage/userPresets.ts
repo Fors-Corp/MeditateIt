@@ -135,3 +135,35 @@ export async function deleteUserPreset(id: string): Promise<boolean> {
   await writeAll(next)
   return true
 }
+
+/**
+ * Replace the entire user-preset list (backup import `replace`).
+ * Invalid / system-id entries are skipped.
+ */
+export async function replaceUserPresets(
+  presets: unknown[],
+): Promise<Preset[]> {
+  const next: Preset[] = []
+  for (const item of presets) {
+    const preset = normalizeUserPreset(item)
+    if (preset) next.push(preset)
+  }
+  await writeAll(next)
+  return next
+}
+
+/**
+ * Merge imported presets by id (imported wins). Existing ids not in
+ * the import are kept.
+ */
+export async function mergeUserPresets(presets: unknown[]): Promise<Preset[]> {
+  const all = await readAll()
+  const byId = new Map(all.map((p) => [p.id, p]))
+  for (const item of presets) {
+    const preset = normalizeUserPreset(item)
+    if (preset) byId.set(preset.id, preset)
+  }
+  const next = [...byId.values()]
+  await writeAll(next)
+  return next
+}
