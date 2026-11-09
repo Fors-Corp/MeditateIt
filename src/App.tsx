@@ -1,6 +1,7 @@
 import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import './App.css'
 import HomePage from './pages/HomePage'
+import SequencePage from './pages/SequencePage'
 import SessionPage from './pages/SessionPage'
 import SettingsPage from './pages/SettingsPage'
 
@@ -28,6 +29,7 @@ function App() {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/session" element={<SessionPage />} />
           <Route path="/session/:presetId" element={<SessionPage />} />
+          <Route path="/sequence/:sequenceId" element={<SequencePage />} />
         </Routes>
       </main>
     </div>

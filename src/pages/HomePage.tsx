@@ -7,6 +7,10 @@ import {
   PRESET_BLURBS,
   removeUserPreset,
 } from '../components/session/bridges'
+import {
+  formatSequenceDuration,
+  listSystemSequences,
+} from '../sequences'
 import { getLastUsedPreset, type SessionRecord } from '../storage'
 import type { Preset } from '../presets'
 
@@ -36,6 +40,7 @@ function formatHistoryWhen(iso: string): string {
 
 export default function HomePage() {
   const presets = loadSystemPresets()
+  const sequences = listSystemSequences()
   const [quickStartId, setQuickStartId] = useState('daily-calm')
   const [userPresets, setUserPresets] = useState<Preset[]>([])
   const [recentSessions, setRecentSessions] = useState<SessionRecord[]>([])
@@ -101,6 +106,23 @@ export default function HomePage() {
             Settings
           </Link>
         </div>
+      </section>
+
+      <section className="preset-section" aria-labelledby="sequences-heading">
+        <h2 id="sequences-heading">Sequences</h2>
+        <ul className="preset-list">
+          {sequences.map((seq, index) => (
+            <li key={seq.id} style={{ animationDelay: `${50 + index * 45}ms` }}>
+              <Link className="preset-link" to={`/sequence/${seq.id}`}>
+                <span className="preset-name">{seq.name}</span>
+                <span className="preset-meta">{seq.summary}</span>
+                <span className="preset-duration">
+                  {formatSequenceDuration(seq)}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       {recentSessions.length > 0 ? (

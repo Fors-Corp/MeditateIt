@@ -54,9 +54,10 @@ Native shells (Capacitor, etc.) are out of scope for this wave.
 
 ## App routes
 
-- `/` — home with quick start, custom, system + saved user presets, recent sessions
+- `/` — home with quick start, custom, system sequences, system + saved user presets, recent sessions
 - `/settings` — export/import JSON backup (merge or replace) + full session history
 - `/session` and `/session/:presetId` — live session player (save preset from the session header)
+- `/sequence/:sequenceId` — multi-stage sequence player (auto-advance + crossfade; pause freezes the stage timer)
 
 ## Backup & history
 
