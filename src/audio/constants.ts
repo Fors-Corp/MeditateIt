@@ -1,4 +1,4 @@
-import type { EngineParams } from './types'
+import { NEUTRAL_LAYER_EQ, type EngineParams } from './types'
 
 /** Classic solfeggio set (Hz) for the tone picker. */
 export const SOLFEGGIO_FREQUENCIES = [
@@ -56,12 +56,14 @@ export const DEFAULT_ENGINE_PARAMS: EngineParams = {
     gain: GAIN.noiseDefault,
     highpassHz: 40,
     lowpassHz: 8000,
+    eq: { ...NEUTRAL_LAYER_EQ },
   },
   tone: {
     enabled: true,
     frequencyHz: FREQ.defaultToneHz,
     gain: GAIN.toneDefault,
     mildDetuneCents: 0,
+    eq: { ...NEUTRAL_LAYER_EQ },
   },
   beat: {
     enabled: false,
@@ -71,11 +73,13 @@ export const DEFAULT_ENGINE_PARAMS: EngineParams = {
     gain: GAIN.beatDefault,
     pulseDepth: 0.85,
     headphonesAcknowledged: false,
+    eq: { ...NEUTRAL_LAYER_EQ },
   },
   nature: {
     enabled: false,
     soundId: null,
     gain: GAIN.natureDefault,
     brightness: FREQ.defaultNatureBrightness,
+    eq: { ...NEUTRAL_LAYER_EQ },
   },
 }

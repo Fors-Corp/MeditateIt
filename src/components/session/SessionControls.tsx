@@ -1,9 +1,25 @@
 import type { ReactNode } from 'react'
-import { NATURE_SOUNDS, SOLFEGGIO_FREQUENCIES } from './bridges'
-import type { SessionController } from './useSessionController'
+import {
+  NATURE_SOUNDS,
+  NEUTRAL_LAYER_EQ,
+  recipeLayerEq,
+  SOLFEGGIO_FREQUENCIES,
+  type LayerEqParams,
+} from './bridges'
+import type {
+  EqBandId,
+  EqLayerId,
+  SessionController,
+} from './useSessionController'
 import { HeadphoneWarning } from './HeadphoneWarning'
 import { SavePresetDialog } from './SavePresetDialog'
 import './session.css'
+
+const EQ_BANDS: { id: EqBandId; label: string }[] = [
+  { id: 'lowDb', label: 'Low' },
+  { id: 'midDb', label: 'Mid' },
+  { id: 'highDb', label: 'High' },
+]
 
 const NOISE_KINDS = ['pink', 'brown', 'white'] as const
 const BEAT_MODES = [
@@ -64,6 +80,8 @@ export function SessionControls({ session }: SessionControlsProps) {
     setBeatHz,
     setNatureSound,
     setNatureBrightness,
+    setLayerEqBand,
+    resetLayerEq,
     acknowledgeHeadphones,
     dismissHeadphoneWarning,
     openSavePreset,
@@ -250,6 +268,13 @@ export function SessionControls({ session }: SessionControlsProps) {
                 </button>
               ))}
             </div>
+            <LayerEqControls
+              layer="noise"
+              layerName="Noise"
+              eq={recipeLayerEq(recipe.noise.eq)}
+              onBand={(band, db) => setLayerEqBand('noise', band, db)}
+              onReset={() => resetLayerEq('noise')}
+            />
           </LayerRow>
 
           <LayerRow
@@ -271,6 +296,13 @@ export function SessionControls({ session }: SessionControlsProps) {
                 </button>
               ))}
             </div>
+            <LayerEqControls
+              layer="tone"
+              layerName="Tone"
+              eq={recipeLayerEq(recipe.tone.eq)}
+              onBand={(band, db) => setLayerEqBand('tone', band, db)}
+              onReset={() => resetLayerEq('tone')}
+            />
           </LayerRow>
 
           <LayerRow
@@ -305,6 +337,13 @@ export function SessionControls({ session }: SessionControlsProps) {
                 />
               </label>
             )}
+            <LayerEqControls
+              layer="beat"
+              layerName="Beat"
+              eq={recipeLayerEq(recipe.beat.eq)}
+              onBand={(band, db) => setLayerEqBand('beat', band, db)}
+              onReset={() => resetLayerEq('beat')}
+            />
           </LayerRow>
 
           <LayerRow
@@ -344,6 +383,13 @@ export function SessionControls({ session }: SessionControlsProps) {
                 aria-label="Nature brightness"
               />
             </label>
+            <LayerEqControls
+              layer="nature"
+              layerName="Nature"
+              eq={recipeLayerEq(recipe.nature.eq)}
+              onBand={(band, db) => setLayerEqBand('nature', band, db)}
+              onReset={() => resetLayerEq('nature')}
+            />
           </LayerRow>
         </div>
       </section>
@@ -409,6 +455,73 @@ function LayerRow({
         aria-label={`${name} volume`}
       />
       {enabled && children}
+    </div>
+  )
+}
+
+interface LayerEqControlsProps {
+  layer: EqLayerId
+  layerName: string
+  eq: LayerEqParams
+  onBand: (band: EqBandId, valueDb: number) => void
+  onReset: () => void
+}
+
+function formatEqDb(db: number): string {
+  if (Math.abs(db) < 0.05) return '0 dB'
+  return `${db > 0 ? '+' : ''}${db.toFixed(1)} dB`
+}
+
+function isNeutralEq(eq: LayerEqParams): boolean {
+  return (
+    eq.lowDb === NEUTRAL_LAYER_EQ.lowDb &&
+    eq.midDb === NEUTRAL_LAYER_EQ.midDb &&
+    eq.highDb === NEUTRAL_LAYER_EQ.highDb
+  )
+}
+
+function LayerEqControls({
+  layer,
+  layerName,
+  eq,
+  onBand,
+  onReset,
+}: LayerEqControlsProps) {
+  const neutral = isNeutralEq(eq)
+  return (
+    <div className="layer-eq" role="group" aria-label={`${layerName} EQ`}>
+      <div className="layer-eq-head">
+        <span className="layer-eq-label">EQ</span>
+        <button
+          type="button"
+          className="layer-eq-reset"
+          disabled={neutral}
+          onClick={onReset}
+        >
+          Flat
+        </button>
+      </div>
+      <div className="layer-eq-bands">
+        {EQ_BANDS.map((band) => (
+          <label key={band.id} className="layer-eq-band">
+            <span>
+              {band.label}{' '}
+              <span className="control-value">{formatEqDb(eq[band.id])}</span>
+            </span>
+            <input
+              type="range"
+              min={-12}
+              max={12}
+              step={0.5}
+              value={eq[band.id]}
+              onChange={(e) => onBand(band.id, Number(e.target.value))}
+              aria-label={`${layerName} ${band.label} EQ`}
+              data-layer={layer}
+              data-eq-band={band.id}
+            />
+          </label>
+        ))}
+      </div>
     </div>
   )
 }

@@ -5,12 +5,33 @@ export type BeatMode = 'off' | 'binaural' | 'isochronic'
 export type NatureSoundId = 'rain' | 'shore' | 'wind' | 'forest'
 export type AudioEngineStatus = 'idle' | 'running' | 'unavailable'
 
+/**
+ * Per-layer 3-band EQ (dB). Neutral / transparent defaults are all 0.
+ * Applied after the layer graph, before the bank bus.
+ */
+export interface LayerEqParams {
+  /** Low-shelf gain in dB (−12…+12). */
+  lowDb: number
+  /** Mid presence (peaking) gain in dB (−12…+12). */
+  midDb: number
+  /** High-shelf gain in dB (−12…+12). */
+  highDb: number
+}
+
+/** Transparent / bypass-equivalent EQ (all bands 0 dB). */
+export const NEUTRAL_LAYER_EQ: Readonly<LayerEqParams> = {
+  lowDb: 0,
+  midDb: 0,
+  highDb: 0,
+}
+
 export interface NoiseParams {
   enabled: boolean
   kind: NoiseKind
   gain: number
   highpassHz: number
   lowpassHz: number
+  eq: LayerEqParams
 }
 
 export interface ToneParams {
@@ -20,6 +41,7 @@ export interface ToneParams {
   gain: number
   /** Optional mild chorus-like detune in cents (−50…50). */
   mildDetuneCents: number
+  eq: LayerEqParams
 }
 
 /**
@@ -43,6 +65,7 @@ export interface BeatParams {
    * Engine does not enforce UI; this is documented for callers.
    */
   headphonesAcknowledged: boolean
+  eq: LayerEqParams
 }
 
 /**
@@ -55,6 +78,7 @@ export interface NatureParams {
   gain: number
   /** 0–1: darker → brighter high shelf. */
   brightness: number
+  eq: LayerEqParams
 }
 
 export interface EngineParams {

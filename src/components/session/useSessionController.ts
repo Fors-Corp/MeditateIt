@@ -15,15 +15,20 @@ import {
   persistHeadphonesAck,
   persistMasterVolume,
   persistUserPreset,
+  recipeLayerEq,
   recordFinishedSession,
   rememberLastPreset,
   resolveSessionPreset,
   type BeatMode,
+  type LayerEqParams,
   type NatureSoundId,
   type NoiseKind,
   type SessionAudioEngine,
 } from './bridges'
 import type { SolfeggioHz } from '../../audio'
+
+export type EqLayerId = 'noise' | 'tone' | 'beat' | 'nature'
+export type EqBandId = keyof LayerEqParams
 
 export interface SessionController {
   ready: boolean
@@ -58,6 +63,8 @@ export interface SessionController {
   setBeatHz: (hz: number) => void
   setNatureSound: (soundId: NatureSoundId) => void
   setNatureBrightness: (brightness: number) => void
+  setLayerEqBand: (layer: EqLayerId, band: EqBandId, valueDb: number) => void
+  resetLayerEq: (layer: EqLayerId) => void
   acknowledgeHeadphones: () => void
   dismissHeadphoneWarning: () => void
   openSavePreset: () => void
@@ -567,6 +574,35 @@ export function useSessionController(
     [updateRecipe],
   )
 
+  const setLayerEqBand = useCallback(
+    (layer: EqLayerId, band: EqBandId, valueDb: number) => {
+      updateRecipe((r) => {
+        const current = recipeLayerEq(r[layer].eq)
+        return {
+          ...r,
+          [layer]: {
+            ...r[layer],
+            eq: recipeLayerEq({ ...current, [band]: valueDb }),
+          },
+        }
+      })
+    },
+    [updateRecipe],
+  )
+
+  const resetLayerEq = useCallback(
+    (layer: EqLayerId) => {
+      updateRecipe((r) => ({
+        ...r,
+        [layer]: {
+          ...r[layer],
+          eq: recipeLayerEq(undefined),
+        },
+      }))
+    },
+    [updateRecipe],
+  )
+
   const acknowledgeHeadphones = useCallback(() => {
     setHeadphonesAck(true)
     setShowHeadphoneWarning(false)
@@ -683,6 +719,8 @@ export function useSessionController(
     setBeatHz,
     setNatureSound,
     setNatureBrightness,
+    setLayerEqBand,
+    resetLayerEq,
     acknowledgeHeadphones,
     dismissHeadphoneWarning,
     openSavePreset,

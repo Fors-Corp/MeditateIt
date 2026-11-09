@@ -5,6 +5,7 @@ import {
 } from './crossfade'
 import { DEFAULT_ENGINE_PARAMS, GAIN, RAMP_SEC } from './constants'
 import { LayerBank } from './LayerBank'
+import { normalizeLayerEq } from './LayerEq'
 import { ensureNoiseWorklet } from './noiseWorklet'
 import { clamp, rampParam } from './ramp'
 import type {
@@ -357,16 +358,28 @@ function mergeParams(
         0,
         GAIN.noiseMax,
       ),
+      eq: normalizeLayerEq({
+        ...base.noise.eq,
+        ...patch.noise?.eq,
+      }),
     },
     tone: {
       ...base.tone,
       ...patch.tone,
       gain: clamp(patch.tone?.gain ?? base.tone.gain, 0, GAIN.toneMax),
+      eq: normalizeLayerEq({
+        ...base.tone.eq,
+        ...patch.tone?.eq,
+      }),
     },
     beat: {
       ...base.beat,
       ...patch.beat,
       gain: clamp(patch.beat?.gain ?? base.beat.gain, 0, GAIN.beatMax),
+      eq: normalizeLayerEq({
+        ...base.beat.eq,
+        ...patch.beat?.eq,
+      }),
     },
     nature: {
       ...base.nature,
@@ -381,6 +394,10 @@ function mergeParams(
         0,
         1,
       ),
+      eq: normalizeLayerEq({
+        ...base.nature.eq,
+        ...patch.nature?.eq,
+      }),
     },
   }
 }

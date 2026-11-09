@@ -12,10 +12,28 @@ export interface LayerGains {
   nature: number
 }
 
+/**
+ * Per-layer 3-band EQ in dB. Omit or leave at 0 for a transparent chain.
+ * Values outside −12…+12 are clamped in the audio engine.
+ */
+export interface LayerEqParams {
+  lowDb: number
+  midDb: number
+  highDb: number
+}
+
+export const NEUTRAL_LAYER_EQ: Readonly<LayerEqParams> = {
+  lowDb: 0,
+  midDb: 0,
+  highDb: 0,
+}
+
 export interface NoiseParams {
   kind: NoiseKind
   highpassHz?: number
   lowpassHz?: number
+  /** Omit → neutral (0 / 0 / 0) */
+  eq?: LayerEqParams
 }
 
 export interface ToneParams {
@@ -24,6 +42,8 @@ export interface ToneParams {
   /** e.g. "528" */
   solfeggioId?: string
   mildDetuneCents?: number
+  /** Omit → neutral (0 / 0 / 0) */
+  eq?: LayerEqParams
 }
 
 export interface BeatParams {
@@ -33,6 +53,8 @@ export interface BeatParams {
   beatHz: number
   /** Isochronic pulse depth 0–1 */
   pulseDepth?: number
+  /** Omit → neutral (0 / 0 / 0) */
+  eq?: LayerEqParams
 }
 
 export type NatureSoundId = 'rain' | 'shore' | 'wind' | 'forest'
@@ -45,6 +67,8 @@ export interface NatureParams {
   soundId: NatureSoundId | null
   /** 0–1 high-shelf brightness; omit → engine default 0.5 */
   brightness?: number
+  /** Omit → neutral (0 / 0 / 0) */
+  eq?: LayerEqParams
 }
 
 export interface SessionRecipe {

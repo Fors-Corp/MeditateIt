@@ -8,6 +8,8 @@ import {
   CROSSFADE_SEC,
   DEFAULT_ENGINE_PARAMS,
   NATURE_SOUNDS,
+  NEUTRAL_LAYER_EQ,
+  normalizeLayerEq,
   SOLFEGGIO_FREQUENCIES,
   type AudioEngineStatus,
   type EngineParams,
@@ -19,6 +21,7 @@ import {
   createBlankRecipe,
   listSystemPresets,
   type BeatMode,
+  type LayerEqParams,
   type NoiseKind,
   type Preset,
   type SessionRecipe,
@@ -43,9 +46,18 @@ export {
   BINAURAL_REQUIRES_HEADPHONES,
   CROSSFADE_SEC,
   NATURE_SOUNDS,
+  NEUTRAL_LAYER_EQ,
+  normalizeLayerEq,
   SOLFEGGIO_FREQUENCIES,
 }
-export type { BeatMode, NatureSoundId, NoiseKind, Preset, SessionRecipe }
+export type {
+  BeatMode,
+  LayerEqParams,
+  NatureSoundId,
+  NoiseKind,
+  Preset,
+  SessionRecipe,
+}
 
 export interface SessionAudioEngine {
   getStatus: () => AudioEngineStatus
@@ -91,12 +103,14 @@ function recipeToPatch(
       gain: recipe.gains.noise,
       highpassHz: recipe.noise.highpassHz ?? 40,
       lowpassHz: recipe.noise.lowpassHz ?? 8000,
+      eq: normalizeLayerEq(recipe.noise.eq),
     },
     tone: {
       enabled: recipe.tone.enabled,
       frequencyHz: recipe.tone.frequencyHz,
       gain: recipe.gains.tone,
       mildDetuneCents: recipe.tone.mildDetuneCents ?? 0,
+      eq: normalizeLayerEq(recipe.tone.eq),
     },
     beat: {
       enabled: recipe.beat.enabled && recipe.beat.mode !== 'off',
@@ -106,14 +120,23 @@ function recipeToPatch(
       gain: recipe.gains.beat,
       pulseDepth: recipe.beat.pulseDepth ?? 0.7,
       headphonesAcknowledged: true,
+      eq: normalizeLayerEq(recipe.beat.eq),
     },
     nature: {
       enabled: recipe.nature.enabled,
       soundId: recipe.nature.soundId,
       gain: recipe.gains.nature,
       brightness: recipe.nature.brightness ?? 0.5,
+      eq: normalizeLayerEq(recipe.nature.eq),
     },
   }
+}
+
+/** Resolve recipe-layer EQ with a neutral fallback (for UI display). */
+export function recipeLayerEq(
+  eq: LayerEqParams | undefined,
+): LayerEqParams {
+  return normalizeLayerEq(eq)
 }
 
 export function createSessionAudio(): SessionAudioEngine {
