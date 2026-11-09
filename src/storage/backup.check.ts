@@ -3,8 +3,10 @@
  * Run: npx --yes tsx src/storage/backup.check.ts
  */
 import { BACKUP_FORMAT, BACKUP_VERSION, parseBackup } from './backup.ts'
+import { MAX_BACKUP_CHARS } from './limits.ts'
 import { normalizeSessionRecord } from './sessionHistory.ts'
 import { normalizePrefs } from './prefs.ts'
+import { normalizeRecipe } from '../presets/recipe.ts'
 
 function assert(cond: boolean, msg: string): void {
   if (!cond) throw new Error(msg)
@@ -47,5 +49,110 @@ try {
   threw = true
 }
 assert(threw, 'rejects bad format')
+
+// --- adversarial probes ---
+
+threw = false
+try {
+  parseBackup('x'.repeat(MAX_BACKUP_CHARS + 1))
+} catch {
+  threw = true
+}
+assert(threw, 'rejects oversized string')
+
+threw = false
+try {
+  parseBackup(
+    `{"format":"${BACKUP_FORMAT}","version":${BACKUP_VERSION},"__proto__":{"polluted":true},"userPresets":[]}`,
+  )
+} catch {
+  threw = true
+}
+assert(threw, 'rejects __proto__ key')
+
+assert(
+  normalizeRecipe({
+    noise: { enabled: true, kind: 'pink' },
+    tone: { enabled: true, frequencyHz: Number.POSITIVE_INFINITY },
+    beat: { enabled: true, mode: 'binaural', carrierHz: 200, beatHz: 8 },
+    nature: { enabled: false, soundId: null },
+    gains: { noise: 0.2, tone: 0.2, beat: 0.2, nature: 0.2 },
+    fadeInSec: 1,
+    fadeOutSec: 1,
+  }) === null,
+  'rejects non-finite tone Hz',
+)
+
+const evilRecipe = normalizeRecipe({
+  noise: { enabled: true, kind: 'pink', highpassHz: 1e20, lowpassHz: -9 },
+  tone: { enabled: true, frequencyHz: 999999 },
+  beat: {
+    enabled: true,
+    mode: 'binaural',
+    carrierHz: -1,
+    beatHz: 9999,
+    pulseDepth: 50,
+  },
+  nature: { enabled: true, soundId: 'rain', brightness: 99 },
+  gains: { noise: 99, tone: -3, beat: Number.NaN, nature: 0.2 },
+  fadeInSec: 1e9,
+  fadeOutSec: -4,
+})
+assert(evilRecipe != null, 'normalize accepts shaped evil recipe')
+const clamped = evilRecipe!
+assert(clamped.fadeInSec <= 180, 'fadeIn capped')
+assert(clamped.fadeOutSec === 0, 'fadeOut floors')
+assert(clamped.tone.frequencyHz <= 2000, 'tone Hz capped')
+assert(clamped.beat.beatHz <= 40, 'beat Hz capped')
+assert(clamped.gains.noise <= 1, 'gain capped')
+assert((clamped.noise.highpassHz ?? 0) <= 2000, 'hpf capped')
+assert((clamped.noise.eq?.lowDb ?? -1) === 0, 'missing eq → neutral')
+
+assert(
+  normalizeRecipe({
+    noise: {},
+    tone: {},
+    beat: {},
+    nature: {},
+    gains: {},
+    fadeInSec: 1,
+    fadeOutSec: 1,
+  }) === null,
+  'rejects empty nested recipe objects',
+)
+
+assert(
+  normalizePrefs({
+    lastRecipe: {
+      noise: {},
+      tone: {},
+      beat: {},
+      nature: {},
+      gains: {},
+      fadeInSec: 1,
+      fadeOutSec: 1,
+    },
+    defaultFadeInSec: 1e12,
+  }).lastRecipe === null,
+  'prefs drops invalid lastRecipe',
+)
+assert(
+  normalizePrefs({ defaultFadeInSec: 1e12 }).defaultFadeInSec <= 180,
+  'prefs fade capped',
+)
+
+const xssName = normalizeSessionRecord({
+  id: 'h1',
+  startedAt: '2026-11-09T10:00:00.000Z',
+  endedAt: '2026-11-09T10:05:00.000Z',
+  durationSec: 12,
+  presetId: null,
+  presetName: '<img src=x onerror=alert(1)>'.repeat(20),
+  sequenceId: null,
+})
+assert(
+  (xssName?.presetName.length ?? 0) <= 120,
+  'history name truncated',
+)
 
 console.log('backup.check: ok')

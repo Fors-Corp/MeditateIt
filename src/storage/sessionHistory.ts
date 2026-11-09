@@ -1,4 +1,9 @@
 import { STORAGE_KEYS } from './keys.ts'
+import {
+  MAX_DURATION_SEC,
+  MAX_ID_CHARS,
+  MAX_NAME_CHARS,
+} from './limits.ts'
 import { readJson, writeJson } from './local.ts'
 import type { SessionRecord } from './types.ts'
 
@@ -10,6 +15,10 @@ export const MIN_SESSION_DURATION_SEC = 1
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function truncate(value: string, max: number): string {
+  return value.length <= max ? value : value.slice(0, max)
 }
 
 export function normalizeSessionRecord(raw: unknown): SessionRecord | null {
@@ -25,30 +34,33 @@ export function normalizeSessionRecord(raw: unknown): SessionRecord | null {
     return null
   }
 
+  const id = truncate(raw.id, MAX_ID_CHARS)
+  if (!id) return null
+
   const presetId =
     typeof raw.presetId === 'string'
-      ? raw.presetId
+      ? truncate(raw.presetId, MAX_ID_CHARS) || null
       : raw.presetId === null
         ? null
         : null
 
   const sequenceId =
     typeof raw.sequenceId === 'string'
-      ? raw.sequenceId
+      ? truncate(raw.sequenceId, MAX_ID_CHARS) || null
       : raw.sequenceId === null
         ? null
         : null
 
   const presetName =
     typeof raw.presetName === 'string' && raw.presetName.trim().length > 0
-      ? raw.presetName.trim()
-      : presetId ?? 'Session'
+      ? truncate(raw.presetName.trim(), MAX_NAME_CHARS)
+      : truncate(presetId ?? 'Session', MAX_NAME_CHARS)
 
   return {
-    id: raw.id,
-    startedAt: raw.startedAt,
-    endedAt: raw.endedAt,
-    durationSec: Math.round(raw.durationSec),
+    id,
+    startedAt: truncate(raw.startedAt, 64),
+    endedAt: truncate(raw.endedAt, 64),
+    durationSec: Math.min(MAX_DURATION_SEC, Math.round(raw.durationSec)),
     presetId,
     presetName,
     sequenceId,
@@ -111,10 +123,16 @@ export async function appendSessionRecord(
     id: crypto.randomUUID(),
     startedAt: input.startedAt,
     endedAt,
-    durationSec,
-    presetId: input.presetId === 'custom' ? null : input.presetId,
-    presetName: input.presetName.trim() || 'Session',
-    sequenceId: input.sequenceId ?? null,
+    durationSec: Math.min(MAX_DURATION_SEC, durationSec),
+    presetId:
+      input.presetId === 'custom' || input.presetId == null
+        ? null
+        : truncate(input.presetId, MAX_ID_CHARS) || null,
+    presetName: truncate(input.presetName.trim() || 'Session', MAX_NAME_CHARS),
+    sequenceId:
+      input.sequenceId == null
+        ? null
+        : truncate(input.sequenceId, MAX_ID_CHARS) || null,
   }
 
   const all = await readAll()

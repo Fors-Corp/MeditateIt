@@ -11,6 +11,7 @@ import type {
   BackupImportResult,
   SessionRecord,
 } from './types.ts'
+import { MAX_BACKUP_CHARS, MAX_USER_PRESETS } from './limits.ts'
 import {
   listUserPresets,
   mergeUserPresets,
@@ -55,16 +56,27 @@ export function stringifyBackup(doc: BackupDocument): string {
 
 /**
  * Parse + soft-validate a backup JSON string or object.
- * Throws on unrecognized format.
+ * Throws on unrecognized format / oversized payloads.
  */
 export function parseBackup(raw: unknown): BackupDocument {
-  const value =
-    typeof raw === 'string'
-      ? (JSON.parse(raw) as unknown)
-      : raw
+  if (typeof raw === 'string' && raw.length > MAX_BACKUP_CHARS) {
+    throw new Error(
+      `Backup too large (max ${Math.floor(MAX_BACKUP_CHARS / (1024 * 1024))} MB)`,
+    )
+  }
+
+  let value: unknown
+  try {
+    value = typeof raw === 'string' ? (JSON.parse(raw) as unknown) : raw
+  } catch {
+    throw new Error('Backup is not valid JSON')
+  }
 
   if (!isObject(value)) {
     throw new Error('Backup must be a JSON object')
+  }
+  if (Object.prototype.hasOwnProperty.call(value, '__proto__')) {
+    throw new Error('Backup contains forbidden __proto__ key')
   }
   if (value.format !== BACKUP_FORMAT) {
     throw new Error(`Unsupported backup format (expected ${BACKUP_FORMAT})`)
@@ -75,19 +87,26 @@ export function parseBackup(raw: unknown): BackupDocument {
   if (!Array.isArray(value.userPresets)) {
     throw new Error('Backup userPresets must be an array')
   }
+  if (value.userPresets.length > MAX_USER_PRESETS * 2) {
+    // Allow a little headroom in the file; persist path still caps.
+    throw new Error(`Backup userPresets exceeds ${MAX_USER_PRESETS * 2} entries`)
+  }
 
   const prefs = normalizePrefs(value.prefs)
   const sessionHistory = Array.isArray(value.sessionHistory)
     ? (value.sessionHistory as SessionRecord[])
     : undefined
-  const sequences = Array.isArray(value.sequences) ? value.sequences : []
+  // Sequences are reserved; drop anything oversized / non-array.
+  const sequences = Array.isArray(value.sequences)
+    ? value.sequences.slice(0, 50)
+    : []
 
   return {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
     exportedAt:
       typeof value.exportedAt === 'string' && value.exportedAt.length > 0
-        ? value.exportedAt
+        ? value.exportedAt.slice(0, 64)
         : new Date().toISOString(),
     prefs,
     userPresets: value.userPresets as Preset[],

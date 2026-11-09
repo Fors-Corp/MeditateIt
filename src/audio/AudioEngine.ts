@@ -3,7 +3,7 @@ import {
   clampCrossfadeDuration,
   dualRampCrossfade,
 } from './crossfade'
-import { DEFAULT_ENGINE_PARAMS, GAIN, RAMP_SEC } from './constants'
+import { DEFAULT_ENGINE_PARAMS, FREQ, GAIN, RAMP_SEC } from './constants'
 import { LayerBank } from './LayerBank'
 import { normalizeLayerEq } from './LayerEq'
 import { ensureNoiseWorklet } from './noiseWorklet'
@@ -102,9 +102,10 @@ export class AudioEngine {
     // Prefer AudioWorklet noise when available (falls back inside NoiseLayer).
     await ensureNoiseWorklet(ctx)
 
-    const fadeIn = Math.max(
-      RAMP_SEC.fadeMin,
+    const fadeIn = clamp(
       options.fadeInSec ?? this.params.fadeInSec,
+      RAMP_SEC.fadeMin,
+      180,
     )
 
     const activeBank = this.activeBank()
@@ -130,9 +131,10 @@ export class AudioEngine {
     this.clearStopTimer()
     this.settleCrossfadeImmediate()
 
-    const fadeOut = Math.max(
-      RAMP_SEC.fadeMin,
+    const fadeOut = clamp(
       options.fadeOutSec ?? this.params.fadeOutSec,
+      RAMP_SEC.fadeMin,
+      180,
     )
     const t = this.ctx.currentTime
     rampParam(this.masterGain.gain, 0, t, fadeOut)
@@ -348,8 +350,8 @@ function mergeParams(
       0,
       GAIN.masterMax,
     ),
-    fadeInSec: Math.max(0, patch.fadeInSec ?? base.fadeInSec),
-    fadeOutSec: Math.max(0, patch.fadeOutSec ?? base.fadeOutSec),
+    fadeInSec: clamp(patch.fadeInSec ?? base.fadeInSec, 0, 180),
+    fadeOutSec: clamp(patch.fadeOutSec ?? base.fadeOutSec, 0, 180),
     noise: {
       ...base.noise,
       ...patch.noise,
@@ -357,6 +359,16 @@ function mergeParams(
         patch.noise?.gain ?? base.noise.gain,
         0,
         GAIN.noiseMax,
+      ),
+      highpassHz: clamp(
+        patch.noise?.highpassHz ?? base.noise.highpassHz,
+        FREQ.hpfMin,
+        FREQ.hpfMax,
+      ),
+      lowpassHz: clamp(
+        patch.noise?.lowpassHz ?? base.noise.lowpassHz,
+        FREQ.lpfMin,
+        FREQ.lpfMax,
       ),
       eq: normalizeLayerEq({
         ...base.noise.eq,
@@ -367,6 +379,16 @@ function mergeParams(
       ...base.tone,
       ...patch.tone,
       gain: clamp(patch.tone?.gain ?? base.tone.gain, 0, GAIN.toneMax),
+      frequencyHz: clamp(
+        patch.tone?.frequencyHz ?? base.tone.frequencyHz,
+        FREQ.carrierMin,
+        FREQ.carrierMax,
+      ),
+      mildDetuneCents: clamp(
+        patch.tone?.mildDetuneCents ?? base.tone.mildDetuneCents,
+        -50,
+        50,
+      ),
       eq: normalizeLayerEq({
         ...base.tone.eq,
         ...patch.tone?.eq,
@@ -376,6 +398,21 @@ function mergeParams(
       ...base.beat,
       ...patch.beat,
       gain: clamp(patch.beat?.gain ?? base.beat.gain, 0, GAIN.beatMax),
+      carrierHz: clamp(
+        patch.beat?.carrierHz ?? base.beat.carrierHz,
+        FREQ.carrierMin,
+        FREQ.carrierMax,
+      ),
+      beatHz: clamp(
+        patch.beat?.beatHz ?? base.beat.beatHz,
+        FREQ.beatMin,
+        FREQ.beatMax,
+      ),
+      pulseDepth: clamp(
+        patch.beat?.pulseDepth ?? base.beat.pulseDepth,
+        0,
+        1,
+      ),
       eq: normalizeLayerEq({
         ...base.beat.eq,
         ...patch.beat?.eq,
