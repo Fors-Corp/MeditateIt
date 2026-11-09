@@ -6,6 +6,7 @@
 export type {
   BeatMode,
   BeatParams,
+  LayerEqParams,
   LayerGains,
   NatureParams,
   NatureSoundId,
@@ -18,7 +19,10 @@ export type {
   UserPrefs,
 } from './types.ts'
 
+export { NEUTRAL_LAYER_EQ } from './types.ts'
+
 export {
+  cloneLayerEq,
   cloneRecipe,
   createBlankRecipe,
   DEFAULT_FADE_IN_SEC,

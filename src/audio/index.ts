@@ -2,7 +2,7 @@
  * MeditateIt generative audio engine (crossfade + Media Session + nature).
  *
  * Master chain: dual layer banks → master gain → soft limiter → destination
- * Layers per bank: NoiseLayer | ToneLayer | BeatLayer | NatureLayer
+ * Layers per bank: Noise|Tone|Beat|Nature → LayerEq (3-band) → bank bus
  *
  * UI usage (from a click/tap handler):
  *
@@ -17,7 +17,13 @@
  * } from '../audio'
  *
  * audioEngine.setParams({
- *   nature: { enabled: true, soundId: 'rain', gain: 0.2, brightness: 0.55 },
+ *   nature: {
+ *     enabled: true,
+ *     soundId: 'rain',
+ *     gain: 0.2,
+ *     brightness: 0.55,
+ *     eq: { lowDb: 0, midDb: 0, highDb: 2 },
+ *   },
  * })
  * await audioEngine.start()
  * audioEngine.setNature({ soundId: 'shore', brightness: 0.4 })
@@ -49,6 +55,14 @@ export {
 export type { SolfeggioHz } from './constants'
 export { BeatLayer } from './BeatLayer'
 export { LayerBank } from './LayerBank'
+export {
+  LAYER_EQ_DB,
+  LAYER_EQ_FREQ,
+  LayerEq,
+  NEUTRAL_LAYER_EQ,
+  clampDb,
+  normalizeLayerEq,
+} from './LayerEq'
 export { NatureLayer } from './NatureLayer'
 export { NoiseLayer } from './NoiseLayer'
 export { ToneLayer, clampToneFrequency } from './ToneLayer'
@@ -69,6 +83,7 @@ export type {
   BeatParams,
   EngineParams,
   EngineParamsPatch,
+  LayerEqParams,
   NatureParams,
   NatureSoundId,
   NoiseKind,
