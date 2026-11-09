@@ -15,6 +15,10 @@ export default defineConfig({
         'icons/icon-192.png',
         'icons/icon-512.png',
         'worklets/noise-processor.js',
+        'fonts/figtree-latin.woff2',
+        'fonts/figtree-latin-ext.woff2',
+        'fonts/fraunces-latin.woff2',
+        'fonts/fraunces-latin-ext.woff2',
       ],
       manifest: {
         name: 'MeditateIt',
@@ -58,33 +62,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'google-fonts-stylesheets',
-              expiration: {
-                maxEntries: 4,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              expiration: {
-                maxEntries: 8,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-        ],
+        // No third-party runtime caches — fonts ship from /fonts (self-hosted).
       },
       devOptions: {
         enabled: false,

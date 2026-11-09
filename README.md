@@ -22,7 +22,7 @@ npm run lint     # oxlint
 
 ## PWA
 
-Production builds register a service worker via `vite-plugin-pwa` (`registerType: autoUpdate`). The SW precaches the app shell (HTML/JS/CSS/icons/manifest) and `public/worklets/noise-processor.js`; Google Fonts are runtime-cached after the first online visit.
+Production builds register a service worker via `vite-plugin-pwa` (`registerType: autoUpdate`). The SW precaches the app shell (HTML/JS/CSS/icons/manifest), self-hosted OFL fonts under `public/fonts/`, and `public/worklets/noise-processor.js`. No third-party font or analytics CDNs.
 
 To verify installability locally:
 
