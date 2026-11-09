@@ -1,6 +1,9 @@
 import type { Preset, UserPrefs } from '../presets/index.ts'
+import { STORAGE_ERROR } from './errors.ts'
+import { MAX_BACKUP_CHARS, MAX_USER_PRESETS } from './limits.ts'
 import { loadPrefs, normalizePrefs, savePrefs } from './prefs.ts'
 import {
+  clearSessionHistory,
   listSessionHistory,
   mergeSessionHistory,
   replaceSessionHistory,
@@ -11,7 +14,6 @@ import type {
   BackupImportResult,
   SessionRecord,
 } from './types.ts'
-import { MAX_BACKUP_CHARS, MAX_USER_PRESETS } from './limits.ts'
 import {
   listUserPresets,
   mergeUserPresets,
@@ -59,40 +61,38 @@ export function stringifyBackup(doc: BackupDocument): string {
 
 /**
  * Parse + soft-validate a backup JSON string or object.
- * Throws on unrecognized format / oversized payloads.
+ * Throws with stable STORAGE_ERROR messages.
  */
 export function parseBackup(raw: unknown): BackupDocument {
   if (typeof raw === 'string' && raw.length > MAX_BACKUP_CHARS) {
-    throw new Error(
-      `Backup too large (max ${Math.floor(MAX_BACKUP_CHARS / (1024 * 1024))} MB)`,
-    )
+    throw new Error(STORAGE_ERROR.TOO_LARGE)
   }
 
   let value: unknown
   try {
     value = typeof raw === 'string' ? (JSON.parse(raw) as unknown) : raw
   } catch {
-    throw new Error('Backup is not valid JSON')
+    throw new Error(STORAGE_ERROR.INVALID_JSON)
   }
 
   if (!isObject(value)) {
-    throw new Error('Backup must be a JSON object')
+    throw new Error(STORAGE_ERROR.NOT_OBJECT)
   }
   if (Object.prototype.hasOwnProperty.call(value, '__proto__')) {
-    throw new Error('Backup contains forbidden __proto__ key')
+    throw new Error(STORAGE_ERROR.FORBIDDEN_KEY)
   }
   if (value.format !== BACKUP_FORMAT) {
-    throw new Error(`Unsupported backup format (expected ${BACKUP_FORMAT})`)
+    throw new Error(STORAGE_ERROR.BAD_FORMAT)
   }
   if (value.version !== BACKUP_VERSION) {
-    throw new Error(`Unsupported backup version (expected ${BACKUP_VERSION})`)
+    throw new Error(STORAGE_ERROR.BAD_VERSION)
   }
   if (!Array.isArray(value.userPresets)) {
-    throw new Error('Backup userPresets must be an array')
+    throw new Error(STORAGE_ERROR.BAD_PRESETS)
   }
   if (value.userPresets.length > MAX_USER_PRESETS * 2) {
     // Allow a little headroom in the file; persist path still caps.
-    throw new Error(`Backup userPresets exceeds ${MAX_USER_PRESETS * 2} entries`)
+    throw new Error(STORAGE_ERROR.PRESETS_TOO_MANY)
   }
 
   const prefs = normalizePrefs(value.prefs)
@@ -119,14 +119,25 @@ export function parseBackup(raw: unknown): BackupDocument {
   }
 }
 
+export type ImportBackupOptions = {
+  /**
+   * When mode is `replace` and the file omits `sessionHistory`:
+   * - false (default): wipe existing history (honest full replace)
+   * - true: keep existing history on device
+   */
+  keepHistoryWhenOmitted?: boolean
+}
+
 /**
  * Import a backup.
- * - `replace`: overwrite prefs + user presets (+ history when present)
+ * - `replace`: overwrite prefs + user presets; history from file, or wipe
+ *   when omitted unless `keepHistoryWhenOmitted`
  * - `merge`: imported prefs fields win; presets/history merge by id
  */
 export async function importBackup(
   raw: unknown,
   mode: BackupImportMode,
+  options?: ImportBackupOptions,
 ): Promise<BackupImportResult> {
   const doc = parseBackup(raw)
 
@@ -151,9 +162,12 @@ export async function importBackup(
         : await mergeSessionHistory(doc.sessionHistory)
     historyCount = history.length
   } else if (mode === 'replace') {
-    // Replace without history field leaves existing history intact
-    // (prefs/presets only). Callers who want a full wipe clear history first.
-    historyCount = (await listSessionHistory()).length
+    if (options?.keepHistoryWhenOmitted) {
+      historyCount = (await listSessionHistory()).length
+    } else {
+      await clearSessionHistory()
+      historyCount = 0
+    }
   } else {
     historyCount = (await listSessionHistory()).length
   }
@@ -166,7 +180,7 @@ export async function importBackup(
   }
 }
 
-/** Trigger a browser download of the current backup. */
+/** Trigger a browser download of the current backup (includes history). */
 export async function downloadBackup(filename?: string): Promise<BackupDocument> {
   const doc = await exportBackup({ includeHistory: true })
   const blob = new Blob([stringifyBackup(doc)], {
