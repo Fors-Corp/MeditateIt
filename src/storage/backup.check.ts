@@ -9,6 +9,7 @@ import {
   BACKUP_VERSION,
   parseBackup,
 } from './backup.ts'
+import { messages } from '../i18n/index.ts'
 import { STORAGE_ERROR, messageForStorageError } from './errors.ts'
 import {
   normalizeHistoryRetentionDays,
@@ -148,12 +149,18 @@ assert(threw, 'rejects __proto__ key with stable message')
 
 assert(
   messageForStorageError(new Error('Backup is not valid JSON')) ===
-    STORAGE_ERROR.INVALID_JSON,
-  'maps legacy JSON message',
+    messages.errors.storage.invalidJson,
+  'maps legacy JSON message to EN copy',
 )
 assert(
-  messageForStorageError(new Error('surprise')) === STORAGE_ERROR.IMPORT_FAILED,
-  'unknown errors fall back',
+  messageForStorageError(new Error(STORAGE_ERROR.BAD_FORMAT)) ===
+    messages.errors.storage.badFormat,
+  'maps stable code to EN copy',
+)
+assert(
+  messageForStorageError(new Error('surprise')) ===
+    messages.errors.storage.importFailed,
+  'unknown errors fall back to EN copy',
 )
 
 assert(

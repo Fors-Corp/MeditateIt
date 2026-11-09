@@ -1,4 +1,4 @@
-import { BINAURAL_REQUIRES_HEADPHONES } from './bridges'
+import { messages } from '../../i18n'
 import { useModalDialogFocus } from './useModalDialogFocus'
 
 interface HeadphoneWarningProps {
@@ -33,16 +33,16 @@ export function HeadphoneWarning({
         aria-describedby="headphone-body"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="headphone-title">Headphones needed</h2>
+        <h2 id="headphone-title">{messages.dialogs.headphonesTitle}</h2>
         <div id="headphone-body" className="headphone-body">
-          <p>{BINAURAL_REQUIRES_HEADPHONES}</p>
+          <p>{messages.dialogs.headphonesBody}</p>
         </div>
         <div className="headphone-actions">
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
-            Cancel
+            {messages.dialogs.cancel}
           </button>
           <button type="button" className="btn btn-primary" onClick={onConfirm}>
-            I have headphones
+            {messages.dialogs.headphonesConfirm}
           </button>
         </div>
       </div>

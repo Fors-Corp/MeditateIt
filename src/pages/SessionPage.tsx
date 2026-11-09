@@ -3,6 +3,7 @@ import {
   SessionControls,
   useSessionController,
 } from '../components/session'
+import { messages } from '../i18n'
 
 export default function SessionPage() {
   const { presetId } = useParams<{ presetId?: string }>()
@@ -12,10 +13,10 @@ export default function SessionPage() {
     <section className="session-page" aria-labelledby="session-heading">
       <div className="session-top">
         <Link className="session-back" to="/">
-          ← Home
+          {messages.app.homeLink}
         </Link>
         <h1 id="session-heading" className="visually-hidden">
-          Session
+          {messages.session.heading}
         </h1>
       </div>
       <SessionControls session={session} />

@@ -1,3 +1,4 @@
+import { PRESET_ERROR, presetTooManyCode } from '../i18n/index.ts'
 import {
   cloneRecipe,
   isSystemPresetId,
@@ -108,14 +109,14 @@ export async function saveUserPreset(
   input: SaveUserPresetInput,
 ): Promise<Preset> {
   const name = truncate(input.name.trim(), MAX_NAME_CHARS)
-  if (!name) throw new Error('Preset name is required')
+  if (!name) throw new Error(PRESET_ERROR.NAME_REQUIRED)
   const recipe = normalizeRecipe(input.recipe)
-  if (!recipe) throw new Error('Invalid session recipe')
+  if (!recipe) throw new Error(PRESET_ERROR.INVALID_RECIPE)
 
   const id = truncate(input.id?.trim() || crypto.randomUUID(), MAX_ID_CHARS)
-  if (!id) throw new Error('Preset id is required')
+  if (!id) throw new Error(PRESET_ERROR.ID_REQUIRED)
   if (isSystemPresetId(id)) {
-    throw new Error('Cannot overwrite a system preset')
+    throw new Error(PRESET_ERROR.CANNOT_OVERWRITE_SYSTEM)
   }
 
   const defaultDurationSec =
@@ -143,7 +144,7 @@ export async function saveUserPreset(
     all[idx] = next
   } else {
     if (all.length >= MAX_USER_PRESETS) {
-      throw new Error(`At most ${MAX_USER_PRESETS} user presets`)
+      throw new Error(presetTooManyCode(MAX_USER_PRESETS))
     }
     all.push(next)
   }

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { messages } from '../../i18n'
 import { HeadphoneWarning } from '../session/HeadphoneWarning'
 import { SavePresetDialog } from '../session/SavePresetDialog'
 import '../session/session.css'
@@ -56,7 +57,7 @@ export function SequenceControls({ session }: SequenceControlsProps) {
   if (!ready) {
     return (
       <div className="sequence-loading" aria-live="polite">
-        Preparing sequence…
+        {messages.sequence.preparing}
       </div>
     )
   }
@@ -64,27 +65,39 @@ export function SequenceControls({ session }: SequenceControlsProps) {
   if (missing || !sequence) {
     return (
       <div className="sequence-missing">
-        <p>That sequence was not found.</p>
+        <p>{messages.sequence.missing}</p>
         <Link className="btn btn-ghost" to="/">
-          Back home
+          {messages.app.backHomeShort}
         </Link>
       </div>
     )
   }
 
-  const statusLabel =
-    engineStatus === 'unavailable'
-      ? 'Audio unavailable in this browser'
+  const statusLabel = completed
+    ? messages.sequence.complete
+    : engineStatus === 'unavailable'
+      ? messages.sequence.unavailable
       : needsAudioGesture
-        ? 'Audio paused by the browser'
+        ? messages.sequence.pausedByBrowser
         : crossfading
-          ? `Crossfading to ${stageName || 'next stage'}…`
+          ? messages.sequence.crossfadingTo(
+              stageName || messages.sequence.nextStage,
+            )
           : statusMessage
 
-  const timerText = completed ? 'Done' : formatTime(stageRemainingSec)
+  const timerText = completed
+    ? messages.sequence.done
+    : formatTime(stageRemainingSec)
   const stageProgressLabel = completed
-    ? `All ${stageCount} stages complete`
-    : `${stageName} · ${formatTime(stageRemainingSec)} of ${formatTime(stageDurationSec)} · stage ${Math.min(stageIndex + 1, stageCount)} / ${stageCount}${crossfading ? ' · fading' : ''}`
+    ? messages.sequence.allStagesComplete(stageCount)
+    : messages.sequence.stageProgress(
+        stageName,
+        formatTime(stageRemainingSec),
+        formatTime(stageDurationSec),
+        Math.min(stageIndex + 1, stageCount),
+        stageCount,
+        crossfading,
+      )
 
   return (
     <div className={`sequence-panel${playing ? ' is-playing' : ''}`}>
@@ -93,21 +106,28 @@ export function SequenceControls({ session }: SequenceControlsProps) {
         <h2 className="sequence-stage-name">{stageName || sequence.name}</h2>
         <p className="sequence-stage-sub">
           {completed
-            ? 'Sequence finished'
-            : `Stage ${Math.min(stageIndex + 1, stageCount)} of ${stageCount}`}
+            ? messages.sequence.finished
+            : messages.sequence.stageOf(
+                Math.min(stageIndex + 1, stageCount),
+                stageCount,
+              )}
         </p>
         {/* Timer is visual only — no per-second aria-live. Status region below. */}
         <p className="sequence-timer" aria-hidden="true">
           {timerText}
         </p>
         <span className="visually-hidden">
-          {completed ? 'Sequence done' : `Stage remaining ${timerText}`}
+          {completed
+            ? messages.sequence.doneTitle
+            : messages.sequence.stageRemaining(timerText)}
         </span>
 
         <div
           className="sequence-progress"
           role="progressbar"
-          aria-label={`${stageName || 'Stage'} progress`}
+          aria-label={messages.sequence.stageProgressAria(
+            stageName || messages.sequence.heading,
+          )}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(stageProgress * 100)}
@@ -126,7 +146,11 @@ export function SequenceControls({ session }: SequenceControlsProps) {
             onClick={() => void togglePlay()}
             aria-pressed={playing}
           >
-            {completed ? 'Play again' : playing ? 'Pause' : 'Play'}
+            {completed
+              ? messages.sequence.playAgain
+              : playing
+                ? messages.session.pause
+                : messages.session.play}
           </button>
           <button
             type="button"
@@ -134,14 +158,18 @@ export function SequenceControls({ session }: SequenceControlsProps) {
             onClick={skipStage}
             disabled={completed}
           >
-            {stageIndex >= stageCount - 1 ? 'End sequence' : 'Skip stage'}
+            {stageIndex >= stageCount - 1
+              ? messages.sequence.endSequence
+              : messages.sequence.skipStage}
           </button>
           <button
             type="button"
             className="btn btn-ghost save-preset-btn"
             onClick={openSaveSequence}
           >
-            {sequence.source === 'user' ? 'Save sequence' : 'Save a copy'}
+            {sequence.source === 'user'
+              ? messages.sequence.saveSequence
+              : messages.sequence.saveACopy}
           </button>
         </div>
 
@@ -151,7 +179,7 @@ export function SequenceControls({ session }: SequenceControlsProps) {
             className="audio-resume-prompt"
             onClick={() => void continueAudio()}
           >
-            Tap to continue audio
+            {messages.session.continueAudio}
           </button>
         )}
 
@@ -167,7 +195,7 @@ export function SequenceControls({ session }: SequenceControlsProps) {
 
       <div className="control-block">
         <div className="control-row">
-          <h2 id="seq-overall-label">Sequence</h2>
+          <h2 id="seq-overall-label">{messages.sequence.heading}</h2>
           <span className="control-value">
             {Math.round(sequenceProgress * 100)}%
           </span>
@@ -175,7 +203,7 @@ export function SequenceControls({ session }: SequenceControlsProps) {
         <div
           className="sequence-progress sequence-progress-overall"
           role="progressbar"
-          aria-label={`${sequence.name} progress`}
+          aria-label={messages.sequence.stageProgressAria(sequence.name)}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(sequenceProgress * 100)}
@@ -211,7 +239,7 @@ export function SequenceControls({ session }: SequenceControlsProps) {
 
       <div className="control-block">
         <div className="control-row">
-          <h2 id="seq-master-label">Master</h2>
+          <h2 id="seq-master-label">{messages.sequence.master}</h2>
           <span className="control-value">
             {Math.round(masterVolume * 100)}%
           </span>
@@ -243,8 +271,8 @@ export function SequenceControls({ session }: SequenceControlsProps) {
         onCancel={dismissSaveSequence}
         onSaveNew={() => void saveSequenceAsNew()}
         onOverwrite={() => void overwriteSequence()}
-        title="Save sequence"
-        description="Store this multi-stage sequence locally on this device. Stages keep their recipes so a restore stays self-contained."
+        title={messages.dialogs.saveSequenceTitle}
+        description={messages.dialogs.saveSequenceBody}
       />
     </div>
   )

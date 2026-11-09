@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { messages } from '../i18n'
 
 /** Chromium beforeinstallprompt (not in all DOM lib versions). */
 interface BeforeInstallPromptEvent extends Event {
@@ -47,27 +48,27 @@ export default function PwaChrome() {
     <div className="pwa-chrome" role="status" aria-live="polite">
       {needRefresh ? (
         <div className="pwa-chrome-row">
-          <p className="pwa-chrome-copy">Update available</p>
+          <p className="pwa-chrome-copy">{messages.pwa.updateAvailable}</p>
           <div className="pwa-chrome-actions">
             <button
               type="button"
               className="btn btn-primary pwa-chrome-btn"
               onClick={() => void updateServiceWorker(true)}
             >
-              Reload
+              {messages.pwa.reload}
             </button>
             <button
               type="button"
               className="btn btn-ghost pwa-chrome-btn"
               onClick={() => setNeedRefresh(false)}
             >
-              Later
+              {messages.pwa.later}
             </button>
           </div>
         </div>
       ) : (
         <div className="pwa-chrome-row">
-          <p className="pwa-chrome-copy">Install MeditateIt on this device</p>
+          <p className="pwa-chrome-copy">{messages.pwa.installPrompt}</p>
           <div className="pwa-chrome-actions">
             <button
               type="button"
@@ -80,14 +81,14 @@ export default function PwaChrome() {
                 })
               }}
             >
-              Install
+              {messages.pwa.install}
             </button>
             <button
               type="button"
               className="btn btn-ghost pwa-chrome-btn"
               onClick={() => setInstallHidden(true)}
             >
-              Dismiss
+              {messages.pwa.dismiss}
             </button>
           </div>
         </div>

@@ -5,6 +5,7 @@ import {
   setMediaSessionPlaybackState,
   setSessionMediaMetadata,
 } from '../../audio'
+import { messageForPresetError, messages } from '../../i18n'
 import { cloneRecipe } from '../../presets'
 import type { Preset, SessionRecipe } from '../../presets'
 import {
@@ -698,7 +699,7 @@ export function useSessionController(
     async (mode: 'new' | 'overwrite') => {
       const name = savePresetName.trim()
       if (!name) {
-        setSavePresetError('Name is required')
+        setSavePresetError(messages.errors.preset.nameRequired)
         return
       }
       setSavePresetBusy(true)
@@ -714,9 +715,7 @@ export function useSessionController(
         setRecipe(cloneRecipe(saved.recipe))
         setShowSavePreset(false)
       } catch (err) {
-        setSavePresetError(
-          err instanceof Error ? err.message : 'Could not save preset',
-        )
+        setSavePresetError(messageForPresetError(err))
       } finally {
         setSavePresetBusy(false)
       }

@@ -9,6 +9,7 @@ import {
   removeUserPreset,
   removeUserSequence,
 } from '../components/session/bridges'
+import { messages } from '../i18n'
 import { isSystemPresetId, type Preset } from '../presets'
 import {
   formatSequenceDuration,
@@ -19,9 +20,9 @@ import {
 import { getLastUsedPreset, type SessionRecord } from '../storage'
 
 function formatDuration(sec: number | null): string {
-  if (sec == null) return 'Open-ended'
+  if (sec == null) return messages.home.openEnded
   const m = Math.round(sec / 60)
-  return `${m} min`
+  return messages.home.minutes(m)
 }
 
 function formatHistoryDuration(sec: number): string {
@@ -117,7 +118,7 @@ export default function HomePage() {
   }, [])
 
   const handleDeletePreset = async (id: string, name: string) => {
-    if (!window.confirm(`Delete preset “${name}”? This cannot be undone.`)) {
+    if (!window.confirm(messages.home.deleteConfirm(name))) {
       return
     }
     setDeletingId(id)
@@ -134,7 +135,7 @@ export default function HomePage() {
   }
 
   const handleDeleteSequence = async (id: string, name: string) => {
-    if (!window.confirm(`Delete sequence “${name}”? This cannot be undone.`)) {
+    if (!window.confirm(messages.home.deleteSequenceConfirm(name))) {
       return
     }
     setDeletingId(id)
@@ -150,23 +151,20 @@ export default function HomePage() {
     <div className="home-page">
       <section className="home-hero" aria-labelledby="brand-hero">
         <div className="home-hero-glow" aria-hidden="true" />
-        <p className="home-eyebrow">Generative soundscapes</p>
+        <p className="home-eyebrow">{messages.home.eyebrow}</p>
         <h1 id="brand-hero" className="home-brand">
-          MeditateIt
+          {messages.app.brand}
         </h1>
-        <p className="home-lede">
-          Shape pink noise, tones, and beats live — start calm in under thirty
-          seconds.
-        </p>
+        <p className="home-lede">{messages.home.lede}</p>
         <div className="home-actions">
           <Link className="btn btn-primary" to={`/session/${quickStartId}`}>
-            Quick start
+            {messages.home.quickStart}
           </Link>
           <Link className="btn btn-ghost" to="/session/custom">
-            Custom
+            {messages.home.custom}
           </Link>
           <Link className="btn btn-ghost" to="/settings">
-            Settings
+            {messages.home.settings}
           </Link>
         </div>
       </section>
@@ -177,8 +175,8 @@ export default function HomePage() {
         aria-labelledby="sequences-heading"
       >
         <div className="section-head">
-          <h2 id="sequences-heading">Sequences</h2>
-          <p className="section-aside">Multi-stage paths</p>
+          <h2 id="sequences-heading">{messages.home.sequences}</h2>
+          <p className="section-aside">{messages.home.sequencesAside}</p>
         </div>
         <ul className="preset-list">
           {sequences.map((seq, index) => (
@@ -200,7 +198,7 @@ export default function HomePage() {
           className="preset-section"
           aria-labelledby="user-sequences-heading"
         >
-          <h2 id="user-sequences-heading">Your sequences</h2>
+          <h2 id="user-sequences-heading">{messages.home.yourSequences}</h2>
           <ul className="preset-list">
             {userSequences.map((seq, index) => (
               <li
@@ -211,7 +209,7 @@ export default function HomePage() {
                 <Link className="preset-link" to={`/sequence/${seq.id}`}>
                   <span className="preset-name">{seq.name}</span>
                   <span className="preset-meta">
-                    {seq.summary || 'Saved on this device'}
+                    {seq.summary || messages.home.savedOnDevice}
                   </span>
                   <span className="preset-duration">
                     {formatSequenceDuration(seq)}
@@ -222,9 +220,9 @@ export default function HomePage() {
                   className="preset-delete"
                   onClick={() => void handleDeleteSequence(seq.id, seq.name)}
                   disabled={deletingId === seq.id}
-                  aria-label={`Delete ${seq.name}`}
+                  aria-label={messages.home.deleteAria(seq.name)}
                 >
-                  {deletingId === seq.id ? '…' : 'Delete'}
+                  {deletingId === seq.id ? '…' : messages.home.delete}
                 </button>
               </li>
             ))}
@@ -235,9 +233,9 @@ export default function HomePage() {
       {recentSessions.length > 0 ? (
         <section className="preset-section" aria-labelledby="history-heading">
           <div className="section-head">
-            <h2 id="history-heading">Recent sessions</h2>
+            <h2 id="history-heading">{messages.home.recentSessions}</h2>
             <Link className="section-link" to="/settings">
-              All & backup
+              {messages.home.allAndBackup}
             </Link>
           </div>
           <ul className="history-list">
@@ -252,7 +250,7 @@ export default function HomePage() {
                 row.sequenceId &&
                 (isSystemSequenceId(row.sequenceId) ||
                   knownUserSequenceIds.has(row.sequenceId))
-                  ? 'Sequence'
+                  ? messages.home.sequenceTag
                   : null,
               ]
                 .filter(Boolean)
@@ -267,7 +265,9 @@ export default function HomePage() {
                       <span className="history-duration">
                         {formatHistoryDuration(row.durationSec)}
                       </span>
-                      <span className="history-replay">Replay</span>
+                      <span className="history-replay">
+                        {messages.home.replay}
+                      </span>
                     </Link>
                   ) : (
                     <>
@@ -287,7 +287,7 @@ export default function HomePage() {
 
       {userPresets.length > 0 ? (
         <section className="preset-section" aria-labelledby="user-presets-heading">
-          <h2 id="user-presets-heading">Your presets</h2>
+          <h2 id="user-presets-heading">{messages.home.yourPresets}</h2>
           <ul className="preset-list">
             {userPresets.map((preset, index) => (
               <li
@@ -297,7 +297,7 @@ export default function HomePage() {
               >
                 <Link className="preset-link" to={`/session/${preset.id}`}>
                   <span className="preset-name">{preset.name}</span>
-                  <span className="preset-meta">Saved on this device</span>
+                  <span className="preset-meta">{messages.home.savedOnDevice}</span>
                   <span className="preset-duration">
                     {formatDuration(preset.defaultDurationSec)}
                   </span>
@@ -307,9 +307,9 @@ export default function HomePage() {
                   className="preset-delete"
                   onClick={() => void handleDeletePreset(preset.id, preset.name)}
                   disabled={deletingId === preset.id}
-                  aria-label={`Delete ${preset.name}`}
+                  aria-label={messages.home.deleteAria(preset.name)}
                 >
-                  {deletingId === preset.id ? '…' : 'Delete'}
+                  {deletingId === preset.id ? '…' : messages.home.delete}
                 </button>
               </li>
             ))}
@@ -318,7 +318,7 @@ export default function HomePage() {
       ) : null}
 
       <section className="preset-section" aria-labelledby="presets-heading">
-        <h2 id="presets-heading">System presets</h2>
+        <h2 id="presets-heading">{messages.home.systemPresets}</h2>
         <ul className="preset-list">
           {presets.map((preset, index) => (
             <li key={preset.id} style={{ animationDelay: `${80 + index * 50}ms` }}>

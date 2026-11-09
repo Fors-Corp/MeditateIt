@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { messages } from '../../i18n'
 import {
   NATURE_SOUNDS,
   NEUTRAL_LAYER_EQ,
@@ -97,7 +98,7 @@ export function SessionControls({ session }: SessionControlsProps) {
   if (!ready) {
     return (
       <div className="session-loading" aria-live="polite">
-        Preparing session…
+        {messages.session.preparing}
       </div>
     )
   }
@@ -106,14 +107,14 @@ export function SessionControls({ session }: SessionControlsProps) {
 
   const engineStatusLabel =
     engineStatus === 'unavailable'
-      ? 'Audio unavailable in this browser'
+      ? messages.session.unavailable
       : needsAudioGesture
-        ? 'Audio paused by the browser'
+        ? messages.session.pausedByBrowser
         : crossfading
-          ? 'Crossfading presets…'
+          ? messages.session.crossfading
           : playing
-            ? 'Soundscape running'
-            : 'Ready when you are'
+            ? messages.session.running
+            : messages.session.ready
 
   return (
     <div className={`session-panel${playing ? ' is-playing' : ''}`}>
@@ -132,7 +133,7 @@ export function SessionControls({ session }: SessionControlsProps) {
           onClick={() => void togglePlay()}
           aria-pressed={playing}
         >
-          {playing ? 'Pause' : 'Play'}
+          {playing ? messages.session.pause : messages.session.play}
         </button>
         {needsAudioGesture && (
           <button
@@ -140,7 +141,7 @@ export function SessionControls({ session }: SessionControlsProps) {
             className="audio-resume-prompt"
             onClick={() => void continueAudio()}
           >
-            Tap to continue audio
+            {messages.session.continueAudio}
           </button>
         )}
         <p
@@ -156,7 +157,7 @@ export function SessionControls({ session }: SessionControlsProps) {
           className="btn btn-ghost save-preset-btn"
           onClick={openSavePreset}
         >
-          Save as preset
+          {messages.session.saveAsPreset}
         </button>
       </div>
 
@@ -471,12 +472,10 @@ export function SessionControls({ session }: SessionControlsProps) {
       </div>
 
       <div className="control-block session-explore">
-        <h2 id="session-explore-label">Explore</h2>
-        <p className="layer-note">
-          Prefer a guided multi-stage path? Sequences are on the home screen.
-        </p>
+        <h2 id="session-explore-label">{messages.session.exploreHeading}</h2>
+        <p className="layer-note">{messages.session.exploreNote}</p>
         <Link className="btn btn-ghost session-explore-link" to="/#sequences">
-          Browse sequences
+          {messages.session.browseSequences}
         </Link>
       </div>
 
