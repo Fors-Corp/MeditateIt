@@ -4,6 +4,7 @@ import './App.css'
 import AppFooter from './components/AppFooter'
 import LanguagePicker from './components/LanguagePicker'
 import PwaChrome from './components/PwaChrome'
+import SettingsGearLink from './components/SettingsGearLink'
 import type { Messages } from './i18n'
 import { useI18n } from './i18n/useI18n'
 import HomePage from './pages/HomePage'
@@ -60,7 +61,10 @@ function App() {
             <p className="app-tagline">{headerLabel(pathname, messages)}</p>
           </>
         ) : null}
-        <LanguagePicker variant="chrome" />
+        <div className="header-actions">
+          <LanguagePicker variant="chrome" />
+          <SettingsGearLink />
+        </div>
       </header>
 
       <main id="main" className="app-main" tabIndex={-1}>

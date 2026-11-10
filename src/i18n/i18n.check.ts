@@ -107,6 +107,7 @@ for (const locale of LOCALES) {
   assert.ok(getMessages().legal.privacyLede.trim().length > 20)
   assert.ok(getMessages().legal.termsWellnessP2.trim().length > 20)
   assert.ok(getMessages().app.languageLabel.trim().length > 0)
+  assert.ok(getMessages().app.settings.trim().length > 0)
   assert.ok(getMessages().settings.languageSystem.trim().length > 0)
   assert.ok(getMessages().settings.languageChromeNote.trim().length > 0)
 }

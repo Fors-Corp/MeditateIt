@@ -165,7 +165,7 @@ export const fr: Messages = {
     languageHeading: 'Langue',
     languageSystem: 'Système',
     languageChromeNote:
-      'Changez la langue à tout moment avec le contrôle en haut de l’app.',
+      'Le drapeau en haut montre toujours la langue en cours — y compris lorsque Système suit le navigateur. Ouvrez Réglages via l’engrenage à côté.',
     languageLede:
       'Système suit la langue du navigateur lorsqu’elle est prise en charge (English, Español, Català, Français, Português). Un choix explicite est enregistré sur cet appareil. Les dates et heures suivent la locale active.',
     backupHeading: 'Sauvegarde',

@@ -165,7 +165,7 @@ export const ca: Messages = {
     languageHeading: 'Idioma',
     languageSystem: 'Sistema',
     languageChromeNote:
-      'Canvia l’idioma en qualsevol moment amb el control de la part superior de l’app.',
+      'La bandera de dalt sempre mostra l’idioma en ús — també quan Sistema segueix el navegador. Obre Configuració amb l’engranatge del costat.',
     languageLede:
       'Sistema segueix l’idioma del navegador quan està disponible (English, Español, Català, Français, Português). Una tria explícita es desa en aquest dispositiu. Les dates i hores segueixen l’idioma actiu.',
     backupHeading: 'Còpia de seguretat',

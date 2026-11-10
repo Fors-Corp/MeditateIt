@@ -6,6 +6,7 @@ import {
 } from '../i18n'
 import { useI18n } from '../i18n/useI18n'
 import { updatePrefs } from '../storage/prefs'
+import LocaleFlag from './LocaleFlag'
 
 interface LanguagePickerProps {
   disabled?: boolean
@@ -25,7 +26,7 @@ export default function LanguagePicker({
   disabled = false,
   variant = 'chrome',
 }: LanguagePickerProps) {
-  const { localePreference, messages, setLocalePreference } = useI18n()
+  const { locale, localePreference, messages, setLocalePreference } = useI18n()
   const label = messages.app.languageLabel
 
   const choose = (preferred: LocaleCode | null) => {
@@ -35,14 +36,23 @@ export default function LanguagePicker({
 
   if (variant === 'chrome') {
     const selectValue = localePreference ?? 'system'
+    const closedLabel =
+      localePreference === null
+        ? `${label}: ${LOCALE_LABELS[locale]} (${messages.settings.languageSystem})`
+        : `${label}: ${LOCALE_LABELS[locale]}`
+
     return (
       <label className="language-chrome">
-        <span className="visually-hidden">{label}</span>
+        <span className="visually-hidden">{closedLabel}</span>
+        <span className="language-chrome-face" aria-hidden="true">
+          <LocaleFlag code={locale} className="language-chrome-flag" />
+          <span className="language-chrome-code">{locale.toUpperCase()}</span>
+        </span>
         <select
           className="language-chrome-select"
           value={selectValue}
           disabled={disabled}
-          aria-label={label}
+          aria-label={closedLabel}
           onChange={(event) => {
             const raw = event.target.value
             if (raw === 'system') {

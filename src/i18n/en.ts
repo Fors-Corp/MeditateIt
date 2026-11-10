@@ -169,7 +169,7 @@ export const en = {
     languageHeading: 'Language',
     languageSystem: 'System',
     languageChromeNote:
-      'Change language anytime with the control at the top of the app.',
+      'The flag at the top always shows the language in use — including when System follows your browser. Open Settings from the gear beside it.',
     languageLede:
       'System follows your browser language when supported (English, Español, Català, Français, Português). An explicit choice is saved on this device. Dates and times follow the active locale.',
     backupHeading: 'Backup',

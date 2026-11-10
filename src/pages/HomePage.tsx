@@ -213,9 +213,6 @@ export default function HomePage() {
           <Link className="btn btn-ghost" to="/session/custom">
             {messages.home.custom}
           </Link>
-          <Link className="btn btn-ghost" to="/settings">
-            {messages.home.settings}
-          </Link>
         </div>
       </section>
 

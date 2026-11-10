@@ -11,8 +11,6 @@ export default function AppFooter() {
         <Link to="/privacy">{messages.app.privacy}</Link>
         <span aria-hidden="true"> · </span>
         <Link to="/terms">{messages.app.terms}</Link>
-        <span aria-hidden="true"> · </span>
-        <Link to="/settings">{messages.app.settings}</Link>
       </p>
     </footer>
   )
