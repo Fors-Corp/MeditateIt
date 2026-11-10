@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import './App.css'
 import AppFooter from './components/AppFooter'
+import LanguagePicker from './components/LanguagePicker'
 import PwaChrome from './components/PwaChrome'
 import type { Messages } from './i18n'
 import { useI18n } from './i18n/useI18n'
@@ -49,15 +50,18 @@ function App() {
         {messages.app.skipToMain}
       </a>
 
-      {!isHome && (
-        <header className="app-header">
-          <Link to="/" className="brand">
-            <span className="brand-mark" aria-hidden="true" />
-            {messages.app.brand}
-          </Link>
-          <p className="app-tagline">{headerLabel(pathname, messages)}</p>
-        </header>
-      )}
+      <header className={`app-header${isHome ? ' is-home' : ''}`}>
+        {!isHome ? (
+          <>
+            <Link to="/" className="brand">
+              <span className="brand-mark" aria-hidden="true" />
+              {messages.app.brand}
+            </Link>
+            <p className="app-tagline">{headerLabel(pathname, messages)}</p>
+          </>
+        ) : null}
+        <LanguagePicker variant="chrome" />
+      </header>
 
       <main id="main" className="app-main" tabIndex={-1}>
         <Routes>

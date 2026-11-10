@@ -6,6 +6,7 @@ export const en = {
   app: {
     brand: 'MeditateIt',
     skipToMain: 'Skip to main content',
+    languageLabel: 'Language',
     taglineHome: 'Generative soundscapes',
     taglineSettings: 'Settings',
     taglinePrivacy: 'Privacy',
@@ -166,8 +167,11 @@ export const en = {
       forest: 'Forest',
     },
     languageHeading: 'Language',
+    languageSystem: 'System',
+    languageChromeNote:
+      'Change language anytime with the control at the top of the app.',
     languageLede:
-      'Choose the language for MeditateIt on this device. Dates and times follow this locale.',
+      'System follows your browser language when supported (English, Español, Català, Français, Português). An explicit choice is saved on this device. Dates and times follow the active locale.',
     backupHeading: 'Backup',
     backupLede:
       'Download or restore prefs, saved presets, sequences, and session history as JSON. Export includes finished listens by default. No account — the file stays on this device.',

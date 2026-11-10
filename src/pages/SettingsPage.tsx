@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import LanguagePicker from '../components/LanguagePicker'
 import { ThemePicker } from '../components/ThemePicker'
 import { useThemePreference } from '../components/useThemePreference'
 import {
+  bootstrapLocale,
   formatLocaleDateTime,
   type Messages,
 } from '../i18n'
@@ -187,6 +187,7 @@ export default function SettingsPage() {
       setKeepHistoryWhenOmitted(false)
       applyThemePreference(null)
       reloadTheme()
+      bootstrapLocale()
       const cacheMsg = result.cachesCleared
         ? messages.settings.erasedCaches(result.serviceWorkersUnregistered)
         : ''
@@ -214,8 +215,8 @@ export default function SettingsPage() {
 
       <section className="settings-section" aria-labelledby="language-heading">
         <h2 id="language-heading">{messages.settings.languageHeading}</h2>
+        <p className="settings-lede">{messages.settings.languageChromeNote}</p>
         <p className="settings-lede">{messages.settings.languageLede}</p>
-        <LanguagePicker disabled={busy} />
       </section>
 
       <section className="settings-section" aria-labelledby="backup-heading">

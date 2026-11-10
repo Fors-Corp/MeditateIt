@@ -5,8 +5,10 @@
 import assert from 'node:assert/strict'
 import {
   allCatalogs,
+  applyLocalePreference,
   detectBrowserLocale,
   getLocale,
+  getLocalePreference,
   getMessages,
   LOCALES,
   matchLocale,
@@ -76,19 +78,36 @@ assert.equal(matchLocale('fr-CA'), 'fr')
 assert.equal(matchLocale('es-MX'), 'es')
 assert.equal(matchLocale('de-DE'), null)
 assert.equal(detectBrowserLocale(['de-DE', 'fr-FR']), 'fr')
+assert.equal(detectBrowserLocale(['pt-BR', 'en']), 'pt')
 assert.equal(detectBrowserLocale(['zz']), 'en')
 assert.equal(resolveLocale(null, ['ca']), 'ca')
 assert.equal(resolveLocale('pt', ['en']), 'pt')
 assert.equal(resolveLocale('nope', ['es-ES']), 'es')
 
 const previous = getLocale()
+const previousPref = getLocalePreference()
 for (const locale of LOCALES) {
   setActiveLocale(locale as LocaleCode)
   assert.equal(getLocale(), locale)
   assert.equal(getMessages().app.brand, 'MeditateIt')
   assert.ok(getMessages().app.disclaimer.length > 20)
   assert.match(getMessages().controls.toneHz, /Hz|Hz\)|\(Hz\)/i)
+  assert.ok(getMessages().app.languageLabel.trim().length > 0)
+  assert.ok(getMessages().settings.languageSystem.trim().length > 0)
+  assert.ok(getMessages().settings.languageChromeNote.trim().length > 0)
 }
+
+assert.equal(applyLocalePreference(null, ['es-MX']), 'es')
+assert.equal(getLocalePreference(), null)
+assert.equal(getLocale(), 'es')
+assert.equal(applyLocalePreference('fr', ['en']), 'fr')
+assert.equal(getLocalePreference(), 'fr')
+assert.equal(getLocale(), 'fr')
+assert.equal(applyLocalePreference(null, ['pt-BR']), 'pt')
+assert.equal(getLocalePreference(), null)
+assert.equal(getLocale(), 'pt')
+
+applyLocalePreference(previousPref)
 setActiveLocale(previous)
 
 // Soften / Tone (Hz) / listening-preference spirit (no treatment claims).

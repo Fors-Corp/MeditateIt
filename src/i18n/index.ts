@@ -38,6 +38,8 @@ const CATALOGS: Record<LocaleCode, Messages> = {
 
 let activeLocale: LocaleCode = 'en'
 let activeMessages: Messages = en
+/** Saved preference: `null` = follow browser (System). */
+let localePreference: LocaleCode | null = null
 const listeners = new Set<() => void>()
 
 function notify(): void {
@@ -52,6 +54,14 @@ function applyDocumentLang(locale: LocaleCode): void {
 /** Current locale (always a concrete supported code). */
 export function getLocale(): LocaleCode {
   return activeLocale
+}
+
+/**
+ * Stored UI preference (`null` = System / browser auto-detect).
+ * Distinct from `getLocale()`, which is always a concrete catalog code.
+ */
+export function getLocalePreference(): LocaleCode | null {
+  return localePreference
 }
 
 /** Current message catalog for the active locale. */
@@ -102,6 +112,21 @@ export function setActiveLocale(locale: LocaleCode): LocaleCode {
   return next
 }
 
+/**
+ * Apply a saved preference (`null` = System) and resolve the active catalog.
+ * Updates `document.documentElement.lang` immediately via `setActiveLocale`.
+ */
+export function applyLocalePreference(
+  preferred: LocaleCode | null,
+  languages?: readonly string[],
+): LocaleCode {
+  localePreference = isLocaleCode(preferred) ? preferred : null
+  const resolved = setActiveLocale(resolveLocale(localePreference, languages))
+  // Preference can change without the resolved code changing (System→en).
+  notify()
+  return resolved
+}
+
 /** Read a stored prefs locale from localStorage without async helpers. */
 export function readStoredLocalePreference(): LocaleCode | null {
   if (typeof window === 'undefined' || !window.localStorage) return null
@@ -129,7 +154,7 @@ export function readStoredLocalePreference(): LocaleCode | null {
  */
 export function bootstrapLocale(): LocaleCode {
   const stored = readStoredLocalePreference()
-  return setActiveLocale(resolveLocale(stored))
+  return applyLocalePreference(stored)
 }
 
 /** System preset display name via catalog (falls back to stored EN name). */

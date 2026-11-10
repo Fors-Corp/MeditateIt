@@ -5,6 +5,7 @@ export const ca: Messages = {
   app: {
     brand: 'MeditateIt',
     skipToMain: 'Salta al contingut principal',
+    languageLabel: 'Idioma',
     taglineHome: 'Paisatges sonors generatius',
     taglineSettings: 'Configuració',
     taglinePrivacy: 'Privadesa',
@@ -162,8 +163,11 @@ export const ca: Messages = {
       forest: 'Bosc',
     },
     languageHeading: 'Idioma',
+    languageSystem: 'Sistema',
+    languageChromeNote:
+      'Canvia l’idioma en qualsevol moment amb el control de la part superior de l’app.',
     languageLede:
-      'Tria l’idioma de MeditateIt en aquest dispositiu. Les dates i hores segueixen aquest idioma.',
+      'Sistema segueix l’idioma del navegador quan està disponible (English, Español, Català, Français, Português). Una tria explícita es desa en aquest dispositiu. Les dates i hores segueixen l’idioma actiu.',
     backupHeading: 'Còpia de seguretat',
     backupLede:
       'Descarrega o restaura preferències, preajustos, seqüències i historial de sessions com a JSON. L’exportació inclou escoltes acabades per defecte. Sense compte: el fitxer roman en aquest dispositiu.',

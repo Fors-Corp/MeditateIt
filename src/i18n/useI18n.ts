@@ -1,6 +1,8 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import {
+  applyLocalePreference,
   getLocale,
+  getLocalePreference,
   getMessages,
   setActiveLocale,
   subscribeLocale,
@@ -10,9 +12,16 @@ import {
 
 export interface I18nApi {
   locale: LocaleCode
+  /** `null` = System (browser auto-detect). */
+  localePreference: LocaleCode | null
   messages: Messages
-  /** Apply locale live (catalog + documentElement.lang). Persist separately. */
+  /** Apply a concrete locale live (catalog + documentElement.lang). Persist separately. */
   setLocale: (locale: LocaleCode) => void
+  /**
+   * Apply preference (`null` = System). Resolves catalog + lang immediately.
+   * Persist separately via `updatePrefs({ locale })`.
+   */
+  setLocalePreference: (preferred: LocaleCode | null) => void
 }
 
 /**
@@ -25,6 +34,11 @@ export function useI18n(): I18nApi {
     getLocale,
     () => 'en' as LocaleCode,
   )
+  const localePreference = useSyncExternalStore(
+    subscribeLocale,
+    getLocalePreference,
+    () => null as LocaleCode | null,
+  )
   const messages = useSyncExternalStore(
     subscribeLocale,
     getMessages,
@@ -35,5 +49,9 @@ export function useI18n(): I18nApi {
     setActiveLocale(next)
   }, [])
 
-  return { locale, messages, setLocale }
+  const setLocalePreference = useCallback((preferred: LocaleCode | null) => {
+    applyLocalePreference(preferred)
+  }, [])
+
+  return { locale, localePreference, messages, setLocale, setLocalePreference }
 }
