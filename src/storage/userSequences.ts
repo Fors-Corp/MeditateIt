@@ -1,3 +1,7 @@
+import {
+  SEQUENCE_ERROR,
+  sequenceTooManyCode,
+} from '../i18n/index.ts'
 import { cloneRecipe, normalizeRecipe } from '../presets/index.ts'
 import { isSystemSequenceId } from '../sequences/system.ts'
 import type { Sequence, SequenceStage } from '../sequences/types.ts'
@@ -161,7 +165,7 @@ export async function saveUserSequence(
   input: SaveUserSequenceInput,
 ): Promise<Sequence> {
   const name = truncate(input.name.trim(), MAX_NAME_CHARS)
-  if (!name) throw new Error('Sequence name is required')
+  if (!name) throw new Error(SEQUENCE_ERROR.NAME_REQUIRED)
 
   const summary = truncate((input.summary ?? '').trim(), MAX_SUMMARY_CHARS)
 
@@ -171,12 +175,12 @@ export async function saveUserSequence(
     const stage = normalizeStage(item)
     if (stage) stages.push(stage)
   }
-  if (stages.length === 0) throw new Error('Sequence needs at least one stage')
+  if (stages.length === 0) throw new Error(SEQUENCE_ERROR.NEEDS_STAGE)
 
   const id = truncate(input.id?.trim() || crypto.randomUUID(), MAX_ID_CHARS)
-  if (!id) throw new Error('Sequence id is required')
+  if (!id) throw new Error(SEQUENCE_ERROR.ID_REQUIRED)
   if (isSystemSequenceId(id)) {
-    throw new Error('Cannot overwrite a system sequence')
+    throw new Error(SEQUENCE_ERROR.CANNOT_OVERWRITE_SYSTEM)
   }
 
   const next: Sequence = {
@@ -194,7 +198,7 @@ export async function saveUserSequence(
     all[idx] = next
   } else {
     if (all.length >= MAX_USER_SEQUENCES) {
-      throw new Error(`At most ${MAX_USER_SEQUENCES} user sequences`)
+      throw new Error(sequenceTooManyCode(MAX_USER_SEQUENCES))
     }
     all.push(next)
   }

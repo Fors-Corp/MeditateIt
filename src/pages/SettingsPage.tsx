@@ -98,9 +98,13 @@ export default function SettingsPage() {
       })
       refreshHistory()
       reloadTheme()
+      const modeLabel =
+        result.mode === 'replace'
+          ? messages.settings.replaceTitle
+          : messages.settings.mergeTitle
       setMessage(
         messages.settings.imported(
-          result.mode,
+          modeLabel,
           result.userPresetCount,
           result.userSequenceCount,
           result.historyCount,

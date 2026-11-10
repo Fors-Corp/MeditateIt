@@ -110,9 +110,9 @@ export const es: Messages = {
     'soft-396': 'Suave 396',
     'bright-528': 'Brillante 528',
     'clear-741': 'Claro 741',
-    'alpha-glide': 'Deslizamiento alfa',
-    'theta-drift': 'Deriva theta',
-    'delta-settle': 'Asiento delta',
+    'alpha-glide': 'Deslizamiento ~10 Hz',
+    'theta-drift': 'Deriva ~6 Hz',
+    'delta-settle': 'Noche ~1,5 Hz',
     'speaker-pulse': 'Pulso de altavoz',
     'night-rain': 'Lluvia nocturna',
     'study-grove': 'Arboleda de estudio',
@@ -205,11 +205,11 @@ export const es: Messages = {
     aboutLede:
       'MeditateIt es una herramienta de sonido generativo para el bienestar personal y la concentración. No es un dispositivo médico y no está destinada a diagnosticar, tratar, curar ni prevenir ninguna afección. Si tienes dudas de salud, consulta a un profesional cualificado.',
     exported: (presetCount, sequenceCount, sessionCount) =>
-      `Exportados ${presetCount} preajuste${presetCount === 1 ? '' : 's'}, ${sequenceCount} secuencia${sequenceCount === 1 ? '' : 's'} y ${sessionCount} sesión${sessionCount === 1 ? '' : 'es'}.`,
+      `Exportados ${presetCount} ${presetCount === 1 ? 'preajuste' : 'preajustes'}, ${sequenceCount} ${sequenceCount === 1 ? 'secuencia' : 'secuencias'} y ${sessionCount} ${sessionCount === 1 ? 'sesión' : 'sesiones'}.`,
     imported: (mode, presetCount, sequenceCount, historyCount) =>
-      `Importación (${mode}): ${presetCount} preajuste${presetCount === 1 ? '' : 's'}, ${sequenceCount} secuencia${sequenceCount === 1 ? '' : 's'}, ${historyCount} entrada${historyCount === 1 ? '' : 's'} de historial.`,
+      `Importación (${mode}): ${presetCount} ${presetCount === 1 ? 'preajuste' : 'preajustes'}, ${sequenceCount} ${sequenceCount === 1 ? 'secuencia' : 'secuencias'}, ${historyCount} ${historyCount === 1 ? 'entrada' : 'entradas'} de historial.`,
     retentionUpdated: (label, kept) =>
-      `Retención del historial: ${label.toLowerCase()}. ${kept} entrada${kept === 1 ? '' : 's'} conservada${kept === 1 ? '' : 's'}.`,
+      `Retención del historial: ${label.toLowerCase()}. ${kept} ${kept === 1 ? 'entrada' : 'entradas'} ${kept === 1 ? 'conservada' : 'conservadas'}.`,
     erased: (keyCount) =>
       `Todos los datos locales de MeditateIt borrados (${keyCount} claves).`,
     erasedCaches: (swCount) =>
@@ -375,16 +375,18 @@ export const es: Messages = {
       'Nota breve sobre lo que MeditateIt guarda en este dispositivo. No es una política de privacidad formal ni asesoramiento legal.',
     privacyLocalHeading: 'Solo almacenamiento local',
     privacyLocalP1:
-      'MeditateIt no tiene cuentas y no sincroniza datos con un servidor de MeditateIt. Preferencias, preajustes guardados e historial de sesiones permanecen en el localStorage de este navegador en tu dispositivo.',
+      'MeditateIt no tiene cuentas y no sincroniza datos con un servidor de MeditateIt. Preferencias, preajustes guardados, secuencias guardadas, historial de sesiones y la preferencia de retención del historial permanecen en el localStorage de este navegador en tu dispositivo.',
     privacyLocalP2:
       'Exportar e importar son archivos JSON que inicias tú para guardar o cargar. Borrar los datos del sitio en el navegador elimina lo que la app guardó.',
     privacyKeysHeading: 'Claves de almacenamiento',
     privacyKeyPrefs: 'preferencias de volumen y sesión',
     privacyKeyPresets: 'preajustes que guardas',
+    privacyKeySequences: 'secuencias de varias etapas que guardas',
     privacyKeyHistory: 'historial de escuchas terminadas',
+    privacyKeyRetention: 'preferencia de retención del historial de sesiones',
     privacyNetworkHeading: 'Red',
     privacyNetworkBody:
-      'Las fuentes de la interfaz se alojan con la app. No hay analítica propia en la versión actual. Si hospedas tu propia copia, puede intervenir lo que registre tu anfitrión o CDN; eso queda fuera del almacenamiento de esta app.',
+      'Las fuentes de la interfaz se alojan con la app. No hay analítica propia en la versión actual. El sitio público en meditateit.vercel.app está alojado en Vercel; Vercel puede guardar registros de acceso del hosting (por ejemplo IP, agente de usuario, URL y tiempos). Ese registro del anfitrión queda fuera del localStorage de esta app. Si hospedas tu propia copia, puede intervenir lo que registre tu anfitrión o CDN.',
     termsTitle: 'Términos',
     termsLede:
       'Notas breves para el uso personal de MeditateIt. No son unas condiciones de servicio formales ni asesoramiento legal.',
@@ -428,6 +430,15 @@ export const es: Messages = {
         'No se puede sobrescribir un preajuste del sistema.',
       tooMany: (max) => `Como máximo ${max} preajustes de usuario.`,
       saveFailed: 'No se pudo guardar el preajuste.',
+    },
+    sequence: {
+      nameRequired: 'El nombre de la secuencia es obligatorio.',
+      needsStage: 'La secuencia necesita al menos una etapa.',
+      idRequired: 'El id de la secuencia es obligatorio.',
+      cannotOverwriteSystem:
+        'No se puede sobrescribir una secuencia del sistema.',
+      tooMany: (max) => `Como máximo ${max} secuencias de usuario.`,
+      saveFailed: 'No se pudo guardar la secuencia.',
     },
   },
 }

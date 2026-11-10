@@ -12,11 +12,16 @@ import {
   getMessages,
   LOCALES,
   matchLocale,
+  messageForSequenceError,
   resolveLocale,
+  SEQUENCE_ERROR,
+  sequenceTooManyCode,
   setActiveLocale,
   type LocaleCode,
 } from './index.ts'
 import { en } from './en.ts'
+import { ca } from './ca.ts'
+import { es } from './es.ts'
 
 function leafPaths(value: unknown, prefix = ''): string[] {
   if (typeof value === 'function') return [prefix || '(root)']
@@ -141,6 +146,52 @@ for (const locale of LOCALES) {
     /listening|écoute|escuch|escolta|escuta/.test(headphones),
     `${locale} headphones copy missing listening-effect spirit`,
   )
+
+  // EEG-band display names softened (ids may stay).
+  for (const id of ['alpha-glide', 'theta-drift', 'delta-settle'] as const) {
+    const name = catalog.systemPresets[id] ?? ''
+    assert.ok(
+      !/\b(alpha|theta|delta|alfa|teta|thêta)\b/i.test(name),
+      `${locale} systemPresets.${id} still uses EEG-band vocabulary: ${name}`,
+    )
+    assert.match(name, /Hz/i)
+  }
+
+  assert.match(catalog.legal.privacyNetworkBody, /Vercel/i)
+  assert.match(catalog.legal.privacyNetworkBody, /meditateit\.vercel\.app/i)
+  assert.ok(catalog.legal.privacyKeySequences.trim().length > 0)
+  assert.ok(catalog.legal.privacyKeyRetention.trim().length > 0)
+  assert.match(
+    catalog.legal.privacyLocalP1,
+    /sequên|sequen|secuen|seqüèn|séquence/i,
+  )
 }
+
+// Sequence save errors use stable codes + localized catalog copy.
+setActiveLocale('es')
+assert.equal(
+  messageForSequenceError(new Error(SEQUENCE_ERROR.NAME_REQUIRED)),
+  getMessages().errors.sequence.nameRequired,
+)
+assert.equal(
+  messageForSequenceError(new Error(sequenceTooManyCode(200))),
+  getMessages().errors.sequence.tooMany(200),
+)
+assert.equal(
+  messageForSequenceError(new Error('surprise')),
+  getMessages().errors.sequence.saveFailed,
+)
+setActiveLocale(previous)
+
+// ca/es plural morphology (no suffix hacks).
+assert.match(ca.settings.exported(2, 2, 2), /seqüències/)
+assert.match(ca.settings.exported(2, 2, 2), /sessions/)
+assert.doesNotMatch(ca.settings.exported(2, 2, 2), /seqüèncias|sesións/)
+assert.match(ca.settings.imported('x', 2, 2, 2), /entrades/)
+assert.match(ca.settings.retentionUpdated('x', 2), /conservades/)
+assert.doesNotMatch(ca.settings.imported('x', 2, 2, 2), /entradaes/)
+assert.doesNotMatch(ca.settings.retentionUpdated('x', 2), /conservadaes/)
+assert.match(es.settings.exported(2, 2, 2), /sesiones/)
+assert.doesNotMatch(es.settings.exported(2, 2, 2), /sesiónes/)
 
 console.log(`i18n.check: ok (${LOCALES.join(', ')}; ${enPaths.length} leaves)`)

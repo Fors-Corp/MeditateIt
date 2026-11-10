@@ -225,6 +225,18 @@ export const PRESET_ERROR = {
 
 export type PresetErrorCode = keyof typeof PRESET_ERROR
 
+/** Stable sequence-save error codes. */
+export const SEQUENCE_ERROR = {
+  NAME_REQUIRED: 'sequence.nameRequired',
+  NEEDS_STAGE: 'sequence.needsStage',
+  ID_REQUIRED: 'sequence.idRequired',
+  CANNOT_OVERWRITE_SYSTEM: 'sequence.cannotOverwriteSystem',
+  TOO_MANY: 'sequence.tooMany',
+  SAVE_FAILED: 'sequence.saveFailed',
+} as const
+
+export type SequenceErrorCode = keyof typeof SEQUENCE_ERROR
+
 function storageCopyMap(m: Messages): Record<string, string> {
   return {
     [STORAGE_ERROR.TOO_LARGE]: m.errors.storage.tooLarge,
@@ -254,6 +266,17 @@ function presetCopyMap(m: Messages): Record<string, string> {
   }
 }
 
+function sequenceCopyMap(m: Messages): Record<string, string> {
+  return {
+    [SEQUENCE_ERROR.NAME_REQUIRED]: m.errors.sequence.nameRequired,
+    [SEQUENCE_ERROR.NEEDS_STAGE]: m.errors.sequence.needsStage,
+    [SEQUENCE_ERROR.ID_REQUIRED]: m.errors.sequence.idRequired,
+    [SEQUENCE_ERROR.CANNOT_OVERWRITE_SYSTEM]:
+      m.errors.sequence.cannotOverwriteSystem,
+    [SEQUENCE_ERROR.SAVE_FAILED]: m.errors.sequence.saveFailed,
+  }
+}
+
 function copyForStorageCode(code: string): string | null {
   return storageCopyMap(getMessages())[code] ?? null
 }
@@ -265,6 +288,17 @@ function copyForPresetCode(code: string): string | null {
   if (code.startsWith(`${PRESET_ERROR.TOO_MANY}:`)) {
     const max = Number(code.slice(PRESET_ERROR.TOO_MANY.length + 1))
     if (Number.isFinite(max)) return m.errors.preset.tooMany(max)
+  }
+  return null
+}
+
+function copyForSequenceCode(code: string): string | null {
+  const m = getMessages()
+  const map = sequenceCopyMap(m)
+  if (code in map) return map[code]!
+  if (code.startsWith(`${SEQUENCE_ERROR.TOO_MANY}:`)) {
+    const max = Number(code.slice(SEQUENCE_ERROR.TOO_MANY.length + 1))
+    if (Number.isFinite(max)) return m.errors.sequence.tooMany(max)
   }
   return null
 }
@@ -343,9 +377,50 @@ export function messageForPresetError(err: unknown): string {
   return m.errors.preset.saveFailed
 }
 
+/** Map thrown values to save-sequence dialog copy in the active locale. */
+export function messageForSequenceError(err: unknown): string {
+  const m = getMessages()
+  if (!(err instanceof Error)) return m.errors.sequence.saveFailed
+  const text = err.message
+
+  const fromCode = copyForSequenceCode(text)
+  if (fromCode) return fromCode
+
+  const known = new Set(Object.values(sequenceCopyMap(m)))
+  if (known.has(text)) return text
+
+  if (/sequence name is required/i.test(text)) {
+    return m.errors.sequence.nameRequired
+  }
+  if (/needs at least one stage/i.test(text)) {
+    return m.errors.sequence.needsStage
+  }
+  if (/sequence id is required/i.test(text)) {
+    return m.errors.sequence.idRequired
+  }
+  if (/cannot overwrite a system sequence/i.test(text)) {
+    return m.errors.sequence.cannotOverwriteSystem
+  }
+  if (/at most \d+ user sequences/i.test(text)) {
+    const match = text.match(/at most (\d+)/i)
+    const max = match ? Number(match[1]) : NaN
+    if (Number.isFinite(max)) return m.errors.sequence.tooMany(max)
+  }
+  if (/localStorage unavailable/i.test(text)) {
+    return m.errors.storage.storageUnavailable
+  }
+
+  return m.errors.sequence.saveFailed
+}
+
 /** Build a coded too-many-presets error message. */
 export function presetTooManyCode(max: number): string {
   return `${PRESET_ERROR.TOO_MANY}:${max}`
+}
+
+/** Build a coded too-many-sequences error message. */
+export function sequenceTooManyCode(max: number): string {
+  return `${SEQUENCE_ERROR.TOO_MANY}:${max}`
 }
 
 /** Catalogs for coverage checks / tooling. */

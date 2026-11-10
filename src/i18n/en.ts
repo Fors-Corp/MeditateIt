@@ -111,9 +111,9 @@ export const en = {
     'soft-396': 'Soft 396',
     'bright-528': 'Bright 528',
     'clear-741': 'Clear 741',
-    'alpha-glide': 'Alpha glide',
-    'theta-drift': 'Theta drift',
-    'delta-settle': 'Delta settle',
+    'alpha-glide': '~10 Hz glide',
+    'theta-drift': '~6 Hz drift',
+    'delta-settle': '~1.5 Hz night bed',
     'speaker-pulse': 'Speaker pulse',
     'night-rain': 'Night rain',
     'study-grove': 'Study grove',
@@ -397,16 +397,18 @@ export const en = {
       'Short product note about what MeditateIt stores on this device. This is not a formal privacy policy and is not legal advice.',
     privacyLocalHeading: 'Local-only storage',
     privacyLocalP1:
-      'MeditateIt has no accounts and does not sync data to a MeditateIt server. Preferences, saved presets, and session history stay in this browser’s localStorage on your device.',
+      'MeditateIt has no accounts and does not sync data to a MeditateIt server. Preferences, saved presets, saved sequences, session history, and the history-retention preference stay in this browser’s localStorage on your device.',
     privacyLocalP2:
       'Export and import are user-initiated JSON files you choose to save or load. Clearing site data in the browser removes what the app stored.',
     privacyKeysHeading: 'Storage keys',
     privacyKeyPrefs: 'volume and session preferences',
     privacyKeyPresets: 'presets you save',
+    privacyKeySequences: 'multi-stage sequences you save',
     privacyKeyHistory: 'finished listen history',
+    privacyKeyRetention: 'session history retention preference',
     privacyNetworkHeading: 'Network',
     privacyNetworkBody:
-      'Fonts used by the UI are self-hosted with the app. There is no first-party analytics in the current build. Hosting your own copy may still involve whatever your host or CDN logs; that is outside this app’s storage.',
+      'Fonts used by the UI are self-hosted with the app. There is no first-party analytics in the current build. The public site at meditateit.vercel.app is hosted on Vercel; Vercel may keep hosting access logs (for example IP, user agent, URL, and timing). That host logging is outside this app’s localStorage. Hosting your own copy may still involve whatever your host or CDN logs.',
     termsTitle: 'Terms',
     termsLede:
       'Brief product notes for personal use of MeditateIt. This is not a formal terms of service and is not legal advice.',
@@ -449,6 +451,14 @@ export const en = {
       cannotOverwriteSystem: 'Cannot overwrite a system preset.',
       tooMany: (max: number) => `At most ${max} user presets.`,
       saveFailed: 'Could not save preset.',
+    },
+    sequence: {
+      nameRequired: 'Sequence name is required.',
+      needsStage: 'Sequence needs at least one stage.',
+      idRequired: 'Sequence id is required.',
+      cannotOverwriteSystem: 'Cannot overwrite a system sequence.',
+      tooMany: (max: number) => `At most ${max} user sequences.`,
+      saveFailed: 'Could not save sequence.',
     },
   },
 } as const

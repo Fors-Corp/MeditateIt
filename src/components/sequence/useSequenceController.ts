@@ -7,6 +7,7 @@ import {
 } from '../../audio'
 import {
   getMessages,
+  messageForSequenceError,
   systemSequenceLabel,
   systemStageLabel,
 } from '../../i18n'
@@ -601,11 +602,7 @@ export function useSequenceController(
         setShowSaveSequence(false)
         setStatusMessage(getMessages().sequence.savedOnDevice(saved.name))
       } catch (err) {
-        setSaveSequenceError(
-          err instanceof Error
-            ? err.message
-            : getMessages().sequence.saveFailed,
-        )
+        setSaveSequenceError(messageForSequenceError(err))
       } finally {
         setSaveSequenceBusy(false)
       }

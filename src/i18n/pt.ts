@@ -110,9 +110,9 @@ export const pt: Messages = {
     'soft-396': 'Suave 396',
     'bright-528': 'Brilhante 528',
     'clear-741': 'Claro 741',
-    'alpha-glide': 'Deslize alfa',
-    'theta-drift': 'Deriva teta',
-    'delta-settle': 'Assento delta',
+    'alpha-glide': 'Deslize ~10 Hz',
+    'theta-drift': 'Deriva ~6 Hz',
+    'delta-settle': 'Noite ~1,5 Hz',
     'speaker-pulse': 'Pulso de altifalante',
     'night-rain': 'Chuva noturna',
     'study-grove': 'Bosque de estudo',
@@ -375,16 +375,18 @@ export const pt: Messages = {
       'Nota breve sobre o que o MeditateIt guarda neste dispositivo. Não é uma política de privacidade formal nem aconselhamento jurídico.',
     privacyLocalHeading: 'Apenas armazenamento local',
     privacyLocalP1:
-      'O MeditateIt não tem contas e não sincroniza dados com um servidor MeditateIt. Preferências, predefinições guardadas e histórico de sessões ficam no localStorage deste browser no teu dispositivo.',
+      'O MeditateIt não tem contas e não sincroniza dados com um servidor MeditateIt. Preferências, predefinições guardadas, sequências guardadas, histórico de sessões e a preferência de retenção do histórico ficam no localStorage deste browser no teu dispositivo.',
     privacyLocalP2:
       'Exportar e importar são ficheiros JSON que inicias tu para guardar ou carregar. Limpar os dados do site no browser remove o que a app guardou.',
     privacyKeysHeading: 'Chaves de armazenamento',
     privacyKeyPrefs: 'preferências de volume e sessão',
     privacyKeyPresets: 'predefinições que guardas',
+    privacyKeySequences: 'sequências de várias etapas que guardas',
     privacyKeyHistory: 'histórico de escutas terminadas',
+    privacyKeyRetention: 'preferência de retenção do histórico de sessões',
     privacyNetworkHeading: 'Rede',
     privacyNetworkBody:
-      'As fontes da interface são auto-alojadas com a app. Não há analítica própria na versão atual. Alojando a tua própria cópia, pode ainda haver o que o teu anfitrião ou CDN regista; isso fica fora do armazenamento desta app.',
+      'As fontes da interface são auto-alojadas com a app. Não há analítica própria na versão atual. O site público em meditateit.vercel.app está alojado na Vercel; a Vercel pode guardar registos de acesso do alojamento (por exemplo IP, agente de utilizador, URL e tempos). Esse registo do anfitrião fica fora do localStorage desta app. Alojando a tua própria cópia, pode ainda haver o que o teu anfitrião ou CDN regista.',
     termsTitle: 'Termos',
     termsLede:
       'Notas breves para uso pessoal do MeditateIt. Não são termos de serviço formais nem aconselhamento jurídico.',
@@ -428,6 +430,15 @@ export const pt: Messages = {
         'Não é possível substituir uma predefinição do sistema.',
       tooMany: (max) => `No máximo ${max} predefinições de utilizador.`,
       saveFailed: 'Não foi possível guardar a predefinição.',
+    },
+    sequence: {
+      nameRequired: 'O nome da sequência é obrigatório.',
+      needsStage: 'A sequência precisa de pelo menos uma etapa.',
+      idRequired: 'O id da sequência é obrigatório.',
+      cannotOverwriteSystem:
+        'Não é possível substituir uma sequência do sistema.',
+      tooMany: (max) => `No máximo ${max} sequências de utilizador.`,
+      saveFailed: 'Não foi possível guardar a sequência.',
     },
   },
 }

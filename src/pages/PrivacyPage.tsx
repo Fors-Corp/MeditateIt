@@ -31,8 +31,16 @@ export default function PrivacyPage() {
             <code>{STORAGE_KEYS.userPresets}</code> — {legal.privacyKeyPresets}
           </li>
           <li>
+            <code>{STORAGE_KEYS.userSequences}</code> —{' '}
+            {legal.privacyKeySequences}
+          </li>
+          <li>
             <code>{STORAGE_KEYS.sessionHistory}</code> —{' '}
             {legal.privacyKeyHistory}
+          </li>
+          <li>
+            <code>{STORAGE_KEYS.historyRetention}</code> —{' '}
+            {legal.privacyKeyRetention}
           </li>
         </ul>
       </section>

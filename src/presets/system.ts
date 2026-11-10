@@ -534,10 +534,10 @@ const CLEAR_741: Preset = systemPreset(
   ['741', 'tone', 'white'],
 )
 
-/** Alpha glide — gentle ~10 Hz binaural with quiet carrier focus. */
+/** ~10 Hz glide — gentle binaural with quiet carrier focus. */
 const ALPHA_GLIDE: Preset = systemPreset(
   'alpha-glide',
-  'Alpha glide',
+  '~10 Hz glide',
   20 * 60,
   {
     noise: {
@@ -565,13 +565,13 @@ const ALPHA_GLIDE: Preset = systemPreset(
     fadeOutSec: 10,
   },
   ['beats', 'calm'],
-  ['binaural', '10hz', 'alpha'],
+  ['binaural', '10hz'],
 )
 
-/** Theta drift — ~6 Hz binaural over soft brown. */
+/** ~6 Hz drift — binaural over soft brown. */
 const THETA_DRIFT: Preset = systemPreset(
   'theta-drift',
-  'Theta drift',
+  '~6 Hz drift',
   25 * 60,
   {
     noise: {
@@ -600,13 +600,13 @@ const THETA_DRIFT: Preset = systemPreset(
     fadeOutSec: 16,
   },
   ['beats', 'sleep'],
-  ['binaural', '6hz', 'theta', 'brown'],
+  ['binaural', '6hz', 'brown'],
 )
 
-/** Delta settle — very slow binaural for night listening. */
+/** ~1.5 Hz night bed — very slow binaural for night listening. */
 const DELTA_SETTLE: Preset = systemPreset(
   'delta-settle',
-  'Delta settle',
+  '~1.5 Hz night bed',
   40 * 60,
   {
     noise: {
@@ -634,7 +634,7 @@ const DELTA_SETTLE: Preset = systemPreset(
     fadeOutSec: 28,
   },
   ['beats', 'sleep'],
-  ['binaural', '1.5hz', 'delta', 'brown'],
+  ['binaural', '1.5hz', 'brown'],
 )
 
 /** Speaker pulse — deeper isochronic pulse for speakers. */

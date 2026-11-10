@@ -110,9 +110,9 @@ export const fr: Messages = {
     'soft-396': 'Doux 396',
     'bright-528': 'Clair 528',
     'clear-741': 'Net 741',
-    'alpha-glide': 'Glisse alpha',
-    'theta-drift': 'Dérive thêta',
-    'delta-settle': 'Assise delta',
+    'alpha-glide': 'Glisse ~10 Hz',
+    'theta-drift': 'Dérive ~6 Hz',
+    'delta-settle': 'Nuit ~1,5 Hz',
     'speaker-pulse': 'Pulsation enceinte',
     'night-rain': 'Pluie de nuit',
     'study-grove': 'Bosquet d’étude',
@@ -375,16 +375,18 @@ export const fr: Messages = {
       'Courte note sur ce que MeditateIt stocke sur cet appareil. Ce n’est pas une politique de confidentialité formelle ni un conseil juridique.',
     privacyLocalHeading: 'Stockage uniquement local',
     privacyLocalP1:
-      'MeditateIt n’a pas de comptes et ne synchronise pas de données vers un serveur MeditateIt. Préférences, préréglages enregistrés et historique de sessions restent dans le localStorage de ce navigateur sur votre appareil.',
+      'MeditateIt n’a pas de comptes et ne synchronise pas de données vers un serveur MeditateIt. Préférences, préréglages enregistrés, séquences enregistrées, historique de sessions et préférence de rétention de l’historique restent dans le localStorage de ce navigateur sur votre appareil.',
     privacyLocalP2:
       'L’export et l’import sont des fichiers JSON que vous choisissez d’enregistrer ou de charger. Effacer les données du site dans le navigateur supprime ce que l’app a stocké.',
     privacyKeysHeading: 'Clés de stockage',
     privacyKeyPrefs: 'préférences de volume et de session',
     privacyKeyPresets: 'préréglages que vous enregistrez',
+    privacyKeySequences: 'séquences multi-étapes que vous enregistrez',
     privacyKeyHistory: 'historique des écoutes terminées',
+    privacyKeyRetention: 'préférence de rétention de l’historique de sessions',
     privacyNetworkHeading: 'Réseau',
     privacyNetworkBody:
-      'Les polices de l’interface sont auto-hébergées avec l’app. Il n’y a pas d’analytique propriétaire dans la version actuelle. Héberger votre propre copie peut encore impliquer les journaux de votre hébergeur ou CDN ; cela est hors du stockage de cette app.',
+      'Les polices de l’interface sont auto-hébergées avec l’app. Il n’y a pas d’analytique propriétaire dans la version actuelle. Le site public meditateit.vercel.app est hébergé sur Vercel ; Vercel peut conserver des journaux d’accès d’hébergement (par exemple IP, agent utilisateur, URL et horodatage). Ces journaux d’hôte sont hors du localStorage de cette app. Héberger votre propre copie peut encore impliquer les journaux de votre hébergeur ou CDN.',
     termsTitle: 'Conditions',
     termsLede:
       'Brèves notes pour un usage personnel de MeditateIt. Ce ne sont pas des conditions d’utilisation formelles ni un conseil juridique.',
@@ -428,6 +430,15 @@ export const fr: Messages = {
         'Impossible d’écraser un préréglage système.',
       tooMany: (max) => `Au plus ${max} préréglages utilisateur.`,
       saveFailed: 'Impossible d’enregistrer le préréglage.',
+    },
+    sequence: {
+      nameRequired: 'Le nom de la séquence est requis.',
+      needsStage: 'La séquence doit comporter au moins une étape.',
+      idRequired: 'L’id de la séquence est requis.',
+      cannotOverwriteSystem:
+        'Impossible d’écraser une séquence système.',
+      tooMany: (max) => `Au plus ${max} séquences utilisateur.`,
+      saveFailed: 'Impossible d’enregistrer la séquence.',
     },
   },
 }

@@ -110,9 +110,9 @@ export const ca: Messages = {
     'soft-396': 'Suau 396',
     'bright-528': 'Brillant 528',
     'clear-741': 'Clar 741',
-    'alpha-glide': 'Lliscat alfa',
-    'theta-drift': 'Deriva theta',
-    'delta-settle': 'Assentament delta',
+    'alpha-glide': 'Lliscat ~10 Hz',
+    'theta-drift': 'Deriva ~6 Hz',
+    'delta-settle': 'Nit ~1,5 Hz',
     'speaker-pulse': 'Pols d’altaveu',
     'night-rain': 'Pluja nocturna',
     'study-grove': 'Bosquet d’estudi',
@@ -205,11 +205,11 @@ export const ca: Messages = {
     aboutLede:
       'MeditateIt és una eina de so generatiu per al benestar personal i la concentració. No és un dispositiu mèdic i no està pensada per diagnosticar, tractar, curar ni prevenir cap afecció. Si tens dubtes de salut, parla amb un professional qualificat.',
     exported: (presetCount, sequenceCount, sessionCount) =>
-      `S’han exportat ${presetCount} preajust${presetCount === 1 ? '' : 'os'}, ${sequenceCount} seqüència${sequenceCount === 1 ? '' : 's'} i ${sessionCount} sessió${sessionCount === 1 ? '' : 'ns'}.`,
+      `S’han exportat ${presetCount} ${presetCount === 1 ? 'preajust' : 'preajustos'}, ${sequenceCount} ${sequenceCount === 1 ? 'seqüència' : 'seqüències'} i ${sessionCount} ${sessionCount === 1 ? 'sessió' : 'sessions'}.`,
     imported: (mode, presetCount, sequenceCount, historyCount) =>
-      `Importació (${mode}): ${presetCount} preajust${presetCount === 1 ? '' : 'os'}, ${sequenceCount} seqüència${sequenceCount === 1 ? '' : 's'}, ${historyCount} entrada${historyCount === 1 ? '' : 'es'} d’historial.`,
+      `Importació (${mode}): ${presetCount} ${presetCount === 1 ? 'preajust' : 'preajustos'}, ${sequenceCount} ${sequenceCount === 1 ? 'seqüència' : 'seqüències'}, ${historyCount} ${historyCount === 1 ? 'entrada' : 'entrades'} d’historial.`,
     retentionUpdated: (label, kept) =>
-      `Retenció de l’historial: ${label.toLowerCase()}. ${kept} entrada${kept === 1 ? '' : 'es'} conservada${kept === 1 ? '' : 'es'}.`,
+      `Retenció de l’historial: ${label.toLowerCase()}. ${kept} ${kept === 1 ? 'entrada' : 'entrades'} ${kept === 1 ? 'conservada' : 'conservades'}.`,
     erased: (keyCount) =>
       `Totes les dades locals de MeditateIt s’han esborrat (${keyCount} claus).`,
     erasedCaches: (swCount) =>
@@ -375,16 +375,18 @@ export const ca: Messages = {
       'Nota breu sobre el que MeditateIt desa en aquest dispositiu. No és una política de privadesa formal ni assessorament legal.',
     privacyLocalHeading: 'Només emmagatzematge local',
     privacyLocalP1:
-      'MeditateIt no té comptes i no sincronitza dades amb un servidor de MeditateIt. Preferències, preajustos desats i historial de sessions romanen al localStorage d’aquest navegador al teu dispositiu.',
+      'MeditateIt no té comptes i no sincronitza dades amb un servidor de MeditateIt. Preferències, preajustos desats, seqüències desades, historial de sessions i la preferència de retenció de l’historial romanen al localStorage d’aquest navegador al teu dispositiu.',
     privacyLocalP2:
       'Exportar i importar són fitxers JSON que inicies tu per desar o carregar. Esborrar les dades del lloc al navegador elimina el que l’app va desar.',
     privacyKeysHeading: 'Claus d’emmagatzematge',
     privacyKeyPrefs: 'preferències de volum i sessió',
     privacyKeyPresets: 'preajustos que deses',
+    privacyKeySequences: 'seqüències de diverses etapes que deses',
     privacyKeyHistory: 'historial d’escoltes acabades',
+    privacyKeyRetention: 'preferència de retenció de l’historial de sessions',
     privacyNetworkHeading: 'Xarxa',
     privacyNetworkBody:
-      'Les fonts de la interfície s’allotgen amb l’app. No hi ha analítica pròpia en la versió actual. Si allotges la teva còpia, pot intervenir el que registri el teu amfitrió o CDN; això queda fora de l’emmagatzematge d’aquesta app.',
+      'Les fonts de la interfície s’allotgen amb l’app. No hi ha analítica pròpia en la versió actual. El lloc públic a meditateit.vercel.app s’allotja a Vercel; Vercel pot desar registres d’accés de l’allotjament (per exemple IP, agent d’usuari, URL i temps). Aquest registre de l’amfitrió queda fora del localStorage d’aquesta app. Si allotges la teva còpia, pot intervenir el que registri el teu amfitrió o CDN.',
     termsTitle: 'Termes',
     termsLede:
       'Notes breus per a l’ús personal de MeditateIt. No són unes condicions de servei formals ni assessorament legal.',
@@ -428,6 +430,15 @@ export const ca: Messages = {
         'No es pot sobrescriure un preajust del sistema.',
       tooMany: (max) => `Com a màxim ${max} preajustos d’usuari.`,
       saveFailed: 'No s’ha pogut desar el preajust.',
+    },
+    sequence: {
+      nameRequired: 'El nom de la seqüència és obligatori.',
+      needsStage: 'La seqüència necessita com a mínim una etapa.',
+      idRequired: 'L’id de la seqüència és obligatori.',
+      cannotOverwriteSystem:
+        'No es pot sobrescriure una seqüència del sistema.',
+      tooMany: (max) => `Com a màxim ${max} seqüències d’usuari.`,
+      saveFailed: 'No s’ha pogut desar la seqüència.',
     },
   },
 }
