@@ -25,3 +25,5 @@ dist-ssr
 
 # Impeccable local hook cache
 .impeccable/
+.vercel
+.env*
