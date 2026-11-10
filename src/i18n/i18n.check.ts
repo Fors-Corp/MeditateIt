@@ -110,6 +110,8 @@ for (const locale of LOCALES) {
   assert.ok(getMessages().app.settings.trim().length > 0)
   assert.ok(getMessages().settings.languageSystem.trim().length > 0)
   assert.ok(getMessages().settings.languageChromeNote.trim().length > 0)
+  assert.ok(getMessages().settings.themeChromeNote.trim().length > 0)
+  assert.ok(getMessages().settings.themeSystem.trim().length > 0)
 }
 
 assert.equal(applyLocalePreference(null, ['es-MX']), 'es')

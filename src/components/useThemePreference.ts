@@ -2,6 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { loadPrefs, updatePrefs } from '../storage'
 import { applyThemePreference, type ThemePreference } from '../theme'
 
+const reloadListeners = new Set<() => void>()
+
+/** Ask every mounted theme-preference hook to re-read prefs (import / erase). */
+export function requestThemePreferenceReload(): void {
+  for (const listener of reloadListeners) listener()
+}
+
 /** Load / persist themeId and keep the document attribute in sync. */
 export function useThemePreference(): {
   themeId: ThemePreference
@@ -13,6 +20,14 @@ export function useThemePreference(): {
   const [themeId, setThemeIdState] = useState<ThemePreference>(null)
   const [busy, setBusy] = useState(false)
   const [tick, setTick] = useState(0)
+
+  useEffect(() => {
+    const onReload = () => setTick((n) => n + 1)
+    reloadListeners.add(onReload)
+    return () => {
+      reloadListeners.delete(onReload)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -37,7 +52,9 @@ export function useThemePreference(): {
       .finally(() => setBusy(false))
   }, [])
 
-  const reload = useCallback(() => setTick((n) => n + 1), [])
+  const reload = useCallback(() => {
+    requestThemePreferenceReload()
+  }, [])
 
   return { themeId, setThemeId, busy, reload }
 }

@@ -154,6 +154,8 @@ export const es: Messages = {
     themeHeading: 'Tema',
     themeLede:
       'Elige una paleta calmada. Sistema sigue el modo claro u oscuro del dispositivo.',
+    themeChromeNote:
+      'Cambia la paleta en cualquier momento con el control de tema de la parte superior de la app. Sistema sigue el modo claro u oscuro del dispositivo.',
     themeSystem: 'Sistema',
     themes: {
       light: 'Claro',

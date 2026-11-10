@@ -154,6 +154,8 @@ export const fr: Messages = {
     themeHeading: 'Thème',
     themeLede:
       'Choisissez une palette calme. Système suit le mode clair ou sombre de l’appareil.',
+    themeChromeNote:
+      'Changez la palette à tout moment avec le contrôle de thème en haut de l’app. Système suit le mode clair ou sombre de l’appareil.',
     themeSystem: 'Système',
     themes: {
       light: 'Clair',

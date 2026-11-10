@@ -173,6 +173,58 @@
   cursor: not-allowed;
 }
 
+.theme-chrome {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.theme-chrome-swatch {
+  position: absolute;
+  inset-inline-start: 0.65rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.theme-chrome-select {
+  appearance: none;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink);
+  background-color: var(--bg-elevated);
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-muted) 50%),
+    linear-gradient(135deg, var(--ink-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 55%,
+    calc(100% - 9px) 55%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.45rem 1.75rem 0.45rem 1.85rem;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.theme-chrome-select:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.theme-chrome-select:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.theme-chrome-select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .settings-chrome {
   display: inline-flex;
   align-items: center;
@@ -689,6 +741,15 @@
   flex-direction: column;
   gap: var(--space-5);
   padding-bottom: var(--space-4);
+}
+
+.settings-page-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
 }
 
 .settings-section {

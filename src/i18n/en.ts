@@ -158,6 +158,8 @@ export const en = {
     themeHeading: 'Theme',
     themeLede:
       'Pick a calm palette. System follows your device light or dark setting.',
+    themeChromeNote:
+      'Change the palette anytime with the theme control at the top of the app. System follows your device light or dark setting.',
     themeSystem: 'System',
     themes: {
       light: 'Light',

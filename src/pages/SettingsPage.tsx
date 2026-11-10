@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ThemePicker } from '../components/ThemePicker'
-import { useThemePreference } from '../components/useThemePreference'
+import { requestThemePreferenceReload } from '../components/useThemePreference'
 import {
   bootstrapLocale,
   formatLocaleDateTime,
@@ -50,12 +49,6 @@ export default function SettingsPage() {
   const [retentionDays, setRetentionDays] =
     useState<HistoryRetentionDays>(null)
   const [clearCachesOnErase, setClearCachesOnErase] = useState(false)
-  const {
-    themeId,
-    setThemeId,
-    busy: themeBusy,
-    reload: reloadTheme,
-  } = useThemePreference()
 
   const refreshHistory = useCallback(() => {
     void listSessionHistory().then(setHistory)
@@ -97,7 +90,7 @@ export default function SettingsPage() {
           importMode === 'replace' ? keepHistoryWhenOmitted : false,
       })
       refreshHistory()
-      reloadTheme()
+      requestThemePreferenceReload()
       const modeLabel =
         result.mode === 'replace'
           ? messages.settings.replaceTitle
@@ -190,7 +183,7 @@ export default function SettingsPage() {
       setRetentionDays(null)
       setKeepHistoryWhenOmitted(false)
       applyThemePreference(null)
-      reloadTheme()
+      requestThemePreferenceReload()
       bootstrapLocale()
       const cacheMsg = result.cachesCleared
         ? messages.settings.erasedCaches(result.serviceWorkersUnregistered)
@@ -207,14 +200,13 @@ export default function SettingsPage() {
 
   return (
     <div className="settings-page">
+      <h1 id="settings-heading" className="settings-page-title">
+        {messages.app.taglineSettings}
+      </h1>
+
       <section className="settings-section" aria-labelledby="theme-heading">
-        <h1 id="theme-heading">{messages.settings.themeHeading}</h1>
-        <p className="settings-lede">{messages.settings.themeLede}</p>
-        <ThemePicker
-          value={themeId}
-          onChange={setThemeId}
-          disabled={busy || themeBusy}
-        />
+        <h2 id="theme-heading">{messages.settings.themeHeading}</h2>
+        <p className="settings-lede">{messages.settings.themeChromeNote}</p>
       </section>
 
       <section className="settings-section" aria-labelledby="language-heading">

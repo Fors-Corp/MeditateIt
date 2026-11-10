@@ -154,6 +154,8 @@ export const ca: Messages = {
     themeHeading: 'Tema',
     themeLede:
       'Tria una paleta calmada. Sistema segueix el mode clar o fosc del dispositiu.',
+    themeChromeNote:
+      'Canvia la paleta en qualsevol moment amb el control de tema de la part superior de l’app. Sistema segueix el mode clar o fosc del dispositiu.',
     themeSystem: 'Sistema',
     themes: {
       light: 'Clar',
