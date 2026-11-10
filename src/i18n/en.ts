@@ -294,6 +294,9 @@ export const en = {
     toneHz: 'Tone (Hz)',
     toneNote:
       'Common named frequencies as pure tones — for listening preference, not proven health effects.',
+    /** Frequency display — unit symbol stays “Hz”; value is locale-formatted by the caller when needed. */
+    hz: (value: number | string) => `${value} Hz`,
+    hzApprox: (value: number | string) => `~${value} Hz`,
     beat: 'Beat',
     beatMode: 'Beat mode',
     beatRate: (hz: string) => `Rate ${hz} Hz`,
@@ -305,6 +308,9 @@ export const en = {
     eq: 'EQ',
     eqGroup: (name: string) => `${name} EQ`,
     eqBandAria: (layer: string, band: string) => `${layer} ${band} EQ`,
+    eqBandHz: (band: string, hz: number) => `${band} · ${hz} Hz`,
+    eqDb: (value: string) => `${value} dB`,
+    eqDbZero: '0 dB',
     flat: 'Flat',
     eqLow: 'Low',
     eqMid: 'Mid',
@@ -367,6 +373,13 @@ export const en = {
     savedFrom: (name: string) => `Saved from ${name}`,
     stagesCount: (n: number) => `${n} stages`,
     saveFailed: 'Could not save sequence',
+    nothingToSave: 'Nothing to save',
+  },
+
+  media: {
+    liveSession: 'Live session',
+    sequenceAlbum: 'Sequence',
+    defaultAlbum: 'Meditation session',
   },
 
   pwa: {
@@ -380,7 +393,36 @@ export const en = {
 
   legal: {
     privacyTitle: 'Privacy',
+    privacyLede:
+      'Short product note about what MeditateIt stores on this device. This is not a formal privacy policy and is not legal advice.',
+    privacyLocalHeading: 'Local-only storage',
+    privacyLocalP1:
+      'MeditateIt has no accounts and does not sync data to a MeditateIt server. Preferences, saved presets, and session history stay in this browser’s localStorage on your device.',
+    privacyLocalP2:
+      'Export and import are user-initiated JSON files you choose to save or load. Clearing site data in the browser removes what the app stored.',
+    privacyKeysHeading: 'Storage keys',
+    privacyKeyPrefs: 'volume and session preferences',
+    privacyKeyPresets: 'presets you save',
+    privacyKeyHistory: 'finished listen history',
+    privacyNetworkHeading: 'Network',
+    privacyNetworkBody:
+      'Fonts used by the UI are self-hosted with the app. There is no first-party analytics in the current build. Hosting your own copy may still involve whatever your host or CDN logs; that is outside this app’s storage.',
     termsTitle: 'Terms',
+    termsLede:
+      'Brief product notes for personal use of MeditateIt. This is not a formal terms of service and is not legal advice.',
+    termsUseHeading: 'Local personal use',
+    termsUseBody:
+      'MeditateIt is a generative wellness sound tool you run locally in the browser. Use it for personal listening and sound design.',
+    termsAsIsHeading: 'As-is',
+    termsAsIsBody:
+      'The software is provided as-is, without warranties of any kind. Audio playback, timers, and persistence may fail or behave differently across browsers and devices.',
+    termsWellnessHeading: 'Not medical treatment',
+    termsWellnessP1:
+      'MeditateIt is not a medical device and is not intended to diagnose, treat, cure, or prevent any condition. If you have health concerns, talk to a qualified professional.',
+    termsWellnessP2:
+      'Keep listening volume comfortable. Use stereo headphones when a binaural beat mode asks for them — that is a listening technique, not therapy.',
+    backSettings: '← Settings',
+    home: 'Home',
   },
 
   errors: {

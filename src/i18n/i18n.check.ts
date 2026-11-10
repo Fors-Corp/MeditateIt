@@ -92,6 +92,15 @@ for (const locale of LOCALES) {
   assert.equal(getMessages().app.brand, 'MeditateIt')
   assert.ok(getMessages().app.disclaimer.length > 20)
   assert.match(getMessages().controls.toneHz, /Hz|Hz\)|\(Hz\)/i)
+  assert.match(getMessages().controls.hz(528), /528\s*Hz/)
+  assert.match(getMessages().controls.hzApprox(5), /~5\s*Hz/)
+  assert.match(getMessages().controls.eqBandHz('Low', 250), /250\s*Hz/)
+  assert.match(getMessages().controls.eqDb('+1.5'), /1\.5\s*dB/)
+  assert.ok(getMessages().controls.eqDbZero.includes('dB'))
+  assert.ok(getMessages().media.liveSession.trim().length > 0)
+  assert.ok(getMessages().sequence.nothingToSave.trim().length > 0)
+  assert.ok(getMessages().legal.privacyLede.trim().length > 20)
+  assert.ok(getMessages().legal.termsWellnessP2.trim().length > 20)
   assert.ok(getMessages().app.languageLabel.trim().length > 0)
   assert.ok(getMessages().settings.languageSystem.trim().length > 0)
   assert.ok(getMessages().settings.languageChromeNote.trim().length > 0)
@@ -114,6 +123,8 @@ setActiveLocale(previous)
 for (const locale of LOCALES) {
   const catalog = allCatalogs()[locale]
   assert.match(catalog.controls.toneHz, /Hz/)
+  assert.match(catalog.controls.hz(396), /396\s*Hz/)
+  assert.match(catalog.controls.beatRate('10.0'), /10\.0\s*Hz/)
   const toneNote = catalog.controls.toneNote.toLowerCase()
   assert.ok(
     /listening|écoute|escuch|escolta|prefer/.test(toneNote),

@@ -3,6 +3,8 @@
  * No-ops when `navigator.mediaSession` is missing.
  */
 
+import { getMessages } from '../i18n'
+
 export interface MediaSessionHandlers {
   onPlay: () => void | Promise<void>
   onPause: () => void
@@ -21,8 +23,6 @@ export interface SessionMediaMetadata {
   album?: string
 }
 
-const DEFAULT_ARTIST = 'MeditateIt'
-
 const ACTION_KEYS = [
   'play',
   'pause',
@@ -37,10 +37,11 @@ export function isMediaSessionAvailable(): boolean {
 export function setSessionMediaMetadata(meta: SessionMediaMetadata): void {
   if (!isMediaSessionAvailable()) return
   try {
+    const m = getMessages()
     navigator.mediaSession.metadata = new MediaMetadata({
       title: meta.title,
-      artist: meta.artist ?? DEFAULT_ARTIST,
-      album: meta.album ?? 'Meditation session',
+      artist: meta.artist ?? m.app.brand,
+      album: meta.album ?? m.media.defaultAlbum,
     })
   } catch {
     /* MediaMetadata unsupported or blocked */

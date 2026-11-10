@@ -249,10 +249,11 @@ export function useSequenceController(
   }, [])
 
   const updateMediaMeta = useCallback((seqName: string, stageName: string) => {
+    const m = getMessages()
     setSessionMediaMetadata({
       title: `${seqName} · ${stageName}`,
-      artist: 'MeditateIt',
-      album: 'Sequence',
+      artist: m.app.brand,
+      album: m.media.sequenceAlbum,
     })
   }, [])
 
@@ -568,13 +569,13 @@ export function useSequenceController(
     async (mode: 'new' | 'overwrite') => {
       const name = saveSequenceName.trim()
       if (!name) {
-        setSaveSequenceError('Name is required')
+        setSaveSequenceError(getMessages().errors.preset.nameRequired)
         return
       }
       const seq = sequenceRef.current
       const stages = resolvedRef.current
       if (!seq || stages.length === 0) {
-        setSaveSequenceError('Nothing to save')
+        setSaveSequenceError(getMessages().sequence.nothingToSave)
         return
       }
 

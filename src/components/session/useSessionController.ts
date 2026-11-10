@@ -5,7 +5,11 @@ import {
   setMediaSessionPlaybackState,
   setSessionMediaMetadata,
 } from '../../audio'
-import { getMessages, messageForPresetError } from '../../i18n'
+import {
+  getMessages,
+  messageForPresetError,
+  systemPresetLabel,
+} from '../../i18n'
 import { cloneRecipe } from '../../presets'
 import type { Preset, SessionRecipe } from '../../presets'
 import {
@@ -276,11 +280,15 @@ export function useSessionController(
     setPlaying(true)
     setNeedsAudioGesture(false)
     setEngineStatus(engine.getStatus())
-    setSessionMediaMetadata({
-      title: presetRef.current.name,
-      artist: 'MeditateIt',
-      album: 'Live session',
-    })
+    {
+      const current = presetRef.current
+      const m = getMessages()
+      setSessionMediaMetadata({
+        title: systemPresetLabel(current.id, current.name),
+        artist: m.app.brand,
+        album: m.media.liveSession,
+      })
+    }
     setMediaSessionPlaybackState('playing')
     if (!openEnded && (remainingSec == null || remainingSec <= 0)) {
       setRemainingSec(preset.defaultDurationSec ?? 10 * 60)
@@ -376,11 +384,14 @@ export function useSessionController(
       presetRef.current = next
       recipeRef.current = nextRecipe
 
-      setSessionMediaMetadata({
-        title: next.name,
-        artist: 'MeditateIt',
-        album: 'Live session',
-      })
+      {
+        const m = getMessages()
+        setSessionMediaMetadata({
+          title: systemPresetLabel(next.id, next.name),
+          artist: m.app.brand,
+          album: m.media.liveSession,
+        })
+      }
 
       if (playingRef.current) {
         engineRef.current?.crossfadeToRecipe(

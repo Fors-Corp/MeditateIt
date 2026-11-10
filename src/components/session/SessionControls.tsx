@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { LAYER_EQ_FREQ } from '../../audio'
 import { systemPresetLabel, type Messages } from '../../i18n'
 import { useI18n } from '../../i18n/useI18n'
 import {
@@ -136,9 +137,27 @@ export function SessionControls({ session }: SessionControlsProps) {
             : messages.session.ready
 
   const eqBands: { id: EqBandId; label: string }[] = [
-    { id: 'lowDb', label: messages.controls.eqLow },
-    { id: 'midDb', label: messages.controls.eqMid },
-    { id: 'highDb', label: messages.controls.eqHigh },
+    {
+      id: 'lowDb',
+      label: messages.controls.eqBandHz(
+        messages.controls.eqLow,
+        LAYER_EQ_FREQ.lowShelfHz,
+      ),
+    },
+    {
+      id: 'midDb',
+      label: messages.controls.eqBandHz(
+        messages.controls.eqMid,
+        LAYER_EQ_FREQ.midHz,
+      ),
+    },
+    {
+      id: 'highDb',
+      label: messages.controls.eqBandHz(
+        messages.controls.eqHigh,
+        LAYER_EQ_FREQ.highShelfHz,
+      ),
+    },
   ]
 
   return (
@@ -379,7 +398,7 @@ export function SessionControls({ session }: SessionControlsProps) {
                     className={`chip${selected ? ' is-selected' : ''}`}
                     onClick={() => setSolfeggio(hz)}
                   >
-                    {hz}
+                    {messages.controls.hz(hz)}
                   </button>
                 )
               })}
@@ -592,9 +611,10 @@ interface LayerEqControlsProps {
   onReset: () => void
 }
 
-function formatEqDb(db: number): string {
-  if (Math.abs(db) < 0.05) return '0 dB'
-  return `${db > 0 ? '+' : ''}${db.toFixed(1)} dB`
+function formatEqDb(db: number, messages: Messages): string {
+  if (Math.abs(db) < 0.05) return messages.controls.eqDbZero
+  const signed = `${db > 0 ? '+' : ''}${db.toFixed(1)}`
+  return messages.controls.eqDb(signed)
 }
 
 function isNeutralEq(eq: LayerEqParams): boolean {
@@ -637,7 +657,9 @@ function LayerEqControls({
           <label key={band.id} className="layer-eq-band">
             <span>
               {band.label}{' '}
-              <span className="control-value">{formatEqDb(eq[band.id])}</span>
+              <span className="control-value">
+                {formatEqDb(eq[band.id], messages)}
+              </span>
             </span>
             <input
               type="range"

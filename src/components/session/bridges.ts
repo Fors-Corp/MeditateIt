@@ -173,7 +173,7 @@ export function createSessionAudio(): SessionAudioEngine {
 export function blankCustomPreset(): Preset {
   return {
     id: 'custom',
-    name: 'Custom',
+    name: getMessages().session.customName,
     source: 'user',
     recipe: createBlankRecipe(),
     defaultDurationSec: null,

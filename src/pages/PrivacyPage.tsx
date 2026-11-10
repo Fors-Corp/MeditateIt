@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useI18n } from '../i18n/useI18n'
 import { STORAGE_KEYS } from '../storage'
 
 /**
@@ -6,58 +7,47 @@ import { STORAGE_KEYS } from '../storage'
  * Not a counsel-approved privacy policy.
  */
 export default function PrivacyPage() {
+  const { messages } = useI18n()
+  const legal = messages.legal
+
   return (
     <div className="legal-page">
-      <h1>Privacy</h1>
-      <p className="legal-lede">
-        Short product note about what MeditateIt stores on this device. This is
-        not a formal privacy policy and is not legal advice.
-      </p>
+      <h1>{legal.privacyTitle}</h1>
+      <p className="legal-lede">{legal.privacyLede}</p>
 
       <section className="legal-section" aria-labelledby="privacy-local">
-        <h2 id="privacy-local">Local-only storage</h2>
-        <p>
-          MeditateIt has no accounts and does not sync data to a MeditateIt
-          server. Preferences, saved presets, and session history stay in this
-          browser&apos;s <code>localStorage</code> on your device.
-        </p>
-        <p>
-          Export and import are user-initiated JSON files you choose to save or
-          load. Clearing site data in the browser removes what the app stored.
-        </p>
+        <h2 id="privacy-local">{legal.privacyLocalHeading}</h2>
+        <p>{legal.privacyLocalP1}</p>
+        <p>{legal.privacyLocalP2}</p>
       </section>
 
       <section className="legal-section" aria-labelledby="privacy-keys">
-        <h2 id="privacy-keys">Storage keys</h2>
+        <h2 id="privacy-keys">{legal.privacyKeysHeading}</h2>
         <ul className="legal-list">
           <li>
-            <code>{STORAGE_KEYS.prefs}</code> — volume and session preferences
+            <code>{STORAGE_KEYS.prefs}</code> — {legal.privacyKeyPrefs}
           </li>
           <li>
-            <code>{STORAGE_KEYS.userPresets}</code> — presets you save
+            <code>{STORAGE_KEYS.userPresets}</code> — {legal.privacyKeyPresets}
           </li>
           <li>
-            <code>{STORAGE_KEYS.sessionHistory}</code> — finished listen history
+            <code>{STORAGE_KEYS.sessionHistory}</code> —{' '}
+            {legal.privacyKeyHistory}
           </li>
         </ul>
       </section>
 
       <section className="legal-section" aria-labelledby="privacy-network">
-        <h2 id="privacy-network">Network</h2>
-        <p>
-          Fonts used by the UI are self-hosted with the app. There is no
-          first-party analytics in the current build. Hosting your own copy may
-          still involve whatever your host or CDN logs; that is outside this
-          app&apos;s storage.
-        </p>
+        <h2 id="privacy-network">{legal.privacyNetworkHeading}</h2>
+        <p>{legal.privacyNetworkBody}</p>
       </section>
 
       <p className="settings-foot">
-        <Link to="/settings">← Settings</Link>
+        <Link to="/settings">{legal.backSettings}</Link>
         {' · '}
-        <Link to="/terms">Terms</Link>
+        <Link to="/terms">{messages.app.terms}</Link>
         {' · '}
-        <Link to="/">Home</Link>
+        <Link to="/">{legal.home}</Link>
       </p>
     </div>
   )

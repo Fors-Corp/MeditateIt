@@ -281,6 +281,8 @@ export const ca: Messages = {
     toneHz: 'To (Hz)',
     toneNote:
       'Freqüències amb nom habituals com a tons purs — per preferència d’escolta, no per efectes de salut demostrats.',
+    hz: (value) => `${value} Hz`,
+    hzApprox: (value) => `~${value} Hz`,
     beat: 'Pols',
     beatMode: 'Mode de pols',
     beatRate: (hz) => `Ritme ${hz} Hz`,
@@ -292,6 +294,9 @@ export const ca: Messages = {
     eq: 'EQ',
     eqGroup: (name) => `EQ de ${name}`,
     eqBandAria: (layer, band) => `EQ ${band} de ${layer}`,
+    eqBandHz: (band, hz) => `${band} · ${hz} Hz`,
+    eqDb: (value) => `${value} dB`,
+    eqDbZero: '0 dB',
     flat: 'Pla',
     eqLow: 'Greus',
     eqMid: 'Mitjans',
@@ -346,6 +351,13 @@ export const ca: Messages = {
     savedFrom: (name) => `Desat des de ${name}`,
     stagesCount: (n) => `${n} etapes`,
     saveFailed: 'No s’ha pogut desar la seqüència',
+    nothingToSave: 'Res a desar',
+  },
+
+  media: {
+    liveSession: 'Sessió en directe',
+    sequenceAlbum: 'Seqüència',
+    defaultAlbum: 'Sessió de meditació',
   },
 
   pwa: {
@@ -359,7 +371,36 @@ export const ca: Messages = {
 
   legal: {
     privacyTitle: 'Privadesa',
+    privacyLede:
+      'Nota breu sobre el que MeditateIt desa en aquest dispositiu. No és una política de privadesa formal ni assessorament legal.',
+    privacyLocalHeading: 'Només emmagatzematge local',
+    privacyLocalP1:
+      'MeditateIt no té comptes i no sincronitza dades amb un servidor de MeditateIt. Preferències, preajustos desats i historial de sessions romanen al localStorage d’aquest navegador al teu dispositiu.',
+    privacyLocalP2:
+      'Exportar i importar són fitxers JSON que inicies tu per desar o carregar. Esborrar les dades del lloc al navegador elimina el que l’app va desar.',
+    privacyKeysHeading: 'Claus d’emmagatzematge',
+    privacyKeyPrefs: 'preferències de volum i sessió',
+    privacyKeyPresets: 'preajustos que deses',
+    privacyKeyHistory: 'historial d’escoltes acabades',
+    privacyNetworkHeading: 'Xarxa',
+    privacyNetworkBody:
+      'Les fonts de la interfície s’allotgen amb l’app. No hi ha analítica pròpia en la versió actual. Si allotges la teva còpia, pot intervenir el que registri el teu amfitrió o CDN; això queda fora de l’emmagatzematge d’aquesta app.',
     termsTitle: 'Termes',
+    termsLede:
+      'Notes breus per a l’ús personal de MeditateIt. No són unes condicions de servei formals ni assessorament legal.',
+    termsUseHeading: 'Ús personal local',
+    termsUseBody:
+      'MeditateIt és una eina de so generatiu per al benestar que executes localment al navegador. Fes-la servir per escoltar i dissenyar so de forma personal.',
+    termsAsIsHeading: 'Tal com és',
+    termsAsIsBody:
+      'El programari s’ofereix tal com és, sense garanties de cap mena. La reproducció, els temporitzadors i la persistència poden fallar o comportar-se diferent segons el navegador i el dispositiu.',
+    termsWellnessHeading: 'No és tractament mèdic',
+    termsWellnessP1:
+      'MeditateIt no és un dispositiu mèdic i no està destinat a diagnosticar, tractar, curar ni prevenir cap afecció. Si tens dubtes de salut, parla amb un professional qualificat.',
+    termsWellnessP2:
+      'Mantén un volum còmode. Usa auriculars estèreo quan el mode binaural ho demani: és una tècnica d’escolta, no una teràpia.',
+    backSettings: '← Configuració',
+    home: 'Inici',
   },
 
   errors: {

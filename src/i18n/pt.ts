@@ -281,6 +281,8 @@ export const pt: Messages = {
     toneHz: 'Tom (Hz)',
     toneNote:
       'Frequências com nome comuns como tons puros — por preferência de escuta, não por efeitos de saúde comprovados.',
+    hz: (value) => `${value} Hz`,
+    hzApprox: (value) => `~${value} Hz`,
     beat: 'Batida',
     beatMode: 'Modo de batida',
     beatRate: (hz) => `Ritmo ${hz} Hz`,
@@ -292,6 +294,9 @@ export const pt: Messages = {
     eq: 'EQ',
     eqGroup: (name) => `EQ de ${name}`,
     eqBandAria: (layer, band) => `EQ ${band} de ${layer}`,
+    eqBandHz: (band, hz) => `${band} · ${hz} Hz`,
+    eqDb: (value) => `${value} dB`,
+    eqDbZero: '0 dB',
     flat: 'Plano',
     eqLow: 'Graves',
     eqMid: 'Médios',
@@ -346,6 +351,13 @@ export const pt: Messages = {
     savedFrom: (name) => `Guardado a partir de ${name}`,
     stagesCount: (n) => `${n} etapas`,
     saveFailed: 'Não foi possível guardar a sequência',
+    nothingToSave: 'Nada para guardar',
+  },
+
+  media: {
+    liveSession: 'Sessão ao vivo',
+    sequenceAlbum: 'Sequência',
+    defaultAlbum: 'Sessão de meditação',
   },
 
   pwa: {
@@ -359,7 +371,36 @@ export const pt: Messages = {
 
   legal: {
     privacyTitle: 'Privacidade',
+    privacyLede:
+      'Nota breve sobre o que o MeditateIt guarda neste dispositivo. Não é uma política de privacidade formal nem aconselhamento jurídico.',
+    privacyLocalHeading: 'Apenas armazenamento local',
+    privacyLocalP1:
+      'O MeditateIt não tem contas e não sincroniza dados com um servidor MeditateIt. Preferências, predefinições guardadas e histórico de sessões ficam no localStorage deste browser no teu dispositivo.',
+    privacyLocalP2:
+      'Exportar e importar são ficheiros JSON que inicias tu para guardar ou carregar. Limpar os dados do site no browser remove o que a app guardou.',
+    privacyKeysHeading: 'Chaves de armazenamento',
+    privacyKeyPrefs: 'preferências de volume e sessão',
+    privacyKeyPresets: 'predefinições que guardas',
+    privacyKeyHistory: 'histórico de escutas terminadas',
+    privacyNetworkHeading: 'Rede',
+    privacyNetworkBody:
+      'As fontes da interface são auto-alojadas com a app. Não há analítica própria na versão atual. Alojando a tua própria cópia, pode ainda haver o que o teu anfitrião ou CDN regista; isso fica fora do armazenamento desta app.',
     termsTitle: 'Termos',
+    termsLede:
+      'Notas breves para uso pessoal do MeditateIt. Não são termos de serviço formais nem aconselhamento jurídico.',
+    termsUseHeading: 'Uso pessoal local',
+    termsUseBody:
+      'O MeditateIt é uma ferramenta de som generativo para bem-estar que corres localmente no browser. Usa-o para escuta pessoal e desenho de som.',
+    termsAsIsHeading: 'Tal como está',
+    termsAsIsBody:
+      'O software é fornecido tal como está, sem garantias de qualquer tipo. A reprodução, os temporizadores e a persistência podem falhar ou comportar-se de forma diferente entre browsers e dispositivos.',
+    termsWellnessHeading: 'Não é tratamento médico',
+    termsWellnessP1:
+      'O MeditateIt não é um dispositivo médico e não se destina a diagnosticar, tratar, curar ou prevenir qualquer condição. Se tiveres preocupações de saúde, fala com um profissional qualificado.',
+    termsWellnessP2:
+      'Mantém um volume confortável. Usa auriculares estéreo quando o modo binaural o pedir — é uma técnica de escuta, não terapia.',
+    backSettings: '← Definições',
+    home: 'Início',
   },
 
   errors: {
