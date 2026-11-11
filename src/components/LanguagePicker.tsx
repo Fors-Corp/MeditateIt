@@ -12,7 +12,7 @@ interface LanguagePickerProps {
   disabled?: boolean
   /**
    * `chrome` — compact top-bar select (default for App header).
-   * `chips` — settings-style chip radiogroup (kept for reuse/tests).
+   * `chips` — radiogroup (kept for reuse/tests).
    */
   variant?: 'chrome' | 'chips'
 }
@@ -36,10 +36,11 @@ export default function LanguagePicker({
 
   if (variant === 'chrome') {
     const selectValue = localePreference ?? 'system'
+    const closedName = LOCALE_LABELS[locale]
     const closedLabel =
       localePreference === null
-        ? `${label}: ${LOCALE_LABELS[locale]} (${messages.settings.languageSystem})`
-        : `${label}: ${LOCALE_LABELS[locale]}`
+        ? `${label}: ${closedName} (${messages.settings.languageSystem})`
+        : `${label}: ${closedName}`
 
     return (
       <label className="language-chrome">

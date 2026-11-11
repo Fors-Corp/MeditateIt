@@ -209,12 +209,6 @@ export default function SettingsPage() {
         <p className="settings-lede">{messages.settings.themeChromeNote}</p>
       </section>
 
-      <section className="settings-section" aria-labelledby="language-heading">
-        <h2 id="language-heading">{messages.settings.languageHeading}</h2>
-        <p className="settings-lede">{messages.settings.languageChromeNote}</p>
-        <p className="settings-lede">{messages.settings.languageLede}</p>
-      </section>
-
       <section className="settings-section" aria-labelledby="backup-heading">
         <h2 id="backup-heading">{messages.settings.backupHeading}</h2>
         <p className="settings-lede">{messages.settings.backupLede}</p>
