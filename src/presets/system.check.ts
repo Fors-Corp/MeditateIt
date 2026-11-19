@@ -17,8 +17,8 @@ import {
 const presets = listSystemPresets()
 
 assert.ok(
-  presets.length >= 20,
-  `expected ≥20 system presets, got ${presets.length}`,
+  presets.length >= 48,
+  `expected ≥48 system presets, got ${presets.length}`,
 )
 assert.equal(SYSTEM_PRESETS.length, presets.length)
 
